@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, VecDeque}, path::Path, time::{Duration, SystemTime, UNIX_EPOCH}
 };
+use rust_embed::Embed;
 
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
 use crossterm::event::{KeyCode, KeyEvent, MouseEvent};
@@ -8,11 +9,15 @@ use ratatui::{prelude::*, widgets::*};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 use tui_widget_list::{ListBuilder, ListState, ListView};
-use wit_parser::{Function, FunctionKind, Interface, InterfaceId, Type, TypeDef, TypeId, UnresolvedPackage, UnresolvedPackageGroup};
+use wit_parser::{Function, FunctionKind, Interface, InterfaceId, SourceMap, Type, TypeDef, TypeId, UnresolvedPackage, UnresolvedPackageGroup};
 
 use crate::{
     action::Action, components::Component, config::{Config, KeyBindings}, tui::Event
 };
+
+#[derive(Embed)]
+#[folder = "crates/rune/wit/runtime"]
+struct RuneWit;
 
 #[derive(Clone)]
 pub enum CurrentItem {
@@ -287,7 +292,12 @@ impl Docs {
 
 impl Default for Docs {
     fn default() -> Self {
-        let package_group = UnresolvedPackageGroup::parse_dir(Path::new("/Users/loch/Documents/Projects/wizard/rune/wit/runtime")).unwrap();
+        let mut source_map = SourceMap::new();
+        for wit_name in RuneWit::iter() {
+            let wit = RuneWit::get(&wit_name).unwrap();
+            source_map.push(Path::new(wit_name.as_ref()), std::str::from_utf8(&wit.data).unwrap());
+        }
+        let package_group = source_map.parse().unwrap();
 
         let mut visited = VecDeque::new();
         visited.push_back(CurrentItem::Package(package_group.main));
