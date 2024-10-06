@@ -1,7 +1,14 @@
-# Rune
+# 🚧 Rune 🚧
+
+[rune.sh](https://rune.sh)
+
 A runtime for cross-language, cross-platform game development. A chassis without an engine.
 
 🚧 Rune is not production ready.
+
+## Get Started
+
+A quick install script is available [on the website](https://rune.sh).
 
 ## What is Rune?
 Rune provides a host environment for guest WebAssembly applications (ie. your game.)
