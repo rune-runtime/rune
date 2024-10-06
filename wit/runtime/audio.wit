@@ -1,0 +1,374 @@
+package rune:runtime;
+
+/// An audio API based on the Web Audio API
+interface audio {
+  /// Gets the user's preferred audio output device
+  output: func() -> option<audio-device>;
+
+  type event-id = u32;
+
+  /// Represents an audio device
+  resource audio-device {
+    /// Get the name of the audio device
+    name: func() -> string;
+    /// Create an audio context
+    create-context: func() -> audio-context;
+
+  }
+
+  /// An audio context controls both the creation of the nodes it contains and the execution of the audio processing, or decoding.
+  resource audio-context {
+    /// A double that represents the number of seconds of processing latency incurred by the AudioContext passing an audio buffer from the AudioDestinationNode
+    base-latency: func() -> f32;
+    /// An estimation of the output latency of the current audio context
+    output-latency: func() -> f32;
+    /// Sink ID of the current output audio device
+    sink-id: func() -> string;
+    /// Sets the Sink ID for the current output audio device
+    set-sink-id: func(sink-id: string);
+    render-capacity: func() -> audio-render-capacity;
+    suspend: func();
+    resume: func();
+    close: func();
+
+    /// Decode audio file data contained in a byte array
+    decode-audio-data: func(data: list<u8>) -> audio-buffer;
+    /// Creates a new, empty audio buffer object, which can then be populated by data, and played via an audio buffer source node
+    create-buffer: func(number-of-channels: u32, length: u32, sample-rate: f32) -> audio-buffer;
+    /// Creates an analyzer node, which can be used to expose audio time and frequency data and create data visualizations
+    create-analyzer: func() -> analyzer-node;
+    /// Creates a biquad filter node, which represents a second order filter configurable as several different common filter types
+    create-biquad-filter: func() -> biquad-filter-node;
+    /// Creates a new audio buffer source node, which can be used to play audio data contained within an audio buffer object
+    create-buffer-source: func() -> audio-buffer-source-node;
+    /// Creates a channel merger node, which combines channels from multiple audio streams into a single audio stream
+    create-channel-merger: func(number-of-inputs: u32) -> channel-merger-node;
+    /// Create a channel splitter node, which is used to access the individual channels of an audio stream and process them separately
+    create-channel-splitter: func(number-of-outputs: u32) -> channel-splitter-node;
+    /// Creates a constant source node object, which is an audio source that continuously outputs a monaural (one-channel) sound signal whose samples all have the same value
+    create-constant-source: func() -> constant-source-node;
+    /// Creates a convolver node, which is commonly used to apply reverb effects to your audio
+    create-convolver: func() -> convolver-node;
+    /// Create a delay node, which is used to delay the incoming audio signal by a certain amount of time
+    create-delay: func(max-delay-time: f32) -> delay-node;
+    create-dynamics-compressor: func() -> dynamics-compressor-node;
+    create-gain: func() -> gain-node;
+    create-iir-filter: func(feedforward: list<f32>, feedback: list<f32>) -> iir-filter-node;
+    create-oscillator: func() -> oscillator-node;
+    create-panner: func() -> panner-node;
+    create-periodic-wave: func(options: periodic-wave-options) -> periodic-wave;
+    create-stereo-panner: func() -> stereo-panner-node;
+    create-wave-shaper: func() -> wave-shaper-node;
+    destination: func() -> audio-destination-node;
+    listener: func() -> audio-listener;
+    sample-rate: func() -> f32;
+    state: func() -> audio-context-state;
+    current-time: func() -> f32;
+    // create-audio-param: func(options: audio-param-descriptor, destination: borrow<audio-context-registration>) -> tuple<audio-param, audio-param-id>;
+    // create-custom: func(key: string) -> custom-audio-node;
+  }
+
+  resource audio-param {
+    automation-rate: func() -> automation-rate;
+    set-automation-rate: func(automation-rate: automation-rate);
+    default-value: func() -> f32;
+    min-value: func() -> f32;
+    max-value: func() -> f32;
+    value: func() -> f32;
+    set-value: func(value: f32);
+    set-value-at-time: func(value: f32, start-time: f32);
+    set-value-curve-at-time: func(values: list<f32>, start-time: f32, duration: f32);
+    linear-ramp-to-value-at-time: func(value: f32, end-time: f32);
+    exponential-ramp-to-value-at-time: func(value: f32, end-time: f32);
+    set-target-at-time: func(value: f32, start-time: f32, time-constant: f32);
+    cancel-scheduled-values: func(cancel-time: f32);
+    cancel-and-hold-at-time: func(cancel-time: f32);
+  }
+
+  enum automation-rate {
+    a,
+    k
+  }
+
+  resource audio-destination-node {
+    max-channel-count: func() -> u32;
+  }
+
+  resource audio-render-capacity {
+
+  }
+
+  resource audio-buffer {
+    constructor(samples: list<list<f32>>, sample-rate: f32);
+    number-of-channels: func() -> u32;
+    length: func() -> u32;
+    sample-rate: func() -> f32;
+    duration: func() -> f32;
+    // copy-from-channel: func() -> 
+    // copy-from-channel-with-offset: func() -> 
+    // copy-to-channel: func() ->
+    // copy-to-channel-with-offset: func() -> 
+    get-channel-data: func(channel-number: u32) -> list<f32>;
+    // get-channel-data-mut: func() -> 
+  }
+
+  variant audio-node {
+    analyzer(borrow<analyzer-node>),
+    biquad-filter(borrow<biquad-filter-node>),
+    buffer-source(borrow<audio-buffer-source-node>),
+    destination(borrow<audio-destination-node>),
+    constant-source(borrow<constant-source-node>),
+    convolver(borrow<convolver-node>),
+    channel-merger(borrow<channel-merger-node>),
+    channel-splitter(borrow<channel-splitter-node>),
+    delay(borrow<delay-node>),
+    dynamics-compressor(borrow<dynamics-compressor-node>),
+    gain(borrow<gain-node>),
+    oscillator(borrow<oscillator-node>),
+    panner(borrow<panner-node>),
+    stereo-panner(borrow<stereo-panner-node>),
+    wave-shaper(borrow<wave-shaper-node>)
+  }
+
+  resource audio-buffer-source-node {
+    // TODO: constructor
+    start-at-with-offset: func(start: f32, offset: f32);
+    start-at-with-offset-and-duration: func(start: f32, offset: f32, duration: f32);
+    buffer: func() -> option<audio-buffer>;
+    set-buffer: func(audio-buffer: audio-buffer);
+    playback-rate: func() -> audio-param;
+    position: func() -> f32;
+    detune: func() -> audio-param;
+    loop: func() -> bool;
+    set-loop: func(value: bool);
+    loop-start: func() -> f32;
+    set-loop-start: func(value: f32);
+    loop-end: func() -> f32;
+    set-loop-end: func(value: f32);
+
+    connect: func(destination: audio-node);
+    start: func();
+  }
+
+  resource analyzer-node {
+    // TODO: constructor
+    fft-size: func() -> u32;
+    set-fft-size: func(fft-size: u32);
+    smoothing-time-constant: func() -> f32;
+    set-smoothing-time-constant: func(smoothing-time-constant: f32);
+    min-decibels: func() -> f32;
+    set-min-decibels: func(min-decebels: f32);
+    max-decibels: func() -> f32;
+    set-max-decibels: func(max-decebels: f32);
+    frequency-bin-count: func() -> u32;
+    get-float-time-domain-data: func() -> list<f32>;
+    get-byte-time-domain-data: func() -> list<u8>;
+    get-float-frequency-data: func() -> list<f32>;
+    get-byte-frequency-data: func() -> list<u8>;
+
+    connect: func(destination: audio-node);
+  }
+
+  resource biquad-filter-node {
+    // TODO: constructor
+    gain: func() -> audio-param;
+    frequency: func() -> audio-param;
+    detune: func() -> audio-param;
+    q: func() -> audio-param;
+    %type: func() -> biquad-filter-type;
+    set-type: func(%type: biquad-filter-type);
+    // get-frequency-response: func(frequency-hz: list<f32>, mag-response: list<f32>, phase-response: list<f32>);
+
+    connect: func(destination: audio-node);
+  }
+
+  enum biquad-filter-type {
+    lowpass,
+    highpass,
+    bandpass,
+    notch,
+    allpass,
+    peaking,
+    lowshelf,
+    highshelf
+  }
+
+  resource constant-source-node {
+    // TODO: constructor
+    offset: func() -> audio-param;
+
+    connect: func(destination: audio-node);
+  }
+
+  resource convolver-node {
+    // TODO: constructor
+    buffer: func() -> option<audio-buffer>;
+    set-buffer: func(buffer: audio-buffer);
+    normalize: func() -> bool;
+    set-normalize: func(value: bool);
+
+    connect: func(destination: audio-node);
+  }
+
+  resource channel-merger-node {
+    // TODO: constructor
+
+    connect: func(destination: audio-node);
+  }
+
+  resource channel-splitter-node {
+    // TODO: constructor
+
+    connect: func(destination: audio-node);
+  }
+
+  resource delay-node {
+    // TODO: constructor
+    delay-time: func() -> audio-param;
+
+    connect: func(destination: audio-node);
+  }
+
+  resource dynamics-compressor-node {
+    // TODO: constructor
+    attack: func() -> audio-param;
+    knee: func() -> audio-param;
+    ratio: func() -> audio-param;
+    release: func() -> audio-param;
+    threshold: func() -> audio-param;
+    reduction: func() -> f32;
+
+    connect: func(destination: audio-node);
+  }
+
+  resource gain-node {
+    // TODO: constructor
+    gain: func() -> audio-param;
+
+    connect: func(destination: audio-node);
+  }
+
+  resource iir-filter-node {
+    // TODO: constructor
+    // get-frequency-response: func(frequency-hz: list<f32>, mag-response: list<f32>, phase-response: list<f32>);
+
+    connect: func(destination: audio-node);
+  }
+
+  resource oscillator-node {
+    // TODO: constructor
+    detune: func() -> audio-param;
+    frequency: func() -> audio-param;
+    %type: func() -> oscillator-type;
+    set-type: func(%type: oscillator-type);
+    set-periodic-wave: func(periodic-wave: periodic-wave);
+
+    connect: func(destination: audio-node);
+  }
+
+  enum oscillator-type {
+    sine,
+    square,
+    sawtooth,
+    triangle,
+    custom
+  }
+
+  record periodic-wave {
+    wavetable: list<f32>
+  }
+
+  resource panner-node {
+    // TODO: constructor
+    position-x: func() -> audio-param;
+    position-y: func() -> audio-param;
+    position-z: func() -> audio-param;
+    set-position: func(x: f32, y: f32, z: f32);
+    orientation-x: func() -> audio-param;
+    orientation-y: func() -> audio-param;
+    orientation-z: func() -> audio-param;
+    set-orientation: func(x: f32, y: f32, z: f32);
+    distance-model: func() -> distance-model-type;
+    set-distance-model: func(value: distance-model-type);
+    ref-distance: func() -> f32;
+    set-ref-distance: func(value: f32);
+    max-distance: func() -> f32;
+    set-max-distance: func(value: f32);
+    rolloff-factor: func() -> f32;
+    set-rolloff-factor: func(value: f32);
+    cone-inner-angle: func() -> f32;
+    set-cone-inner-angle: func(value: f32);
+    cone-outer-angle: func() -> f32;
+    set-cone-outer-angle: func(value: f32);
+    cone-outer-gain: func() -> f32;
+    set-cone-outer-gain: func(value: f32);
+    panning-model: func() -> panning-model-type;
+    set-panning-model: func(value: panning-model-type);
+
+    connect: func(destination: audio-node);
+  }
+
+  enum distance-model-type {
+    linear,
+    inverse,
+    exponential
+  }
+  
+  enum panning-model-type {
+    equal-power,
+    hrtf
+  }
+
+  record periodic-wave-options {
+    real: option<list<f32>>,
+    imag: option<list<f32>>,
+    disable-normalization: bool
+  }
+
+  resource stereo-panner-node {
+    pan: func() -> audio-param;
+
+    connect: func(destination: audio-node);
+  }
+
+  resource wave-shaper-node {
+    curve: func() -> option<list<f32>>;
+    set-curve: func(curve: list<f32>);
+    oversample: func() -> over-sample-type;
+    set-oversample: func(oversample: over-sample-type);
+
+    connect: func(destination: audio-node);
+  }
+
+  resource audio-listener {
+    position-x: func() -> audio-param;
+    position-y: func() -> audio-param;
+    position-z: func() -> audio-param;
+    forward-x: func() -> audio-param;
+    forward-y: func() -> audio-param;
+    forward-z: func() -> audio-param;
+    up-x: func() -> audio-param;
+    up-y: func() -> audio-param;
+    up-z: func() -> audio-param;
+  }
+
+  enum over-sample-type {
+    none,
+    x2,
+    x4
+  }
+
+  enum audio-context-state {
+    suspended,
+    running,
+    closed
+  }
+}
+
+// interface custom-audio-node {
+//   process: func();
+// }
+
+// world audio-node {
+//   export custom-audio-node;
+// }

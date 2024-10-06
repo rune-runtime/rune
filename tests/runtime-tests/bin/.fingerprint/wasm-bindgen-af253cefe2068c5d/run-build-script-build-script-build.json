@@ -1,0 +1,1 @@
+{"rustc":5799405366513964044,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[1681240118795328213,"build_script_build",false,2870669546049644558]],"local":[{"RerunIfChanged":{"output":"wasm32-wasi/debug/build/wasm-bindgen-af253cefe2068c5d/output","paths":["build.rs"]}}],"rustflags":[],"metadata":0,"config":0,"compile_kind":0}

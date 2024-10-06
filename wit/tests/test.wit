@@ -1,0 +1,3 @@
+// interface test {
+//   assert: func(a: bool, b: bool);
+// }

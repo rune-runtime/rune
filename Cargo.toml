@@ -1,0 +1,74 @@
+[package]
+name = "rune"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+doctest = false
+
+[[test]]
+name = "runtime"
+path = "tests/runtime.rs"
+harness = false
+
+[dependencies]
+# wasmtime = { version = "25.0.1", features = ['component-model'] }
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", features = ['component-model'] }
+# wasmtime-wasi = "25.0.1"
+wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime" }
+raw-window-handle = "0.6"
+wit-bindgen-core = "0.32.0"
+wit-bindgen-rust = "0.32.0"
+# wit-bindgen-core = { git = "https://github.com/bytecodealliance/wit-bindgen" }
+# wit-bindgen-rust = { git = "https://github.com/bytecodealliance/wit-bindgen" }
+wit-component = "0.217.0"
+wgpu-hal = "0.21"
+wgpu-types = "0.20"
+anyhow = "1.0.89"
+async-trait = "0.1.71"
+futures = "0.3.28"
+winit = "0.29.10"
+pollster = "0.2.5"
+once_cell = "1.18.0"
+slab = "0.4.9"
+uuid = { version = "1.4.1", features = ["v4"] }
+cpal = "0.15.2"
+gilrs = "0.10.2"
+vfs = "0.10.0"
+termcolor = "1.3.0"
+gdbstub = "0.7.1"
+web-audio-api = "0.45.2"
+libtest-mimic = "0.7.3"
+wasi = "0.13.2"
+
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies.wgpu-core]
+version = "0.20"
+features = ["wgsl", "raw-window-handle", "vulkan"]
+
+[target.'cfg(target_os = "windows")'.dependencies.wgpu-core]
+version = "0.20"
+features = ["wgsl", "raw-window-handle", "dx12"]
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.wgpu-core]
+version = "0.20"
+features = ["wgsl", "raw-window-handle", "metal"]
+
+[target.'cfg(all(not(target_os = "linux"), not(target_os = "android"), not(target_os = "windows"), not(target_os = "macos"), not(target_os = "ios")))'.dependencies.wgpu-core]
+version = "0.20"
+features = ["wgsl", "raw-window-handle", "gles"]
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# wasm-bindgen = "0.2.50"
+# js-sys = "0.3.57"
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+# version = "0.3.57"
+# features = [
+#   'Document',
+#   'Element',
+#   'HtmlElement',
+#   'Node',
+#   'Window',
+#   'Navigator'
+# ]

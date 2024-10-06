@@ -1,0 +1,12 @@
+[package]
+identifier = "runtime-tests"
+version = "0.1.0"
+type = "game"
+
+[runtime]
+version = "0.1.0"
+
+[build]
+input = "./target/wasm32-wasi/debug"
+entrypoint = "runtime_tests.wasm"
+output = "./bin"

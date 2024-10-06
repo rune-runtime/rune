@@ -1,0 +1,139 @@
+package rune:runtime;
+
+/// APIs for accessing user input via gamepad, keyboard, mouse, touch, etc.
+interface input {
+  gamepad: func() -> option<gamepad-device>;
+  keyboard: func() -> option<keyboard-device>;
+  mouse: func() -> option<mouse-device>;
+  touch: func() -> option<touch-device>;
+
+  resource gamepad-device {
+    name: func() -> string;
+    is-pressed: func(btn: gamepad-button) -> bool;
+    value: func(axis: gamepad-axis) -> float32;
+    button-data: func(btn: gamepad-button) -> option<gamepad-button-data>;
+    axis-data: func(axis: gamepad-axis) -> option<gamepad-axis-data>;
+  }
+
+  enum gamepad-button {
+    south,
+    east,
+    north,
+    west,
+    c,
+    z,
+    left-trigger,
+    left-trigger2,
+    right-trigger,
+    right-trigger2,
+    select,
+    start,
+    mode,
+    left-thumb,
+    right-thumb,
+    dpad-up,
+    dpad-down,
+    dpad-left,
+    dpad-right,
+    unknown
+  }
+
+  enum gamepad-axis {
+    left-stick-x,
+    left-stick-y,
+    left-z,
+    right-stick-x,
+    right-stick-y,
+    right-z,
+    dpad-x,
+    dpad-y,
+    unknown
+  }
+
+  record gamepad-button-data {
+    is-pressed: bool,
+    value: float32,
+    is-repeating: bool,
+    counter: u32
+  }
+  
+  record gamepad-axis-data {
+    value: float32,
+    counter: u32
+  }
+
+  resource keyboard-device {
+    is-pressed: func(key: keyboard-key) -> bool;
+    just-pressed: func(key: keyboard-key) -> bool;
+    active-keys: func() -> list<keyboard-key>;
+  }
+
+  variant keyboard-key {
+    character(string),
+    unidentified(u32),
+    dead(option<string>),
+    alt(key-location),
+    caps-lock,
+    control(key-location),
+    super(key-location),
+    fn,
+    fn-lock,
+    num-lock,
+    scroll-lock,
+    shift(key-location),
+    symbol,
+    symbol-lock,
+    enter,
+    tab,
+    space,
+    arrow-down,
+    arrow-left,
+    arrow-right,
+    arrow-up,
+    end,
+    home,
+    page-down,
+    page-up,
+    backspace,
+    delete,
+    insert,
+    cancel,
+    context-menu,
+    escape,
+    props,
+    select,
+    zoom-in,
+    zoom-out,
+    f1,
+    f2,
+    f3,
+    f4,
+    f5,
+    f6,
+    f7,
+    f8,
+    f9,
+    f10,
+    f11,
+    f12,
+  }
+
+  variant key-location {
+    standard,
+    left,
+    right,
+    numpad
+  }
+
+  resource mouse-device {
+    is-pressed: func(btn: mouse-button) -> bool;
+  }
+
+  enum mouse-button {
+    unknown
+  }
+
+  resource touch-device {
+
+  }
+}

@@ -1,0 +1,37 @@
+package rune:runtime;
+
+/// Virtual filesystem APIs for local and cloud based storage
+interface storage {
+  cloud: func() -> option<storage-device>;
+  local: func() -> storage-device;
+
+  resource storage-device {
+    create-dir: func(path: path);
+    list-dir: func(path: path) -> list<path>;
+    exists: func(path: path) -> bool;
+    read: func(path: path) -> option<list<u8>>;
+    // read: func(path: path) -> option<output-stream>;
+    read-string: func(path: path) -> option<string>;
+    write: func(path: path, content: writeable-content);
+    remove: func(path: path) -> option<bool>;
+  }
+
+  variant writeable-content {
+    %stream(string),
+    // %stream(output-stream),
+    %string(string),
+    %bytes(list<u8>)
+  }
+
+  resource path {
+    constructor(storage: borrow<storage-device>, path: string);
+    to-string: func() -> string;
+    is-dir: func() -> bool;
+    is-file: func() -> bool;
+    is-root: func() -> bool;
+    extension: func() -> option<string>;
+    filename: func() -> option<string>;
+    join: func(path: string) -> path;
+    parent: func() -> path;
+  }
+}

@@ -1,0 +1,8 @@
+package rune:runtime;
+
+/// Tools for debugging, like logging
+interface debug {
+  log: func(msg: string);
+  warn: func(msg: string);
+  error: func(msg: string);
+}

@@ -1,0 +1,2 @@
+cargo:rustc-link-lib=wit_bindgen_cabi_realloc0_32_0
+cargo:rustc-link-search=native=/Users/loch/Documents/Projects/wizard/rune/tests/runtime-tests/target/wasm32-wasi/debug/build/wit-bindgen-rt-2f28b6ea3dd075c3/out

@@ -1,0 +1,16 @@
+package rune:tests;
+
+interface guest {
+  register: func() -> list<string>;
+}
+
+world tests {
+  import rune:runtime/debug;
+  import rune:runtime/audio;
+  import rune:runtime/input;
+  import rune:runtime/gpu;
+  import rune:runtime/storage;
+  import rune:runtime/window;
+
+  export guest;
+}

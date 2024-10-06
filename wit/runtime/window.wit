@@ -1,0 +1,7 @@
+package rune:runtime;
+
+/// APIs for accessing information about the window
+interface window {
+  /// Get the current dimensions of the drawable window area
+  dimensions: func() -> tuple<u32, u32>;
+}
