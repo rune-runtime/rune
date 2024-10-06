@@ -3,6 +3,9 @@ use std::collections::HashMap;
 use wgpu_core::id::{BufferId, QuerySetId, TextureId};
 use wgpu_types::{BufferUsages, QueryType, TextureDimension, TextureFormat, TextureUsages};
 
+pub type ComputePass = wgpu_core::command::ComputePass::<crate::Backend>;
+pub type RenderPass = wgpu_core::command::RenderPass::<crate::Backend>;
+
 pub struct Buffer {
     pub usage: BufferUsages,
     pub size: u64

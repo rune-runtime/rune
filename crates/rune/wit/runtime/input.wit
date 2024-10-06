@@ -10,7 +10,7 @@ interface input {
   resource gamepad-device {
     name: func() -> string;
     is-pressed: func(btn: gamepad-button) -> bool;
-    value: func(axis: gamepad-axis) -> float32;
+    value: func(axis: gamepad-axis) -> f32;
     button-data: func(btn: gamepad-button) -> option<gamepad-button-data>;
     axis-data: func(axis: gamepad-axis) -> option<gamepad-axis-data>;
   }
@@ -52,13 +52,13 @@ interface input {
 
   record gamepad-button-data {
     is-pressed: bool,
-    value: float32,
+    value: f32,
     is-repeating: bool,
     counter: u32
   }
   
   record gamepad-axis-data {
-    value: float32,
+    value: f32,
     counter: u32
   }
 

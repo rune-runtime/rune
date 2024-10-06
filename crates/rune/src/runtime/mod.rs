@@ -61,6 +61,7 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
             // Make sure we use the texture resolution limits from the adapter, so we can support images the size of the swapchain.
             required_limits: wgpu_types::Limits::downlevel_webgl2_defaults()
                 .using_resolution(adapter_limits),
+            memory_hints: wgpu_types::MemoryHints::default()
         },
         None,
         None,

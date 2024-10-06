@@ -12,8 +12,6 @@ interface gpu {
   }
 
   resource gpu-query-set {
-    /// Label for the query set.
-    label: func() -> string;
     /// Type of query for this query set.
     %type: func() -> gpu-query-type;
     /// Number of queries for this query set.
@@ -82,7 +80,6 @@ interface gpu {
 
   /// A device is the logical instantiation of an adapter, through which GPU interfaces are created.
   resource gpu-device {
-    label: func() -> string;
     queue: func() -> gpu-queue;
 
     create-buffer: func(descriptor: gpu-buffer-descriptor) -> gpu-buffer;
@@ -123,8 +120,6 @@ interface gpu {
 
   /// GPUQueue
   resource gpu-queue {
-    label: func() -> string;
-
     submit: func(command-buffers: list<gpu-command-buffer>);
     write-buffer: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size-u64, data: buffer-source, data-offset: gpu-size-u64, size: gpu-size-u64);
     write-texture: func(destination: gpu-image-copy-texture, data: buffer-source, data-layout: gpu-image-data-layout, size: gpu-extent-d3);
@@ -146,7 +141,6 @@ interface gpu {
 
   /// GPUBuffer
   resource gpu-buffer {
-    label: func() -> string;
     size: func() -> gpu-size-u64;
     usage: func() -> gpu-buffer-usage;
 
@@ -359,7 +353,7 @@ interface gpu {
 
   /// GPUTextureView
   resource gpu-texture-view {
-    label: func() -> string;
+    
   }
 
   record gpu-texture-view-descriptor {
@@ -383,7 +377,7 @@ interface gpu {
   }
 
   resource gpu-external-texture {
-    label: func() -> string;
+    
   }
 
   record gpu-external-texture-descriptor {
@@ -402,7 +396,7 @@ interface gpu {
 
   /// GPUSampler
   resource gpu-sampler {
-    label: func() -> string;
+    
   }
 
   record gpu-sampler-descriptor {
@@ -413,8 +407,8 @@ interface gpu {
     mag-filter: gpu-filter-mode,
     min-filter: gpu-filter-mode,
     mipmap-filter: gpu-filter-mode,
-    lod-min-clamp: float32,
-    lod-max-clamp: float32,
+    lod-min-clamp: f32,
+    lod-max-clamp: f32,
     compare: option<gpu-compare-function>,
     max-anisotrophy: u16
   }
@@ -445,7 +439,7 @@ interface gpu {
 
   /// GPUBindGroupLayout
   resource gpu-bind-group-layout {
-    label: func() -> string;
+    
   }
 
   record gpu-bind-group-layout-descriptor {
@@ -521,7 +515,6 @@ interface gpu {
   /// GPUBindGroup
 
   resource gpu-bind-group {
-    label: func() -> option<string>;
   }
 
   record gpu-bind-group-descriptor {
@@ -547,7 +540,7 @@ interface gpu {
   /// GPUPipelineLayout
 
   resource gpu-pipeline-layout {
-    label: func() -> string;
+    
   }
 
   record gpu-pipeline-layout-descriptor {
@@ -601,8 +594,8 @@ interface gpu {
 
   variant gpu-pipeline-constant-value {
     %bool(bool),
-    f16(float32),
-    %f32(float32),
+    f16(f32),
+    %f32(f32),
     i32(s32),
     %u32(u32)
   }
@@ -614,8 +607,6 @@ interface gpu {
 
   /// GPUComputePipeline
   resource gpu-compute-pipeline {
-    label: func() -> string;
-    
     get-bind-group-layout: func(index: u32) -> gpu-bind-group-layout;
   }
 
@@ -632,8 +623,6 @@ interface gpu {
 
   /// GPURenderPipeline
   resource gpu-render-pipeline {
-    label: func() -> string;
-    
     get-bind-group-layout: func(index: u32) -> gpu-bind-group-layout;
   }
 
@@ -795,8 +784,8 @@ interface gpu {
     stencil-read-mask: option<gpu-stencil-value>,
     stencil-write-mask: option<gpu-stencil-value>,
     depth-bias: option<gpu-depth-bias>,
-    depth-bias-slope-scale: option<float32>,
-    depth-bias-clamp: option<float32>
+    depth-bias-slope-scale: option<f32>,
+    depth-bias-clamp: option<f32>
   }
 
   record gpu-stencil-face-state {
@@ -870,7 +859,7 @@ interface gpu {
 
   /// GPUCommandBuffer
   resource gpu-command-buffer {
-    label: func() -> string;
+
   }
 
   record gpu-command-buffer-descriptor {
@@ -882,8 +871,6 @@ interface gpu {
 
   // GPUCommandEncoder
   resource gpu-command-encoder {
-    label: func() -> string;
-
     begin-render-pass: func(descriptor: gpu-render-pass-descriptor) -> gpu-render-pass-encoder;
     begin-compute-pass: func(descriptor: option<gpu-compute-pass-descriptor>) -> gpu-compute-pass-encoder;
     copy-buffer-to-buffer: func(source: borrow<gpu-buffer>, source-offset: gpu-size-u64, destination: borrow<gpu-buffer>, destination-offset: gpu-size-u64, size: gpu-size-u64);
@@ -904,8 +891,6 @@ interface gpu {
 
   /// GPUComputePassEncoder
   resource gpu-compute-pass-encoder {
-    label: func() -> string;
-
     set-pipeline: func(pipeline: borrow<gpu-compute-pipeline>);
     dispatch-workgroups: func(workgroup-count-x: gpu-size-u32, workgroup-count-y: option<gpu-size-u32>, workgroup-count-z: option<gpu-size-u32>);
     dispatch-workgroups-indirect: func(indirect-buffer: borrow<gpu-buffer>, indirect-offset: gpu-size-u64);
@@ -932,8 +917,6 @@ interface gpu {
 
   /// GPURenderPassEncoder
   resource gpu-render-pass-encoder {
-    label: func() -> string;
-
     set-pipeline: func(pipeline: borrow<gpu-render-pipeline>);
     set-index-buffer: func(buffer: borrow<gpu-buffer>, index-format: gpu-index-format, offset: gpu-size-u64, size: option<gpu-size-u64>);
     set-vertex-buffer: func(slot: gpu-index-u32, buffer: borrow<gpu-buffer>, offset: gpu-size-u64, size: option<gpu-size-u64>);
@@ -942,7 +925,7 @@ interface gpu {
     draw-indirect: func(indirect-buffer: borrow<gpu-buffer>, indirect-offset: gpu-size-u64);
     draw-indexed-indirect: func(indirect-buffer: borrow<gpu-buffer>, indirect-offset: gpu-size-u64);
 
-    set-viewport: func(x: float32, y: float32, width: float32, height: float32, min-depth: float32, max-depth: float32);
+    set-viewport: func(x: f32, y: f32, width: f32, height: f32, min-depth: f32, max-depth: f32);
     set-scissor-rect: func(x: gpu-integer-coordinate, y: gpu-integer-coordinate, width: gpu-integer-coordinate, height: gpu-integer-coordinate);
     set-blend-constant: func(color: gpu-color);
     set-stencil-reference: func(reference: gpu-stencil-value);
@@ -975,7 +958,7 @@ interface gpu {
     store-op: gpu-store-op
   }
 
-  type gpu-color = list<float64>;
+  type gpu-color = list<f64>;
 
   enum gpu-load-op {
     load,
@@ -989,7 +972,7 @@ interface gpu {
 
   record gpu-render-pass-depth-stencil-attachment {
     view: borrow<gpu-texture-view>,
-    depth-clear-value: float32,
+    depth-clear-value: f32,
     depth-load-op: gpu-load-op,
     depth-store-op: gpu-store-op,
     depth-read-only: bool,
@@ -1009,7 +992,7 @@ interface gpu {
 
   /// GPURenderBundle
   resource gpu-render-bundle {
-    label: func() -> string;
+    
   }
 
   resource gpu-render-bundle-encoder {
