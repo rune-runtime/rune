@@ -4,7 +4,11 @@ A runtime for cross-language, cross-platform game development. A chassis without
 🚧 Rune is not production ready.
 
 ## What is Rune?
-Rune provides a host environment for guest WebAssembly applications (ie. your game.) Guest applications have access to the Rune Runtime API, which includes access to features like GPU, audio, storage, input, networking, UI, window management and more. Think of it like SDL for WebAssembly. Rune _is not_ a web environment - method invocations from your application are executed against "native" APIs. Rune models much of its APIs heavily on the Web platform because of its familiarity and foundational design principles; for example the GPU API is basically WebGPU and the audio API is basically WebAudio.
+Rune provides a host environment for guest WebAssembly applications (ie. your game.)
+
+Guest applications have access to the Rune Runtime API, which includes access to features like GPU, audio, storage, input, networking, UI, window management and more. Think of it like SDL for WebAssembly. Rune _is not_ a web environment - method invocations from your application are executed against "native" APIs.
+
+Rune models much of its APIs heavily on the Web platform because of its familiarity and foundational design principles; for example the GPU API is basically WebGPU and the audio API is basically WebAudio.
 
 ## How does it work
 Guest applications implement the simple Rune Guest protocol, which includes `init`, `update`, `render` methods to be implemented. The protocol is provided as a collection of `.wit` files, which can be compiled to a library in the language of your choice. (We may release official packages for various languges in the future.) Once you've implemented the protocol, you build your application targetting WebAssembly, with WASI support. You can then run your application in the Rune CLI. When you're ready to publish your game, Rune CLI can bundle your application into various platform outputs such as `.app` for Mac, `.msi` for Windows, etc.
