@@ -1,5 +1,8 @@
 name: CD # Continuous Deployment
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
