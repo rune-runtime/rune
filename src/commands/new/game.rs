@@ -32,7 +32,7 @@ pub async fn game(identifier: &String, name: &String, template: &Option<String>)
 pub fn template_files(template_key: &str, project_root: &Path, paths: Vec<Cow<'static, str>>, globals: &Object) -> crate::Result<()> {
     for path in paths {
         let contents = Templates::get(path.as_ref()).unwrap();
-        let relative_path = path.strip_prefix(&template_key).unwrap();
+        let relative_path = path.strip_prefix(&format!("{template_key}/")).unwrap();
         let destination_path = project_root.join(PathBuf::from(relative_path));
         let mut file = fs::OpenOptions::new()
             .create(true)
