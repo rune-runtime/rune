@@ -2,7 +2,6 @@ use crate::cli::NewSubcommand;
 
 use crate::Result;
 
-pub mod common;
 pub mod game;
 
 pub async fn new(new: &NewSubcommand) -> Result<()> {

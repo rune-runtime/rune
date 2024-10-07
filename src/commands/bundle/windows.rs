@@ -15,7 +15,7 @@ pub fn bundle_project(settings: &Settings) -> crate::Result<()> {
         fs::remove_dir_all(&msi_path)?;
     }
 
-    let mut package = new_empty_package(&msi_path)?;
+    let package = new_empty_package(&msi_path)?;
 
     Ok(())
 }

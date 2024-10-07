@@ -247,7 +247,7 @@ fn create_icns_file(
     // }
 
     // Otherwise, read available images and pack them into a new ICNS file.
-    let mut family = icns::IconFamily::new();
+    let family = icns::IconFamily::new();
 
     fn add_icon_to_family(
         icon: image::DynamicImage,

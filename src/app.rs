@@ -50,8 +50,7 @@ impl App {
             Some(CliCommand::Test) => {
                 let input_path = Path::new("../test-game/dist/.rune/input/");
                 let binary = std::fs::read(input_path.join("test-game.wasm")).unwrap();
-                rune::runtime::test(input_path.to_path_buf(), binary);
-
+                rune::runtime::test(input_path.to_path_buf(), binary).await;
             },
             Some(CliCommand::Run { release }) => {
                 crate::commands::build::build(release).await?;

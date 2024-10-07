@@ -76,7 +76,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
                 Action::Resize(w, h) => {
                     tui.resize(Rect::new(0, 0, w, h))?;
                     tui.draw(|f| {
-                        let r = docs.draw(f, f.size());
+                        let r = docs.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
                                 .send(Action::Error(format!(
@@ -89,7 +89,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
                 }
                 Action::Render => {
                     tui.draw(|f| {
-                        let r = docs.draw(f, f.size());
+                        let r = docs.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
                                 .send(Action::Error(format!(

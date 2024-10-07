@@ -40,7 +40,7 @@ impl CurrentItem {
                 format!("{}: {}", type_def.kind.as_str(), type_def.name.clone().unwrap_or_default())
             },
             CurrentItem::Function(func) => {
-                let name = func.item_name().clone();
+                let name = func.item_name();
                 let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
                     format!("{param_name}")
                 }).collect::<Vec<_>>().join(", ");
@@ -126,7 +126,7 @@ fn render_function_list_item<'a>(package: &UnresolvedPackage, func: &Function) -
     let item = CurrentItem::Function(func.clone());
     match func.kind {
         wit_parser::FunctionKind::Freestanding => {
-            let name = func.item_name().clone();
+            let name = func.item_name();
             let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
                 format!("{param_name}")
             }).collect::<Vec<_>>().join(", ");
@@ -141,7 +141,7 @@ fn render_function_list_item<'a>(package: &UnresolvedPackage, func: &Function) -
             )
         },
         wit_parser::FunctionKind::Method(type_id) => {
-            let name = func.item_name().clone();
+            let name = func.item_name();
             let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
                 format!("{param_name}")
             }).collect::<Vec<_>>().join(", ");
@@ -156,7 +156,7 @@ fn render_function_list_item<'a>(package: &UnresolvedPackage, func: &Function) -
             )
         },
         wit_parser::FunctionKind::Static(type_id) => {
-            let name = func.item_name().clone();
+            let name = func.item_name();
             let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
                 format!("{param_name}")
             }).collect::<Vec<_>>().join(", ");
@@ -171,7 +171,7 @@ fn render_function_list_item<'a>(package: &UnresolvedPackage, func: &Function) -
             )
         },
         wit_parser::FunctionKind::Constructor(type_id) => {
-            let name = func.item_name().clone();
+            let name = func.item_name();
             let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
                 format!("{param_name}")
             }).collect::<Vec<_>>().join(", ");
