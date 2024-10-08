@@ -59,10 +59,10 @@ pub enum NewSubcommand {
     // New game
     Game {
         #[clap(long, short = 'i', value_name = "IDENTIFIER")]
-        identifier: String,
+        identifier: Option<String>,
         #[clap(long, short = 'n', value_name = "NAME")]
-        name: String,
-        #[clap(long, short = 't')]
+        name: Option<String>,
+        #[clap(long, short = 't', value_name = "TEMPLATE")]
         template: Option<String>,
     }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "test-game2",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "``` cargo build --target wasm32-wasi wasm-tools component new ./target/wasm32-wasi/debug/test_game2.wasm -o test-game2.wasm --adapt ./wasi_snapshot_preview1.reactor.wasm ```",
+  "main": "index.js",
+  "scripts": {
+    "build:rollup": "rollup -c",
+    "build": "npm run build:rollup"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@bytecodealliance/componentize-js": "^0.7.0",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup": "^4.12.0",
+    "rollup-plugin-polyfill-node": "^0.13.0"
+  },
+  "dependencies": {
+    "rune-threejs": "0.1.0",
+    "three": "^0.162.0"
+  }
+}
