@@ -37,7 +37,10 @@ impl Settings {
     }
 
     pub fn target_dir(&self) -> PathBuf {
-        self.project_dir().join("target").join(&self.target_triplet).join(&self.build)
+        self.project_dir()
+            .join("target")
+            .join(&self.target_triplet)
+            .join(&self.build)
     }
 
     pub fn target_binary_path(&self) -> PathBuf {

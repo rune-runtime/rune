@@ -1,7 +1,9 @@
-use std::{
-    collections::{HashMap, VecDeque}, path::Path, time::{Duration, SystemTime, UNIX_EPOCH}
-};
 use rust_embed::Embed;
+use std::{
+    collections::{HashMap, VecDeque},
+    path::Path,
+    time::{Duration, SystemTime, UNIX_EPOCH}
+};
 
 use color_eyre::{eyre::Result, owo_colors::OwoColorize};
 use crossterm::event::{KeyCode, KeyEvent, MouseEvent};
@@ -9,10 +11,16 @@ use ratatui::{prelude::*, widgets::*};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 use tui_widget_list::{ListBuilder, ListState, ListView};
-use wit_parser::{Function, FunctionKind, Interface, InterfaceId, SourceMap, Type, TypeDef, TypeId, UnresolvedPackage, UnresolvedPackageGroup};
+use wit_parser::{
+    Function, FunctionKind, Interface, InterfaceId, SourceMap, Type, TypeDef, TypeId,
+    UnresolvedPackage, UnresolvedPackageGroup
+};
 
 use crate::{
-    action::Action, components::Component, config::{Config, KeyBindings}, tui::Event
+    action::Action,
+    components::Component,
+    config::{Config, KeyBindings},
+    tui::Event
 };
 
 #[derive(Embed)]
@@ -24,7 +32,7 @@ pub enum CurrentItem {
     Package(UnresolvedPackage),
     Interface(InterfaceId),
     TypeDef(InterfaceId, TypeId),
-    Function(Function)
+    Function(Function),
 }
 
 impl CurrentItem {
@@ -34,16 +42,19 @@ impl CurrentItem {
             CurrentItem::Interface(id) => {
                 let interface = package.interfaces.get(*id).unwrap();
                 interface.name.clone().unwrap_or_default()
-            },
+            }
             CurrentItem::TypeDef(interface_id, type_id) => {
                 let type_def = package.types.get(*type_id).unwrap();
                 format!("{}: {}", type_def.kind.as_str(), type_def.name.clone().unwrap_or_default())
-            },
+            }
             CurrentItem::Function(func) => {
                 let name = func.item_name();
-                let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
-                    format!("{param_name}")
-                }).collect::<Vec<_>>().join(", ");
+                let params = func
+                    .params
+                    .iter()
+                    .skip(1)
+                    .map(|(param_name, param_type)| format!("{param_name}"))
+                    .collect::<Vec<_>>().join(", ");
 
                 let func_kind = match func.kind {
                     wit_parser::FunctionKind::Freestanding => "static",
@@ -53,25 +64,32 @@ impl CurrentItem {
                 };
 
                 format!("{func_kind}: {name}({params})")
-            },
+            }
         }
     }
 }
 
-fn list_items<'a>(package: &UnresolvedPackage, item: &CurrentItem) -> Vec<(Line<'a>, Line<'a>, CurrentItem)> {
+fn list_items<'a>(
+    package: &UnresolvedPackage,
+    item: &CurrentItem
+) -> Vec<(Line<'a>, Line<'a>, CurrentItem)> {
     match item {
-        CurrentItem::Package(package) => package.interfaces
+        CurrentItem::Package(package) => package
+            .interfaces
             .iter()
-            .map(|(interface_id, _)| render_interface_list_item(package, &interface_id)).collect(),
+            .map(|(interface_id, _)| render_interface_list_item(package, &interface_id))
+            .collect(),
         CurrentItem::Interface(interface_id) => {
             let interface = package.interfaces.get(*interface_id).unwrap();
-            let mut functions = interface.functions
+            let mut functions = interface
+                .functions
                 .iter()
                 .filter(|(_, f)| f.kind == FunctionKind::Freestanding)
                 .map(|(_, f)| render_function_list_item(package, f))
                 .collect::<Vec<_>>();
 
-            let types = interface.types
+            let types = interface
+                .types
                 .iter()
                 .map(|(_, type_id)| render_type_list_item(package, interface_id, type_id))
                 .collect::<Vec<_>>();
@@ -79,140 +97,216 @@ fn list_items<'a>(package: &UnresolvedPackage, item: &CurrentItem) -> Vec<(Line<
             functions.extend(types);
 
             functions
-        },
+        }
         CurrentItem::TypeDef(interface_id, type_id) => {
             let interface = package.interfaces.get(*interface_id).unwrap();
-            interface.functions
+            interface
+                .functions
                 .iter()
                 .filter(|(_, f)| match f.kind {
                     FunctionKind::Method(tid) => tid.eq(type_id),
                     FunctionKind::Static(tid) => tid.eq(type_id),
                     FunctionKind::Constructor(tid) => tid.eq(type_id),
-                    _ => false
+                    _ => false,
                 })
                 .map(|(_, f)| render_function_list_item(package, f))
                 .collect::<Vec<_>>()
-        },
+        }
         CurrentItem::Function(_) => todo!(),
     }
 }
 
-fn render_interface_list_item<'a>(package: &UnresolvedPackage, interface_id: &InterfaceId) -> (Line<'a>, Line<'a>, CurrentItem) {
+fn render_interface_list_item<'a>(
+    package: &UnresolvedPackage,
+    interface_id: &InterfaceId
+) -> (Line<'a>, Line<'a>, CurrentItem) {
     let interface = package.interfaces.get(*interface_id).unwrap();
     (
         Line::from(vec![
             Span::styled("namespace ", Style::reset().bold().fg(Color::Indexed(33))),
-            Span::styled(interface.name.clone().unwrap_or_default(), Style::reset().bold().fg(Color::Indexed(75)))
+            Span::styled(
+                interface.name.clone().unwrap_or_default(),
+                Style::reset().bold().fg(Color::Indexed(75))
+            ),
         ]),
-        Line::styled(interface.docs.contents.clone().unwrap_or_default(), Style::reset().dim()),
-        CurrentItem::Interface(*interface_id)
+        Line::styled(
+            interface.docs.contents.clone().unwrap_or_default(),
+            Style::reset().dim()
+        ),
+        CurrentItem::Interface(*interface_id),
     )
 }
 
-fn render_type_list_item<'a>(package: &UnresolvedPackage, interface_id: &InterfaceId, type_id: &TypeId) -> (Line<'a>, Line<'a>, CurrentItem) {
+fn render_type_list_item<'a>(
+    package: &UnresolvedPackage,
+    interface_id: &InterfaceId,
+    type_id: &TypeId
+) -> (Line<'a>, Line<'a>, CurrentItem) {
     let interface = package.interfaces.get(*interface_id).unwrap();
     let type_def = package.types.get(*type_id).unwrap();
     (
         Line::from(vec![
             Span::styled("type ", Style::reset().bold().fg(Color::Indexed(43))),
-            Span::styled(type_def.name.clone().unwrap_or_default(), Style::reset().bold().fg(Color::Indexed(158)))
+            Span::styled(
+                type_def.name.clone().unwrap_or_default(),
+                Style::reset().bold().fg(Color::Indexed(158))
+            ),
         ]),
-        Line::styled(type_def.docs.contents.clone().unwrap_or_default(), Style::reset().dim()),
-        CurrentItem::TypeDef(*interface_id, *type_id)
+        Line::styled(
+            type_def.docs.contents.clone().unwrap_or_default(),
+            Style::reset().dim()
+        ),
+        CurrentItem::TypeDef(*interface_id, *type_id),
     )
 }
 
-fn render_function_list_item<'a>(package: &UnresolvedPackage, func: &Function) -> (Line<'a>, Line<'a>, CurrentItem) {
+fn render_function_list_item<'a>(
+    package: &UnresolvedPackage,
+    func: &Function
+) -> (Line<'a>, Line<'a>, CurrentItem) {
     let item = CurrentItem::Function(func.clone());
     match func.kind {
         wit_parser::FunctionKind::Freestanding => {
             let name = func.item_name();
-            let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
-                format!("{param_name}")
-            }).collect::<Vec<_>>().join(", ");
+            let params = func
+                .params
+                .iter()
+                .skip(1)
+                .map(|(param_name, param_type)| format!("{param_name}"))
+                .collect::<Vec<_>>().join(", ");
 
             (
                 Line::from(vec![
                     Span::styled("static fn ", Style::reset().bold().fg(Color::Indexed(33))),
-                    Span::styled(format!("{name}({params})"), Style::reset().bold().fg(Color::Indexed(229)))
+                    Span::styled(
+                        format!("{name}({params})"),
+                        Style::reset().bold().fg(Color::Indexed(229))
+                    ),
                 ]),
-                Line::styled(func.docs.contents.clone().unwrap_or_default(), Style::reset().dim()),
-                item
+                Line::styled(
+                    func.docs.contents.clone().unwrap_or_default(),
+                    Style::reset().dim()
+                ),
+                item,
             )
-        },
+        }
         wit_parser::FunctionKind::Method(type_id) => {
             let name = func.item_name();
-            let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
-                format!("{param_name}")
-            }).collect::<Vec<_>>().join(", ");
+            let params = func
+                .params
+                .iter()
+                .skip(1)
+                .map(|(param_name, param_type)| format!("{param_name}"))
+                .collect::<Vec<_>>().join(", ");
 
             (
                 Line::from(vec![
                     Span::styled("fn ", Style::reset().bold().fg(Color::Indexed(33))),
-                    Span::styled(format!("{name}({params})"), Style::reset().bold().fg(Color::Indexed(229)))
+                    Span::styled(
+                        format!("{name}({params})"),
+                        Style::reset().bold().fg(Color::Indexed(229))
+                    ),
                 ]),
-                Line::styled(func.docs.contents.clone().unwrap_or_default(), Style::reset().dim()),
-                item
+                Line::styled(
+                    func.docs.contents.clone().unwrap_or_default(),
+                    Style::reset().dim(),
+                ),
+                item,
             )
         },
         wit_parser::FunctionKind::Static(type_id) => {
             let name = func.item_name();
-            let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
-                format!("{param_name}")
-            }).collect::<Vec<_>>().join(", ");
+            let params = func
+                .params
+                .iter()
+                .skip(1)
+                .map(|(param_name, param_type)| format!("{param_name}"))
+                .collect::<Vec<_>>().join(", ");
 
             (
                 Line::from(vec![
                     Span::styled("static fn ", Style::reset().bold().fg(Color::Indexed(33))),
-                    Span::styled(format!("{name}({params})"), Style::reset().bold().fg(Color::Indexed(229)))
+                    Span::styled(
+                        format!("{name}({params})"),
+                        Style::reset().bold().fg(Color::Indexed(229))
+                    ),
                 ]),
-                Line::styled(func.docs.contents.clone().unwrap_or_default(), Style::reset().dim()),
-                item
+                Line::styled(
+                    func.docs.contents.clone().unwrap_or_default(),
+                    Style::reset().dim()
+                ),
+                item,
             )
         },
         wit_parser::FunctionKind::Constructor(type_id) => {
             let name = func.item_name();
-            let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
-                format!("{param_name}")
-            }).collect::<Vec<_>>().join(", ");
+            let params = func
+                .params
+                .iter()
+                .skip(1)
+                .map(|(param_name, param_type)| format!("{param_name}"))
+                .collect::<Vec<_>>().join(", ");
 
             (
                 Line::from(vec![
                     Span::styled("constructor ", Style::reset().bold().fg(Color::Indexed(33))),
-                    Span::styled(format!("{name}({params})"), Style::reset().bold().fg(Color::Indexed(229)))
+                    Span::styled(
+                        format!("{name}({params})"),
+                        Style::reset().bold().fg(Color::Indexed(229))
+                    ),
                 ]),
-                Line::styled(func.docs.contents.clone().unwrap_or_default(), Style::reset().dim()),
-                item
+                Line::styled(
+                    func.docs.contents.clone().unwrap_or_default(),
+                    Style::reset().dim(),
+                ),
+                item,
             )
         },
     }
 }
 
-fn render_function_page(func: &Function, f: &mut Frame, area: Rect, function_params_list_state: &mut ListState) {
-    let layout = Layout::vertical(vec![Constraint::Length(3), Constraint::Min(0), Constraint::Fill(1)]);
+fn render_function_page(
+    func: &Function,
+    f: &mut Frame,
+    area: Rect,
+    function_params_list_state: &mut ListState,
+) {
+    let layout = Layout::vertical(vec![
+        Constraint::Length(3),
+        Constraint::Min(0),
+        Constraint::Fill(1)
+    ]);
 
     let [name_area, description_area, content_area] = layout.areas(area);
 
     let name = func.item_name();
-    let params = func.params.iter().skip(1).map(|(param_name, param_type)| {
-        format!("{param_name}")
-    }).collect::<Vec<_>>().join(", ");
+    let params = func
+        .params
+        .iter()
+        .skip(1)
+        .map(|(param_name, param_type)| format!("{param_name}"))
+        .collect::<Vec<_>>().join(", ");
 
     let name = Paragraph::new(match func.kind {
         wit_parser::FunctionKind::Freestanding | wit_parser::FunctionKind::Static(_) => {
-            vec![
-                Line::from(vec![
-                    Span::styled(" static ", Style::reset().bold().fg(Color::White).bg(Color::Indexed(33))),
-                    Span::styled(format!(" {} ", format!("{name}({params})")), Style::reset().fg(Color::Black).bg(Color::Indexed(229)))
-                ])
-            ]
+            vec![Line::from(vec![
+                Span::styled(
+                    " static ",
+                    Style::reset().bold().fg(Color::White).bg(Color::Indexed(33))
+                ),
+                Span::styled(
+                    format!(" {} ", format!("{name}({params})")),
+                    Style::reset().fg(Color::Black).bg(Color::Indexed(229))
+                ),
+            ])]
         },
         _ => {
-            vec![
-                Line::from(vec![
-                    Span::styled(format!(" {} ", format!("{name}({params})")), Style::reset().fg(Color::Indexed(229)))
-                ])
-            ]
+            vec![Line::from(vec![
+                Span::styled(
+                    format!(" {} ", format!("{name}({params})")),
+                    Style::reset().fg(Color::Indexed(229))
+                ),
+            ])]
         }
 
     })

@@ -138,7 +138,10 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
         "windows" => "rustup-init.exe",
         _ => "rustup-init",
     };
-    let url = format!("https://static.rust-lang.org/rustup/dist/{}/{}", CURRENT_PLATFORM, filename);
+    let url = format!(
+        "https://static.rust-lang.org/rustup/dist/{}/{}",
+        CURRENT_PLATFORM, filename
+    );
     let resp = reqwest::get(url).await?;
     let content = resp.bytes().await?;
 
@@ -194,7 +197,7 @@ async fn install_cross(settings: &Settings) -> Result<()> {
 
     println!("Output: {}", String::from_utf8_lossy(&output.stdout));
     println!("Error: {}", String::from_utf8_lossy(&output.stderr));
-    
+
     Ok(())
 }
 
@@ -222,11 +225,14 @@ async fn build_target(settings: &Settings) -> Result<()> {
 
     println!("{}", String::from_utf8_lossy(&output.stdout));
     println!("{}", String::from_utf8_lossy(&output.stderr));
-    
+
     Ok(())
 }
 
 async fn copy_input_to_output(settings: &Settings) -> Result<()> {
-    crate::fs::copy_dir_all(&settings.build_input_dir, settings.build_output_dir.join(".rune/input"))?;
+    crate::fs::copy_dir_all(
+        &settings.build_input_dir,
+        settings.build_output_dir.join(".rune/input")
+    )?;
     Ok(())
 }
