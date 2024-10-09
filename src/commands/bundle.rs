@@ -1,17 +1,27 @@
 pub mod macos;
 pub mod windows;
 
-use std::{env, fs::{self, File, OpenOptions}, io::{self, BufWriter, Write}, os::unix::fs::OpenOptionsExt, path::PathBuf, process::{Command, Stdio}};
+use std::{
+    env,
+    fs::{self, File, OpenOptions},
+    io::{self, BufWriter, Write},
+    os::unix::fs::OpenOptionsExt,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 use current_platform::CURRENT_PLATFORM;
 use semver::Version;
 use toml::Table;
 
-use crate::Result;
 use crate::settings::Settings;
+use crate::Result;
 
 pub async fn bundle(target: &String, release: &bool) -> Result<()> {
-    let config = std::fs::read_to_string("rune.toml").unwrap().parse::<Table>().unwrap();
+    let config = std::fs::read_to_string("rune.toml")
+        .unwrap()
+        .parse::<Table>()
+        .unwrap();
 
     let current_dir = env::current_dir()?;
     let rune_dir = current_dir.join(".rune");
@@ -25,8 +35,9 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
         "linux" => "x86_64-unknown-linux-musl",
         "macos" => "aarch64-apple-darwin",
         "windows" => "x86_64-pc-windows-msvc",
-        _ => panic!("no --target provided")
-    }.to_owned();
+        _ => panic!("no --target provided"),
+    }
+    .to_owned();
 
     let settings = Settings {
         current_dir: current_dir.clone(),
@@ -38,11 +49,15 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
         target,
         target_triplet,
         runtime_version: Version::parse(config["runtime"]["version"].as_str().unwrap()).unwrap(),
-        build_input_dir: current_dir.clone().join(config["build"]["input"].as_str().unwrap()),
-        build_output_dir: current_dir.clone().join(config["build"]["output"].as_str().unwrap()),
+        build_input_dir: current_dir
+            .clone()
+            .join(config["build"]["input"].as_str().unwrap()),
+        build_output_dir: current_dir
+            .clone()
+            .join(config["build"]["output"].as_str().unwrap()),
         build_entrypoint: PathBuf::from(config["build"]["entrypoint"].as_str().unwrap()),
         bundle_name: config["bundle"]["name"].as_str().unwrap().to_owned(),
-        bundle_identifier: config["bundle"]["identifier"].as_str().unwrap().to_owned()
+        bundle_identifier: config["bundle"]["identifier"].as_str().unwrap().to_owned(),
     };
 
     println!("Building for target {}", settings.target_triplet);
@@ -50,7 +65,7 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
     // TODO: Create a rust project that imports the wasm binary and runs it in the rune runtime
     // println!("Creating project...");
     init_rust_project(&settings).await?;
-    
+
     // println!("Installing Rust...");
     install_rustup(&settings).await?;
 
@@ -67,9 +82,9 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
     // ie. https://github.com/burtonageo/cargo-bundle/blob/master/src/bundle/ios_bundle.rs#L22
 
     match settings.target.as_str() {
-        "android" => {},
-        "ios" => {},
-        "linux" => {},
+        "android" => {}
+        "ios" => {}
+        "linux" => {}
         "macos" => macos::bundle_project(&settings)?,
         "windows" => windows::bundle_project(&settings)?,
         _ => {}
@@ -77,7 +92,6 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
 
     Ok(())
 }
-
 
 async fn init_rust_project(settings: &Settings) -> Result<()> {
     let metadata_id = &settings.metadata_id;
@@ -92,7 +106,9 @@ async fn init_rust_project(settings: &Settings) -> Result<()> {
 
     let cargotoml_path = project_dir.join("Cargo.toml");
     let mut cargo_toml = File::create(&cargotoml_path)?;
-    cargo_toml.write_all(format!(r#"
+    cargo_toml.write_all(
+        format!(
+            r#"
     [package]
     name = "{}"
     version = "0.1.0"
@@ -105,7 +121,11 @@ async fn init_rust_project(settings: &Settings) -> Result<()> {
     [[bin]]
     name = "{}"
     path = "src/main.rs"
-    "#, metadata_id, metadata_id).as_bytes())?;
+    "#,
+            metadata_id, metadata_id
+        )
+        .as_bytes(),
+    )?;
 
     fs::create_dir_all(&project_dir.join("src"))?;
 
@@ -123,7 +143,7 @@ async fn init_rust_project(settings: &Settings) -> Result<()> {
         runtime::run(input_path, binary);
     }}
     "#).as_bytes())?;
-    
+
     Ok(())
 }
 
@@ -232,7 +252,7 @@ async fn build_target(settings: &Settings) -> Result<()> {
 async fn copy_input_to_output(settings: &Settings) -> Result<()> {
     crate::fs::copy_dir_all(
         &settings.build_input_dir,
-        settings.build_output_dir.join(".rune/input")
+        settings.build_output_dir.join(".rune/input"),
     )?;
     Ok(())
 }

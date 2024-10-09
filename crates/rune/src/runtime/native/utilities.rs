@@ -1,21 +1,37 @@
 use std::{borrow::Cow, num::NonZeroU64};
 
 use wasmtime::component::ResourceTable;
-use wgpu_core::{binding_model::{BindGroupEntry, BindingResource, BufferBinding}, command::{LoadOp, StoreOp}, device::HostMap, resource::BufferMapOperation};
-use wgpu_types::{AddressMode, AstcBlock, AstcChannel, BlendComponent, BlendFactor, BlendOperation, BlendState, BufferUsages, Color, ColorWrites, CompareFunction, Extent3d, FilterMode, IndexFormat, QueryType, ShaderStages, StencilFaceState, StencilOperation, TextureAspect, TextureDimension, TextureFormat, TextureUsages};
+use wgpu_core::{
+    binding_model::{BindGroupEntry, BindingResource, BufferBinding},
+    command::{LoadOp, StoreOp},
+    device::HostMap,
+    resource::BufferMapOperation,
+};
+use wgpu_types::{
+    AddressMode, AstcBlock, AstcChannel, BlendComponent, BlendFactor, BlendOperation, BlendState,
+    BufferUsages, Color, ColorWrites, CompareFunction, Extent3d, FilterMode, IndexFormat,
+    QueryType, ShaderStages, StencilFaceState, StencilOperation, TextureAspect, TextureDimension,
+    TextureFormat, TextureUsages,
+};
 
-use crate::gpu::{GpuAddressMode, GpuBindGroupEntry, GpuBlendComponent, GpuBlendFactor, GpuBlendOperation, GpuBlendState, GpuBufferUsage, GpuColorWrite, GpuCompareFunction, GpuExtentD3, GpuFilterMode, GpuIndexFormat, GpuLoadOp, GpuMapMode, GpuQueryType, GpuShaderStage, GpuStencilFaceState, GpuStencilOperation, GpuStoreOp, GpuTextureAspect, GpuTextureDimension, GpuTextureFormat, GpuTextureUsage};
+use crate::gpu::{
+    GpuAddressMode, GpuBindGroupEntry, GpuBlendComponent, GpuBlendFactor, GpuBlendOperation,
+    GpuBlendState, GpuBufferUsage, GpuColorWrite, GpuCompareFunction, GpuExtentD3, GpuFilterMode,
+    GpuIndexFormat, GpuLoadOp, GpuMapMode, GpuQueryType, GpuShaderStage, GpuStencilFaceState,
+    GpuStencilOperation, GpuStoreOp, GpuTextureAspect, GpuTextureDimension, GpuTextureFormat,
+    GpuTextureUsage,
+};
 
 // use crate::renderer::{GpuCompareFunction, GpuTextureFormat, GpuStencilOperation, GpuStencilFaceState, GpuColorWrite, GpuBlendState, GpuBlendComponent, GpuBlendFactor, GpuBlendOperation};
 
-pub fn vec_to_color(vec: &Vec::<f64>) -> Color {
+pub fn vec_to_color(vec: &Vec<f64>) -> Color {
     assert_eq!(vec.len(), 4);
 
     Color {
         r: vec[0],
         g: vec[1],
         b: vec[2],
-        a: vec[3]
+        a: vec[3],
     }
 }
 
@@ -24,7 +40,7 @@ impl Into<AddressMode> for GpuAddressMode {
         match self {
             GpuAddressMode::ClampToEdge => AddressMode::ClampToEdge,
             GpuAddressMode::MirrorRepeat => AddressMode::MirrorRepeat,
-            GpuAddressMode::Repeat => AddressMode::Repeat
+            GpuAddressMode::Repeat => AddressMode::Repeat,
         }
     }
 }
@@ -34,7 +50,7 @@ impl Into<Extent3d> for GpuExtentD3 {
         Extent3d {
             width: self.width,
             height: self.height,
-            depth_or_array_layers: self.depth_or_array_layers
+            depth_or_array_layers: self.depth_or_array_layers,
         }
     }
 }
@@ -58,7 +74,7 @@ impl Into<FilterMode> for GpuFilterMode {
     fn into(self) -> FilterMode {
         match self {
             GpuFilterMode::Linear => FilterMode::Linear,
-            GpuFilterMode::Nearest => FilterMode::Nearest
+            GpuFilterMode::Nearest => FilterMode::Nearest,
         }
     }
 }
@@ -67,7 +83,7 @@ impl Into<IndexFormat> for GpuIndexFormat {
     fn into(self) -> IndexFormat {
         match self {
             GpuIndexFormat::Uint16 => IndexFormat::Uint16,
-            GpuIndexFormat::Uint32 => IndexFormat::Uint32
+            GpuIndexFormat::Uint32 => IndexFormat::Uint32,
         }
     }
 }
@@ -84,7 +100,7 @@ impl Into<ShaderStages> for GpuShaderStage {
         if self.contains(GpuShaderStage::VERTEX) {
             ss |= ShaderStages::VERTEX;
         }
-        
+
         ss
     }
 }
@@ -171,115 +187,115 @@ impl Into<TextureFormat> for GpuTextureFormat {
             GpuTextureFormat::Eacrg11snorm => TextureFormat::EacRg11Snorm,
             GpuTextureFormat::Astc4x4unorm => TextureFormat::Astc {
                 block: AstcBlock::B4x4,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc4x4unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B4x4,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc5x4unorm => TextureFormat::Astc {
                 block: AstcBlock::B5x4,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc5x4unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B5x4,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc5x5unorm => TextureFormat::Astc {
                 block: AstcBlock::B5x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc5x5unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B5x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc6x5unorm => TextureFormat::Astc {
                 block: AstcBlock::B6x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc6x5unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B6x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc6x6unorm => TextureFormat::Astc {
                 block: AstcBlock::B6x6,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc6x6unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B6x6,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc8x5unorm => TextureFormat::Astc {
                 block: AstcBlock::B8x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc8x5unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B8x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc8x6unorm => TextureFormat::Astc {
                 block: AstcBlock::B8x6,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc8x6unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B8x6,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc8x8unorm => TextureFormat::Astc {
                 block: AstcBlock::B8x8,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc8x8unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B8x8,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc10x5unorm => TextureFormat::Astc {
                 block: AstcBlock::B10x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc10x5unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B10x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc10x6unorm => TextureFormat::Astc {
                 block: AstcBlock::B10x6,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc10x6unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B10x6,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc10x8unorm => TextureFormat::Astc {
                 block: AstcBlock::B10x8,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc10x8unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B10x8,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc10x10unorm => TextureFormat::Astc {
                 block: AstcBlock::B10x10,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc10x10unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B10x10,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc12x10unorm => TextureFormat::Astc {
                 block: AstcBlock::B12x10,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc12x10unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B12x10,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
             GpuTextureFormat::Astc12x12unorm => TextureFormat::Astc {
                 block: AstcBlock::B12x12,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             },
             GpuTextureFormat::Astc12x12unormsrgb => TextureFormat::Astc {
                 block: AstcBlock::B12x12,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             },
         }
     }
@@ -356,117 +372,117 @@ impl Into<GpuTextureFormat> for TextureFormat {
             TextureFormat::EacRg11Snorm => GpuTextureFormat::Eacrg11snorm,
             TextureFormat::Astc {
                 block: AstcBlock::B4x4,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc4x4unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B4x4,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc4x4unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B5x4,
-                channel: AstcChannel::Unorm
-            } => GpuTextureFormat::Astc5x4unorm, 
+                channel: AstcChannel::Unorm,
+            } => GpuTextureFormat::Astc5x4unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B5x4,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc5x4unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B5x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc5x5unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B5x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc5x5unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B6x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc6x5unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B6x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc6x5unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B6x6,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc6x6unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B6x6,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc6x6unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B8x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc8x5unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B8x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc8x5unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B8x6,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc8x6unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B8x6,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc8x6unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B8x8,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc8x8unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B8x8,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc8x8unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B10x5,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc10x5unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B10x5,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc10x5unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B10x6,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc10x6unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B10x6,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc10x6unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B10x8,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc10x8unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B10x8,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc10x8unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B10x10,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc10x10unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B10x10,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc10x10unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B12x10,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc12x10unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B12x10,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc12x10unormsrgb,
             TextureFormat::Astc {
                 block: AstcBlock::B12x12,
-                channel: AstcChannel::Unorm
+                channel: AstcChannel::Unorm,
             } => GpuTextureFormat::Astc12x12unorm,
             TextureFormat::Astc {
                 block: AstcBlock::B12x12,
-                channel: AstcChannel::UnormSrgb
+                channel: AstcChannel::UnormSrgb,
             } => GpuTextureFormat::Astc12x12unormsrgb,
-            _ => panic!("Texture format not supported")
+            _ => panic!("Texture format not supported"),
         }
     }
 }
@@ -476,7 +492,7 @@ impl Into<TextureDimension> for GpuTextureDimension {
         match self {
             GpuTextureDimension::D1 => TextureDimension::D1,
             GpuTextureDimension::D2 => TextureDimension::D2,
-            GpuTextureDimension::D3 => TextureDimension::D3
+            GpuTextureDimension::D3 => TextureDimension::D3,
         }
     }
 }
@@ -486,7 +502,7 @@ impl Into<GpuTextureDimension> for TextureDimension {
         match self {
             TextureDimension::D1 => GpuTextureDimension::D1,
             TextureDimension::D2 => GpuTextureDimension::D2,
-            TextureDimension::D3 => GpuTextureDimension::D3
+            TextureDimension::D3 => GpuTextureDimension::D3,
         }
     }
 }
@@ -501,7 +517,7 @@ impl Into<StencilOperation> for GpuStencilOperation {
             GpuStencilOperation::IncrementClamp => StencilOperation::IncrementClamp,
             GpuStencilOperation::DecrementClamp => StencilOperation::DecrementClamp,
             GpuStencilOperation::IncrementWrap => StencilOperation::IncrementWrap,
-            GpuStencilOperation::DecrementWrap => StencilOperation::DecrementWrap
+            GpuStencilOperation::DecrementWrap => StencilOperation::DecrementWrap,
         }
     }
 }
@@ -510,7 +526,7 @@ impl Into<LoadOp> for GpuLoadOp {
     fn into(self) -> LoadOp {
         match self {
             GpuLoadOp::Clear => LoadOp::Clear,
-            GpuLoadOp::Load => LoadOp::Load
+            GpuLoadOp::Load => LoadOp::Load,
         }
     }
 }
@@ -519,7 +535,7 @@ impl Into<GpuLoadOp> for LoadOp {
     fn into(self) -> GpuLoadOp {
         match self {
             LoadOp::Clear => GpuLoadOp::Clear,
-            LoadOp::Load => GpuLoadOp::Load
+            LoadOp::Load => GpuLoadOp::Load,
         }
     }
 }
@@ -528,7 +544,7 @@ impl Into<StoreOp> for GpuStoreOp {
     fn into(self) -> StoreOp {
         match self {
             GpuStoreOp::Discard => StoreOp::Discard,
-            GpuStoreOp::Store => StoreOp::Store
+            GpuStoreOp::Store => StoreOp::Store,
         }
     }
 }
@@ -537,7 +553,7 @@ impl Into<GpuStoreOp> for StoreOp {
     fn into(self) -> GpuStoreOp {
         match self {
             StoreOp::Discard => GpuStoreOp::Discard,
-            StoreOp::Store => GpuStoreOp::Store
+            StoreOp::Store => GpuStoreOp::Store,
         }
     }
 }
@@ -547,19 +563,19 @@ impl Into<StencilFaceState> for GpuStencilFaceState {
         StencilFaceState {
             compare: match self.compare {
                 None => CompareFunction::Always,
-                Some(compare) => compare.into()
+                Some(compare) => compare.into(),
             },
             fail_op: match self.fail_op {
                 None => StencilOperation::default(),
-                Some(fail_op) => fail_op.into()
+                Some(fail_op) => fail_op.into(),
             },
             depth_fail_op: match self.depth_fail_op {
                 None => StencilOperation::default(),
-                Some(depth_fail_op) => depth_fail_op.into()
+                Some(depth_fail_op) => depth_fail_op.into(),
             },
             pass_op: match self.pass_op {
                 None => StencilOperation::default(),
-                Some(pass_op) => pass_op.into()
+                Some(pass_op) => pass_op.into(),
             },
         }
     }
@@ -579,15 +595,15 @@ impl Into<BlendComponent> for GpuBlendComponent {
         BlendComponent {
             src_factor: match self.src_factor {
                 None => BlendFactor::One,
-                Some(src_factor) => src_factor.into()
+                Some(src_factor) => src_factor.into(),
             },
             dst_factor: match self.dst_factor {
                 None => BlendFactor::Zero,
-                Some(src_factor) => src_factor.into()
+                Some(src_factor) => src_factor.into(),
             },
             operation: match self.operation {
                 None => BlendOperation::Add,
-                Some(operation) => operation.into()
+                Some(operation) => operation.into(),
             },
         }
     }
@@ -640,15 +656,14 @@ impl Into<ColorWrites> for GpuColorWrite {
         if self.contains(GpuColorWrite::ALPHA) {
             cw |= ColorWrites::ALPHA;
         }
-        
+
         if self.contains(GpuColorWrite::ALL) {
             cw = ColorWrites::all();
         }
-        
+
         cw
     }
 }
-
 
 impl Into<BufferUsages> for GpuBufferUsage {
     fn into(self) -> BufferUsages {
@@ -684,11 +699,10 @@ impl Into<BufferUsages> for GpuBufferUsage {
         if self.contains(GpuBufferUsage::COPY_DST) {
             cw |= BufferUsages::COPY_DST;
         }
-        
+
         cw
     }
 }
-
 
 impl Into<GpuBufferUsage> for BufferUsages {
     fn into(self) -> GpuBufferUsage {
@@ -724,7 +738,7 @@ impl Into<GpuBufferUsage> for BufferUsages {
         if self.contains(BufferUsages::COPY_DST) {
             cw |= GpuBufferUsage::COPY_DST;
         }
-        
+
         cw
     }
 }
@@ -747,11 +761,10 @@ impl Into<TextureUsages> for GpuTextureUsage {
         if self.contains(GpuTextureUsage::RENDER_ATTACHMENT) {
             cw |= TextureUsages::RENDER_ATTACHMENT;
         }
-        
+
         cw
     }
 }
-
 
 impl Into<GpuTextureUsage> for TextureUsages {
     fn into(self) -> GpuTextureUsage {
@@ -771,7 +784,7 @@ impl Into<GpuTextureUsage> for TextureUsages {
         if self.contains(TextureUsages::RENDER_ATTACHMENT) {
             cw |= GpuTextureUsage::RENDER_ATTACHMENT;
         }
-        
+
         cw
     }
 }
@@ -780,7 +793,7 @@ impl Into<QueryType> for GpuQueryType {
     fn into(self) -> QueryType {
         match self {
             GpuQueryType::Occlusion => QueryType::Occlusion,
-            GpuQueryType::Timestamp => QueryType::Timestamp
+            GpuQueryType::Timestamp => QueryType::Timestamp,
         }
     }
 }
@@ -790,14 +803,13 @@ impl Into<GpuQueryType> for QueryType {
         match self {
             QueryType::Occlusion => GpuQueryType::Occlusion,
             QueryType::Timestamp => GpuQueryType::Timestamp,
-            _ => panic!("Query type not supported")
+            _ => panic!("Query type not supported"),
         }
     }
 }
 
 impl Into<BufferMapOperation> for GpuMapMode {
     fn into(self) -> BufferMapOperation {
-        
         let host = {
             if self.contains(GpuMapMode::READ) {
                 HostMap::Read
@@ -805,47 +817,94 @@ impl Into<BufferMapOperation> for GpuMapMode {
                 HostMap::Write
             }
         };
-        
+
         BufferMapOperation {
             host,
-            callback: None
+            callback: None,
         }
     }
 }
 
-pub fn convert_bind_group_entry(resource_table: &ResourceTable, entry: GpuBindGroupEntry) -> BindGroupEntry {
+pub fn convert_bind_group_entry(
+    resource_table: &ResourceTable,
+    entry: GpuBindGroupEntry,
+) -> BindGroupEntry {
     BindGroupEntry {
         binding: entry.binding,
         resource: match entry.resource {
-            crate::gpu::GpuBindingResource::Buffer(buffer_binding) => BindingResource::Buffer(BufferBinding {
-                buffer_id: resource_table.get(&buffer_binding.buffer).unwrap().to_owned(),
-                offset: buffer_binding.offset,
-                size: buffer_binding.size.map(|s| NonZeroU64::new(s).unwrap()),
-            }),
-            crate::gpu::GpuBindingResource::BufferArray(buffers) => BindingResource::BufferArray(Cow::Owned(buffers.iter().map(|b| BufferBinding {
-                buffer_id: resource_table.get(&b.buffer).unwrap().to_owned(),
-                offset: b.offset,
-                size: b.size.map(|s| NonZeroU64::new(s).unwrap()),
-            }).collect())),
-            crate::gpu::GpuBindingResource::Sampler(sampler) => BindingResource::Sampler(resource_table.get(&sampler).unwrap().to_owned()),
-            crate::gpu::GpuBindingResource::SamplerArray(samplers) => BindingResource::SamplerArray(Cow::Owned(samplers.iter().map(|s| resource_table.get(&s).unwrap().to_owned()).collect())),
-            crate::gpu::GpuBindingResource::TextureView(texture_view) => BindingResource::TextureView(resource_table.get(&texture_view).unwrap().to_owned()),
-            crate::gpu::GpuBindingResource::TextureViewArray(texture_views) => BindingResource::TextureViewArray(Cow::Owned(texture_views.iter().map(|v| resource_table.get(&v).unwrap().to_owned()).collect())),
-        }
+            crate::gpu::GpuBindingResource::Buffer(buffer_binding) => {
+                BindingResource::Buffer(BufferBinding {
+                    buffer_id: resource_table
+                        .get(&buffer_binding.buffer)
+                        .unwrap()
+                        .to_owned(),
+                    offset: buffer_binding.offset,
+                    size: buffer_binding.size.map(|s| NonZeroU64::new(s).unwrap()),
+                })
+            }
+            crate::gpu::GpuBindingResource::BufferArray(buffers) => {
+                BindingResource::BufferArray(Cow::Owned(
+                    buffers
+                        .iter()
+                        .map(|b| BufferBinding {
+                            buffer_id: resource_table.get(&b.buffer).unwrap().to_owned(),
+                            offset: b.offset,
+                            size: b.size.map(|s| NonZeroU64::new(s).unwrap()),
+                        })
+                        .collect(),
+                ))
+            }
+            crate::gpu::GpuBindingResource::Sampler(sampler) => {
+                BindingResource::Sampler(resource_table.get(&sampler).unwrap().to_owned())
+            }
+            crate::gpu::GpuBindingResource::SamplerArray(samplers) => {
+                BindingResource::SamplerArray(Cow::Owned(
+                    samplers
+                        .iter()
+                        .map(|s| resource_table.get(&s).unwrap().to_owned())
+                        .collect(),
+                ))
+            }
+            crate::gpu::GpuBindingResource::TextureView(texture_view) => {
+                BindingResource::TextureView(resource_table.get(&texture_view).unwrap().to_owned())
+            }
+            crate::gpu::GpuBindingResource::TextureViewArray(texture_views) => {
+                BindingResource::TextureViewArray(Cow::Owned(
+                    texture_views
+                        .iter()
+                        .map(|v| resource_table.get(&v).unwrap().to_owned())
+                        .collect(),
+                ))
+            }
+        },
     }
 }
 
 impl Into<crate::audio::BiquadFilterType> for web_audio_api::node::BiquadFilterType {
     fn into(self) -> crate::audio::BiquadFilterType {
         match self {
-            web_audio_api::node::BiquadFilterType::Allpass => crate::audio::BiquadFilterType::Allpass,
-            web_audio_api::node::BiquadFilterType::Lowpass => crate::audio::BiquadFilterType::Lowpass,
-            web_audio_api::node::BiquadFilterType::Highpass => crate::audio::BiquadFilterType::Highpass,
-            web_audio_api::node::BiquadFilterType::Bandpass => crate::audio::BiquadFilterType::Bandpass,
+            web_audio_api::node::BiquadFilterType::Allpass => {
+                crate::audio::BiquadFilterType::Allpass
+            }
+            web_audio_api::node::BiquadFilterType::Lowpass => {
+                crate::audio::BiquadFilterType::Lowpass
+            }
+            web_audio_api::node::BiquadFilterType::Highpass => {
+                crate::audio::BiquadFilterType::Highpass
+            }
+            web_audio_api::node::BiquadFilterType::Bandpass => {
+                crate::audio::BiquadFilterType::Bandpass
+            }
             web_audio_api::node::BiquadFilterType::Notch => crate::audio::BiquadFilterType::Notch,
-            web_audio_api::node::BiquadFilterType::Peaking => crate::audio::BiquadFilterType::Peaking,
-            web_audio_api::node::BiquadFilterType::Lowshelf => crate::audio::BiquadFilterType::Lowshelf,
-            web_audio_api::node::BiquadFilterType::Highshelf => crate::audio::BiquadFilterType::Highshelf,
+            web_audio_api::node::BiquadFilterType::Peaking => {
+                crate::audio::BiquadFilterType::Peaking
+            }
+            web_audio_api::node::BiquadFilterType::Lowshelf => {
+                crate::audio::BiquadFilterType::Lowshelf
+            }
+            web_audio_api::node::BiquadFilterType::Highshelf => {
+                crate::audio::BiquadFilterType::Highshelf
+            }
         }
     }
 }
@@ -853,14 +912,28 @@ impl Into<crate::audio::BiquadFilterType> for web_audio_api::node::BiquadFilterT
 impl Into<web_audio_api::node::BiquadFilterType> for crate::audio::BiquadFilterType {
     fn into(self) -> web_audio_api::node::BiquadFilterType {
         match self {
-            crate::audio::BiquadFilterType::Allpass => web_audio_api::node::BiquadFilterType::Allpass,
-            crate::audio::BiquadFilterType::Lowpass => web_audio_api::node::BiquadFilterType::Lowpass,
-            crate::audio::BiquadFilterType::Highpass => web_audio_api::node::BiquadFilterType::Highpass,
-            crate::audio::BiquadFilterType::Bandpass => web_audio_api::node::BiquadFilterType::Bandpass,
+            crate::audio::BiquadFilterType::Allpass => {
+                web_audio_api::node::BiquadFilterType::Allpass
+            }
+            crate::audio::BiquadFilterType::Lowpass => {
+                web_audio_api::node::BiquadFilterType::Lowpass
+            }
+            crate::audio::BiquadFilterType::Highpass => {
+                web_audio_api::node::BiquadFilterType::Highpass
+            }
+            crate::audio::BiquadFilterType::Bandpass => {
+                web_audio_api::node::BiquadFilterType::Bandpass
+            }
             crate::audio::BiquadFilterType::Notch => web_audio_api::node::BiquadFilterType::Notch,
-            crate::audio::BiquadFilterType::Peaking => web_audio_api::node::BiquadFilterType::Peaking,
-            crate::audio::BiquadFilterType::Lowshelf => web_audio_api::node::BiquadFilterType::Lowshelf,
-            crate::audio::BiquadFilterType::Highshelf => web_audio_api::node::BiquadFilterType::Highshelf,
+            crate::audio::BiquadFilterType::Peaking => {
+                web_audio_api::node::BiquadFilterType::Peaking
+            }
+            crate::audio::BiquadFilterType::Lowshelf => {
+                web_audio_api::node::BiquadFilterType::Lowshelf
+            }
+            crate::audio::BiquadFilterType::Highshelf => {
+                web_audio_api::node::BiquadFilterType::Highshelf
+            }
         }
     }
 }
@@ -890,7 +963,7 @@ impl Into<crate::audio::OscillatorType> for web_audio_api::node::OscillatorType 
             web_audio_api::node::OscillatorType::Square => crate::audio::OscillatorType::Square,
             web_audio_api::node::OscillatorType::Sawtooth => crate::audio::OscillatorType::Sawtooth,
             web_audio_api::node::OscillatorType::Triangle => crate::audio::OscillatorType::Triangle,
-            web_audio_api::node::OscillatorType::Custom => crate::audio::OscillatorType::Custom
+            web_audio_api::node::OscillatorType::Custom => crate::audio::OscillatorType::Custom,
         }
     }
 }
@@ -910,9 +983,15 @@ impl Into<web_audio_api::node::OscillatorType> for crate::audio::OscillatorType 
 impl Into<crate::audio::DistanceModelType> for web_audio_api::node::DistanceModelType {
     fn into(self) -> crate::audio::DistanceModelType {
         match self {
-            web_audio_api::node::DistanceModelType::Linear => crate::audio::DistanceModelType::Linear,
-            web_audio_api::node::DistanceModelType::Inverse => crate::audio::DistanceModelType::Inverse,
-            web_audio_api::node::DistanceModelType::Exponential => crate::audio::DistanceModelType::Exponential,
+            web_audio_api::node::DistanceModelType::Linear => {
+                crate::audio::DistanceModelType::Linear
+            }
+            web_audio_api::node::DistanceModelType::Inverse => {
+                crate::audio::DistanceModelType::Inverse
+            }
+            web_audio_api::node::DistanceModelType::Exponential => {
+                crate::audio::DistanceModelType::Exponential
+            }
         }
     }
 }
@@ -920,9 +999,15 @@ impl Into<crate::audio::DistanceModelType> for web_audio_api::node::DistanceMode
 impl Into<web_audio_api::node::DistanceModelType> for crate::audio::DistanceModelType {
     fn into(self) -> web_audio_api::node::DistanceModelType {
         match self {
-            crate::audio::DistanceModelType::Linear => web_audio_api::node::DistanceModelType::Linear,
-            crate::audio::DistanceModelType::Inverse => web_audio_api::node::DistanceModelType::Inverse,
-            crate::audio::DistanceModelType::Exponential => web_audio_api::node::DistanceModelType::Exponential,
+            crate::audio::DistanceModelType::Linear => {
+                web_audio_api::node::DistanceModelType::Linear
+            }
+            crate::audio::DistanceModelType::Inverse => {
+                web_audio_api::node::DistanceModelType::Inverse
+            }
+            crate::audio::DistanceModelType::Exponential => {
+                web_audio_api::node::DistanceModelType::Exponential
+            }
         }
     }
 }
@@ -930,7 +1015,9 @@ impl Into<web_audio_api::node::DistanceModelType> for crate::audio::DistanceMode
 impl Into<web_audio_api::node::PanningModelType> for crate::audio::PanningModelType {
     fn into(self) -> web_audio_api::node::PanningModelType {
         match self {
-            crate::audio::PanningModelType::EqualPower => web_audio_api::node::PanningModelType::EqualPower,
+            crate::audio::PanningModelType::EqualPower => {
+                web_audio_api::node::PanningModelType::EqualPower
+            }
             crate::audio::PanningModelType::Hrtf => web_audio_api::node::PanningModelType::HRTF,
         }
     }
@@ -939,7 +1026,9 @@ impl Into<web_audio_api::node::PanningModelType> for crate::audio::PanningModelT
 impl Into<crate::audio::PanningModelType> for web_audio_api::node::PanningModelType {
     fn into(self) -> crate::audio::PanningModelType {
         match self {
-            web_audio_api::node::PanningModelType::EqualPower => crate::audio::PanningModelType::EqualPower,
+            web_audio_api::node::PanningModelType::EqualPower => {
+                crate::audio::PanningModelType::EqualPower
+            }
             web_audio_api::node::PanningModelType::HRTF => crate::audio::PanningModelType::Hrtf,
         }
     }
@@ -970,7 +1059,7 @@ impl Into<web_audio_api::PeriodicWaveOptions> for crate::audio::PeriodicWaveOpti
         web_audio_api::PeriodicWaveOptions {
             real: self.real,
             imag: self.imag,
-            disable_normalization: self.disable_normalization
+            disable_normalization: self.disable_normalization,
         }
     }
 }
@@ -988,9 +1077,15 @@ impl Into<crate::audio::PeriodicWaveOptions> for web_audio_api::PeriodicWaveOpti
 impl Into<crate::audio::AudioContextState> for web_audio_api::context::AudioContextState {
     fn into(self) -> crate::audio::AudioContextState {
         match self {
-            web_audio_api::context::AudioContextState::Suspended => crate::audio::AudioContextState::Suspended,
-            web_audio_api::context::AudioContextState::Running => crate::audio::AudioContextState::Running,
-            web_audio_api::context::AudioContextState::Closed => crate::audio::AudioContextState::Closed,
+            web_audio_api::context::AudioContextState::Suspended => {
+                crate::audio::AudioContextState::Suspended
+            }
+            web_audio_api::context::AudioContextState::Running => {
+                crate::audio::AudioContextState::Running
+            }
+            web_audio_api::context::AudioContextState::Closed => {
+                crate::audio::AudioContextState::Closed
+            }
         }
     }
 }
@@ -998,9 +1093,15 @@ impl Into<crate::audio::AudioContextState> for web_audio_api::context::AudioCont
 impl Into<web_audio_api::context::AudioContextState> for crate::audio::AudioContextState {
     fn into(self) -> web_audio_api::context::AudioContextState {
         match self {
-            crate::audio::AudioContextState::Suspended => web_audio_api::context::AudioContextState::Suspended,
-            crate::audio::AudioContextState::Running => web_audio_api::context::AudioContextState::Running,
-            crate::audio::AudioContextState::Closed => web_audio_api::context::AudioContextState::Closed,
+            crate::audio::AudioContextState::Suspended => {
+                web_audio_api::context::AudioContextState::Suspended
+            }
+            crate::audio::AudioContextState::Running => {
+                web_audio_api::context::AudioContextState::Running
+            }
+            crate::audio::AudioContextState::Closed => {
+                web_audio_api::context::AudioContextState::Closed
+            }
         }
     }
 }

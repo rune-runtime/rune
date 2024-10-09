@@ -6,8 +6,8 @@ use vfs::VfsPath;
 use wgpu_types::TextureFormat;
 use winit::keyboard::{Key, KeyLocation};
 
-pub mod runtime;
 pub mod game;
+pub mod runtime;
 pub mod tests;
 // pub mod debug;
 
@@ -21,8 +21,8 @@ pub(crate) type Backend = wgpu_core::api::Dx12;
 pub(crate) type Backend = wgpu_core::api::Metal;
 
 // needed for wasmtime::component::bindgen! as it only looks in the current crate.
-pub(crate) use wgpu_core;
 pub(crate) use gilrs;
+pub(crate) use wgpu_core;
 
 pub type BufferSource = Vec<u8>;
 
@@ -70,7 +70,7 @@ wasmtime::component::bindgen!({
         "rune:runtime/audio/stereo-panner-node": web_audio_api::node::StereoPannerNode,
         "rune:runtime/audio/wave-shaper-node": web_audio_api::node::WaveShaperNode,
         "rune:runtime/audio/audio-listener": web_audio_api::AudioListener,
-        
+
         "rune:runtime/gpu/gpu-adapter": wgpu_core::id::AdapterId,
         "rune:runtime/gpu/gpu-device": wgpu_core::id::DeviceId,
         "rune:runtime/gpu/gpu-queue": wgpu_core::id::QueueId,
@@ -106,20 +106,13 @@ wasmtime::component::bindgen!({
 //     }
 // });
 
-use gilrs::{Button, Gilrs};
-use runtime::{
-    audio::AudioState, gpu::GpuState, storage::Storage
-};
-use uuid::Uuid;
-use wasmtime_wasi::{
-    ResourceTable,
-    WasiCtx,
-    WasiCtxBuilder,
-    WasiView
-};
-use winit::dpi::PhysicalSize;
-pub use rune::runtime::*;
 pub use exports::rune::runtime::guest;
+use gilrs::{Button, Gilrs};
+pub use rune::runtime::*;
+use runtime::{audio::AudioState, gpu::GpuState, storage::Storage};
+use uuid::Uuid;
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+use winit::dpi::PhysicalSize;
 
 pub struct RuneRuntimeState {
     pub id: Uuid,
@@ -141,8 +134,8 @@ pub struct RuneRuntimeState {
     pub audio_state: AudioState,
     pub gamepad_state: GamepadState,
     pub keyboard_state: KeyboardState,
-    pub paths: Slab::<VfsPath>,
-    pub storages: Slab::<Storage>,
+    pub paths: Slab<VfsPath>,
+    pub storages: Slab<Storage>,
     pub wasi_ctx: WasiCtx,
     pub table: ResourceTable,
 }
@@ -158,25 +151,25 @@ impl WasiView for RuneRuntimeState {
 }
 
 pub struct KeyboardState {
-    pub active_keys: Vec<(u64, Key, KeyLocation)>
+    pub active_keys: Vec<(u64, Key, KeyLocation)>,
 }
 
 impl KeyboardState {
     pub fn new() -> KeyboardState {
         Self {
-            active_keys: Vec::new()
+            active_keys: Vec::new(),
         }
     }
 }
 
 pub struct GamepadState {
-    pub active_buttons: Vec<(u64, Button)>
+    pub active_buttons: Vec<(u64, Button)>,
 }
 
 impl GamepadState {
     pub fn new() -> GamepadState {
         Self {
-            active_buttons: Vec::new()
+            active_buttons: Vec::new(),
         }
     }
 }
@@ -192,7 +185,7 @@ impl RuneRuntimeState {
         adapter: wgpu_core::id::AdapterId,
         device: wgpu_core::id::DeviceId,
         queue: wgpu_core::id::QueueId,
-        gilrs: Gilrs
+        gilrs: Gilrs,
     ) -> Self {
         let mut table = ResourceTable::new();
 
@@ -209,14 +202,10 @@ impl RuneRuntimeState {
             present_mode: swapchain_capabilities.present_modes[0],
             alpha_mode: swapchain_capabilities.alpha_modes[0],
             view_formats: vec![],
-            desired_maximum_frame_latency: 1
+            desired_maximum_frame_latency: 1,
         };
 
-        instance
-            .surface_configure::<crate::Backend>(
-                surface,
-                device,
-                &surface_config);
+        instance.surface_configure::<crate::Backend>(surface, device, &surface_config);
 
         RuneRuntimeState {
             id,
@@ -244,7 +233,7 @@ impl RuneRuntimeState {
                 .inherit_stderr()
                 .inherit_stdout()
                 .build(),
-            table
+            table,
         }
     }
 }

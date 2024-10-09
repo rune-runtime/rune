@@ -1,18 +1,31 @@
-use std::{env, fs::{self, File, OpenOptions, Permissions}, io::{self, BufWriter, ErrorKind, Read, Write}, os::unix::fs::{OpenOptionsExt, PermissionsExt}, path::{Path, PathBuf}, process::{Command, Stdio}};
+use std::{
+    env,
+    fs::{self, File, OpenOptions, Permissions},
+    io::{self, BufWriter, ErrorKind, Read, Write},
+    os::unix::fs::{OpenOptionsExt, PermissionsExt},
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
 
 use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 
-use rune::input;
+use current_platform::CURRENT_PLATFORM;
 use ratatui::prelude::Rect;
+use rune::input;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use toml::Table;
-use current_platform::CURRENT_PLATFORM;
 
 use crate::{
-    action::Action, cli::{Cli, CliCommand}, components::Component, config::Config, mode::Mode, settings::Settings, tui
+    action::Action,
+    cli::{Cli, CliCommand},
+    components::Component,
+    config::Config,
+    mode::Mode,
+    settings::Settings,
+    tui,
 };
 
 pub struct App {
@@ -51,16 +64,19 @@ impl App {
                 let input_path = Path::new("../test-game/dist/.rune/input/");
                 let binary = std::fs::read(input_path.join("test-game.wasm")).unwrap();
                 rune::runtime::test(input_path.to_path_buf(), binary).await;
-            },
+            }
             Some(CliCommand::Run { release }) => {
                 crate::commands::build::build(release).await?;
 
                 let current_dir = env::current_dir()?;
-                let config = std::fs::read_to_string(current_dir.join("rune.toml")).unwrap().parse::<Table>().unwrap();
+                let config = std::fs::read_to_string(current_dir.join("rune.toml"))
+                    .unwrap()
+                    .parse::<Table>()
+                    .unwrap();
 
                 let entrypoint_path = match config["build"]["entrypoint"].as_str() {
                     Some(entrypoint_path) => entrypoint_path,
-                    None => panic!("No build input provided in config!")
+                    None => panic!("No build input provided in config!"),
                 };
 
                 match config["build"]["output"].as_str() {
@@ -69,17 +85,17 @@ impl App {
                         let entrypoint_path = output_path.join(entrypoint_path);
                         let binary = std::fs::read(entrypoint_path).unwrap();
                         rune::runtime::run(output_path.to_path_buf(), binary);
-                    },
-                    None => panic!("No build input provided in config!")
+                    }
+                    None => panic!("No build input provided in config!"),
                 }
-            },
+            }
             Some(CliCommand::Build { release }) => {
                 crate::commands::build::build(release).await?;
-            },
+            }
             Some(CliCommand::Bundle { target, release }) => {
                 crate::commands::build::build(release).await?;
                 crate::commands::bundle::bundle(target, release).await?;
-            },
+            }
             Some(CliCommand::Upgrade) => crate::commands::upgrade::upgrade().await?,
             Some(CliCommand::Docs) => crate::commands::docs::docs(&self.config, &self.mode).await?,
             None => {}

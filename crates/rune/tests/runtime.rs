@@ -1,7 +1,7 @@
 extern crate rune;
 
-use std::process::Command;
 use rune::runtime;
+use std::process::Command;
 
 #[cfg(test)]
 fn main() {

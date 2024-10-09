@@ -3,11 +3,13 @@ use std::{path::PathBuf, time::Duration};
 use anyhow::{Ok, Result};
 use gilrs::Gilrs;
 use uuid::Uuid;
-use wasmtime::{Engine, Config, component::{Component, Linker}, Store};
+use wasmtime::{
+    component::{Component, Linker},
+    Config, Engine, Store,
+};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::{Runtime, RuntimePre, RuneRuntimeState};
-
+use crate::{RuneRuntimeState, Runtime, RuntimePre};
 
 /// Game is used to run wasm component
 
@@ -16,7 +18,7 @@ pub struct Game {
     pub engine: Engine,
     pub instance_pre: RuntimePre<RuneRuntimeState>,
     pub runtime: Option<Runtime>,
-    pub store: Option<Store<RuneRuntimeState>>
+    pub store: Option<Store<RuneRuntimeState>>,
 }
 
 impl std::fmt::Debug for Game {
@@ -36,9 +38,8 @@ impl Game {
 
         let mut linker = Linker::new(&engine);
 
-        wasmtime_wasi::add_to_linker_sync(&mut linker)
-            .expect("add wasmtime_wasi::preview2 failed");
-        
+        wasmtime_wasi::add_to_linker_sync(&mut linker).expect("add wasmtime_wasi::preview2 failed");
+
         Runtime::add_to_linker(&mut linker, |state: &mut RuneRuntimeState| state)?;
 
         Ok(Self {
@@ -46,11 +47,22 @@ impl Game {
             engine,
             instance_pre: RuntimePre::new(linker.instantiate_pre(&component)?)?,
             runtime: None,
-            store: None
+            store: None,
         })
     }
 
-    pub async fn init(&mut self, window: &Window, input_path: PathBuf, audio_device: cpal::Device, instance: wgpu_core::global::Global, surface: wgpu_core::id::SurfaceId, adapter: wgpu_core::id::AdapterId, device: wgpu_core::id::DeviceId, queue: wgpu_core::id::QueueId, gilrs: Gilrs) -> Result<(), anyhow::Error> {
+    pub async fn init(
+        &mut self,
+        window: &Window,
+        input_path: PathBuf,
+        audio_device: cpal::Device,
+        instance: wgpu_core::global::Global,
+        surface: wgpu_core::id::SurfaceId,
+        adapter: wgpu_core::id::AdapterId,
+        device: wgpu_core::id::DeviceId,
+        queue: wgpu_core::id::QueueId,
+        gilrs: Gilrs,
+    ) -> Result<(), anyhow::Error> {
         let window_size = window.inner_size();
 
         let runtime_state = RuneRuntimeState::new(
@@ -63,16 +75,14 @@ impl Game {
             adapter,
             device,
             queue,
-            gilrs
+            gilrs,
         );
 
         let mut store = Store::new(&self.engine, runtime_state);
 
         let runtime = self.instance_pre.instantiate_async(&mut store).await?;
-        
-        runtime
-            .rune_runtime_guest()
-            .call_init(&mut store).await?;
+
+        runtime.rune_runtime_guest().call_init(&mut store).await?;
 
         self.runtime = Some(runtime);
         self.store = Some(store);
@@ -80,29 +90,43 @@ impl Game {
         Ok(())
     }
 
-    pub async fn update(&mut self,  epoch_time: Duration, delta_time: Duration) -> Result<(), anyhow::Error> {
+    pub async fn update(
+        &mut self,
+        epoch_time: Duration,
+        delta_time: Duration,
+    ) -> Result<(), anyhow::Error> {
         let store = self.store.as_mut().unwrap();
-        self.runtime.as_ref().unwrap().rune_runtime_guest().call_update(
-            store,
-            epoch_time.as_secs_f64(),
-            delta_time.as_secs_f64()
-        ).await?;
+        self.runtime
+            .as_ref()
+            .unwrap()
+            .rune_runtime_guest()
+            .call_update(store, epoch_time.as_secs_f64(), delta_time.as_secs_f64())
+            .await?;
 
         Ok(())
     }
 
-    pub async fn render(&mut self, epoch_time: Duration, delta_time: Duration) -> Result<(), anyhow::Error> {
-        self.runtime.as_ref().expect("Runtime must be initialized").rune_runtime_guest().call_render(
-            self.store.as_mut().expect("Store must be initialized"),
-            epoch_time.as_secs_f64(),
-            delta_time.as_secs_f64()
-        ).await?;
+    pub async fn render(
+        &mut self,
+        epoch_time: Duration,
+        delta_time: Duration,
+    ) -> Result<(), anyhow::Error> {
+        self.runtime
+            .as_ref()
+            .expect("Runtime must be initialized")
+            .rune_runtime_guest()
+            .call_render(
+                self.store.as_mut().expect("Store must be initialized"),
+                epoch_time.as_secs_f64(),
+                delta_time.as_secs_f64(),
+            )
+            .await?;
 
         let store = self.store.as_mut().expect("Store must be initialized");
         let ctx = store.data_mut();
         let surface_id = ctx.surface;
         ctx.instance.surface_present::<crate::Backend>(surface_id)?;
-    
+
         Ok(())
     }
 
@@ -113,10 +137,11 @@ impl Game {
         let device_id = ctx.device;
 
         let surface_config = &mut ctx.surface_config;
-    
+
         surface_config.width = size.width;
         surface_config.height = size.height;
-    
-        ctx.instance.surface_configure::<crate::Backend>(surface_id, device_id, &surface_config);
+
+        ctx.instance
+            .surface_configure::<crate::Backend>(surface_id, device_id, &surface_config);
     }
 }

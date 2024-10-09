@@ -16,7 +16,8 @@ pub enum CliCommand {
     /// View Rune API documentation
     Docs,
     /// Create a new Rune project, optionally specifying a template
-    #[command(subcommand)] New(NewSubcommand),
+    #[command(subcommand)]
+    New(NewSubcommand),
     // /// Pushes a new release candidate for an unreleased version. Will NOT publish
     // Push,
     /// Just for testin'
@@ -64,5 +65,5 @@ pub enum NewSubcommand {
         name: Option<String>,
         #[clap(long, short = 't', value_name = "TEMPLATE")]
         template: Option<String>,
-    }
+    },
 }

@@ -8,11 +8,11 @@ pub mod cli;
 pub mod commands;
 pub mod components;
 pub mod config;
+pub mod fs;
 pub mod mode;
 pub mod settings;
 pub mod tui;
 pub mod utils;
-pub mod fs;
 
 use clap::Parser;
 use cli::{Cli, CliCommand};

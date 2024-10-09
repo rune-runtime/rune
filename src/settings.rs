@@ -26,10 +26,12 @@ pub struct Settings {
 
 impl Settings {
     pub fn binary_name(&self) -> String {
-        "".to_owned() + &self.metadata_id + match self.target.as_str() {
-            "windows" => ".exe",
-            _ => ""
-        }
+        "".to_owned()
+            + &self.metadata_id
+            + match self.target.as_str() {
+                "windows" => ".exe",
+                _ => "",
+            }
     }
 
     pub fn project_dir(&self) -> PathBuf {

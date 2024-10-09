@@ -1,4 +1,9 @@
-use std::{ffi::OsStr, fs, io::Write, path::{Path, PathBuf}};
+use std::{
+    ffi::OsStr,
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use image::GenericImageView;
 
@@ -18,8 +23,7 @@ pub fn bundle_project(settings: &Settings) -> crate::Result<()> {
 
     let resources_dir = bundle_directory.join("Resources");
 
-    let bundle_icon_file: Option<PathBuf> =
-        { create_icns_file(&resources_dir, settings)? };
+    let bundle_icon_file: Option<PathBuf> = { create_icns_file(&resources_dir, settings)? };
 
     create_info_plist(&bundle_directory, bundle_icon_file, settings)?;
 
@@ -32,7 +36,6 @@ pub fn bundle_project(settings: &Settings) -> crate::Result<()> {
     Ok(())
 }
 
-
 fn copy_build_output_to_bundle(bundle_directory: &Path, settings: &Settings) -> crate::Result<()> {
     let dest_dir = bundle_directory.join("MacOS");
     crate::fs::copy_file(
@@ -44,10 +47,7 @@ fn copy_build_output_to_bundle(bundle_directory: &Path, settings: &Settings) -> 
 
 fn copy_input_to_bundle(bundle_directory: &Path, settings: &Settings) -> crate::Result<()> {
     let dest_dir = bundle_directory.join("MacOS");
-    crate::fs::copy_dir_all(
-        &settings.build_input_dir,
-        dest_dir.join(".rune/input"),
-    )?;
+    crate::fs::copy_dir_all(&settings.build_input_dir, dest_dir.join(".rune/input"))?;
     Ok(())
 }
 
@@ -319,5 +319,13 @@ fn make_icns_image(img: image::DynamicImage) -> std::io::Result<icns::Image> {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg));
         }
     };
-    icns::Image::from_data(pixel_format, img.width(), img.height(), img.pixels().flat_map(|(_, _, p)| p.0).collect::<Vec<_>>().to_vec())
+    icns::Image::from_data(
+        pixel_format,
+        img.width(),
+        img.height(),
+        img.pixels()
+            .flat_map(|(_, _, p)| p.0)
+            .collect::<Vec<_>>()
+            .to_vec(),
+    )
 }

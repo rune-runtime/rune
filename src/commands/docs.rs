@@ -1,5 +1,5 @@
-use crate::{action::Action, components::Component, mode::Mode, tui, Result};
 use crate::config::Config;
+use crate::{action::Action, components::Component, mode::Mode, tui, Result};
 use docs::Docs;
 use ratatui::layout::Rect;
 use tokio::sync::mpsc;
@@ -15,9 +15,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
     let mut should_quit = false;
     let mut should_suspend = false;
 
-    let mut tui = tui::Tui::new()?
-        .tick_rate(tick_rate)
-        .frame_rate(frame_rate);
+    let mut tui = tui::Tui::new()?.tick_rate(tick_rate).frame_rate(frame_rate);
     // tui.mouse(true);
     tui.enter()?;
 
@@ -47,8 +45,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
                             last_tick_key_events.push(key);
 
                             // Check for multi-key combinations
-                            if let Some(action) = keymap.get(&last_tick_key_events)
-                            {
+                            if let Some(action) = keymap.get(&last_tick_key_events) {
                                 log::info!("Got action: {action:?}");
                                 action_tx.send(action.clone())?;
                             }
@@ -79,10 +76,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
                         let r = docs.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
-                                .send(Action::Error(format!(
-                                    "Failed to draw: {:?}",
-                                    e
-                                )))
+                                .send(Action::Error(format!("Failed to draw: {:?}", e)))
                                 .unwrap();
                         }
                     })?;
@@ -92,10 +86,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
                         let r = docs.draw(f, f.area());
                         if let Err(e) = r {
                             action_tx
-                                .send(Action::Error(format!(
-                                    "Failed to draw: {:?}",
-                                    e
-                                )))
+                                .send(Action::Error(format!("Failed to draw: {:?}", e)))
                                 .unwrap();
                         }
                     })?;
@@ -109,9 +100,7 @@ pub async fn docs(config: &Config, mode: &Mode) -> Result<()> {
         if should_suspend {
             tui.suspend()?;
             action_tx.send(Action::Resume)?;
-            tui = tui::Tui::new()?
-                .tick_rate(tick_rate)
-                .frame_rate(frame_rate);
+            tui = tui::Tui::new()?.tick_rate(tick_rate).frame_rate(frame_rate);
             // tui.mouse(true);
             tui.enter()?;
         } else if should_quit {

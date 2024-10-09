@@ -1,4 +1,8 @@
-use std::{fs::{self, File}, io::{self, BufWriter}, path::{Path, PathBuf}};
+use std::{
+    fs::{self, File},
+    io::{self, BufWriter},
+    path::{Path, PathBuf},
+};
 
 pub fn create_file(path: &PathBuf) -> io::Result<BufWriter<File>> {
     if let Some(parent) = path.parent() {
@@ -22,13 +26,16 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<
     Ok(())
 }
 
-pub fn copy_file_to_dir(source: impl AsRef<Path>, destination_dir: impl AsRef<Path>) -> io::Result<()> {
+pub fn copy_file_to_dir(
+    source: impl AsRef<Path>,
+    destination_dir: impl AsRef<Path>,
+) -> io::Result<()> {
     fs::create_dir_all(&destination_dir)?;
 
     let source_path = source.as_ref();
-    let destination_path = destination_dir.as_ref().join(
-        source_path.file_name().expect("Failed to get file name")
-    );
+    let destination_path = destination_dir
+        .as_ref()
+        .join(source_path.file_name().expect("Failed to get file name"));
 
     fs::copy(source_path, &destination_path)?;
 

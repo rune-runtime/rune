@@ -7,12 +7,12 @@ use wasmtime_wasi::ResourceTable;
 use web_audio_api::context::{AudioContext, AudioContextOptions, BaseAudioContext};
 use web_audio_api::node::{AudioNode, AudioScheduledSourceNode, IIRFilterNode};
 
-use crate::RuneRuntimeState;
 use crate::rune::runtime::audio::*;
+use crate::RuneRuntimeState;
 
 #[async_trait::async_trait]
 impl Host for RuneRuntimeState {
-    async fn output(&mut self) ->  Option<Resource<AudioDevice>> {
+    async fn output(&mut self) -> Option<Resource<AudioDevice>> {
         Some(Resource::new_own(0))
     }
 }
@@ -22,11 +22,14 @@ impl HostAudioDevice for RuneRuntimeState {
     async fn name(&mut self, _audio_device: Resource<AudioDevice>) -> String {
         match self.audio_state.device.name() {
             Ok(name) => name,
-            Err(_) => "Unknown".to_owned()
+            Err(_) => "Unknown".to_owned(),
         }
     }
 
-    async fn create_context(&mut self, _audio_device: Resource<AudioDevice>) -> Resource<AudioContext> {
+    async fn create_context(
+        &mut self,
+        _audio_device: Resource<AudioDevice>,
+    ) -> Resource<AudioContext> {
         let audio_context = AudioContext::new(AudioContextOptions {
             sample_rate: Some(44100.),
             ..AudioContextOptions::default()
@@ -61,7 +64,10 @@ impl HostAudioContext for RuneRuntimeState {
         audio_context.set_sink_id_sync(sink_id).unwrap()
     }
 
-    async fn render_capacity(&mut self, audio_context: Resource<AudioContext>) -> Resource<AudioRenderCapacity> {
+    async fn render_capacity(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<AudioRenderCapacity> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.render_capacity()).unwrap()
     }
@@ -81,59 +87,125 @@ impl HostAudioContext for RuneRuntimeState {
         audio_context.close_sync()
     }
 
-    async fn decode_audio_data(&mut self, audio_context: Resource<AudioContext>, data: Vec<u8>) -> Resource<AudioBuffer> {
+    async fn decode_audio_data(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+        data: Vec<u8>,
+    ) -> Resource<AudioBuffer> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.decode_audio_data_sync(Cursor::new(data)).unwrap()).unwrap()
+        self.table
+            .push(
+                audio_context
+                    .decode_audio_data_sync(Cursor::new(data))
+                    .unwrap(),
+            )
+            .unwrap()
     }
 
-    async fn create_buffer(&mut self, audio_context: Resource<AudioContext>, number_of_channels: u32, length: u32, sample_rate: f32) -> Resource<AudioBuffer> {
+    async fn create_buffer(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+        number_of_channels: u32,
+        length: u32,
+        sample_rate: f32,
+    ) -> Resource<AudioBuffer> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_buffer(number_of_channels as usize, length as usize, sample_rate)).unwrap()
+        self.table
+            .push(audio_context.create_buffer(
+                number_of_channels as usize,
+                length as usize,
+                sample_rate,
+            ))
+            .unwrap()
     }
 
-    async fn create_biquad_filter(&mut self, audio_context: Resource<AudioContext>) -> Resource<BiquadFilterNode> {
+    async fn create_biquad_filter(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<BiquadFilterNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_biquad_filter()).unwrap()
+        self.table
+            .push(audio_context.create_biquad_filter())
+            .unwrap()
     }
 
-    async fn create_buffer_source(&mut self, audio_context: Resource<AudioContext>) -> Resource<AudioBufferSourceNode> {
+    async fn create_buffer_source(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<AudioBufferSourceNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_buffer_source()).unwrap()
+        self.table
+            .push(audio_context.create_buffer_source())
+            .unwrap()
     }
 
-    async fn create_analyzer(&mut self, audio_context: Resource<AudioContext>) -> Resource<AnalyzerNode> {
+    async fn create_analyzer(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<AnalyzerNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.create_analyser()).unwrap()
     }
 
-    async fn create_constant_source(&mut self, audio_context: Resource<AudioContext>) -> Resource<ConstantSourceNode> {
+    async fn create_constant_source(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<ConstantSourceNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_constant_source()).unwrap()
+        self.table
+            .push(audio_context.create_constant_source())
+            .unwrap()
     }
 
-    async fn create_convolver(&mut self, audio_context: Resource<AudioContext>) -> Resource<ConvolverNode> {
+    async fn create_convolver(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<ConvolverNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.create_convolver()).unwrap()
     }
 
-    async fn create_channel_merger(&mut self, audio_context: Resource<AudioContext>, number_of_inputs: u32) -> Resource<ChannelMergerNode> {
+    async fn create_channel_merger(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+        number_of_inputs: u32,
+    ) -> Resource<ChannelMergerNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_channel_merger(number_of_inputs as usize)).unwrap()
+        self.table
+            .push(audio_context.create_channel_merger(number_of_inputs as usize))
+            .unwrap()
     }
 
-    async fn create_channel_splitter(&mut self, audio_context: Resource<AudioContext>, number_of_outputs: u32) -> Resource<ChannelSplitterNode> {
+    async fn create_channel_splitter(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+        number_of_outputs: u32,
+    ) -> Resource<ChannelSplitterNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_channel_splitter(number_of_outputs as usize)).unwrap()
+        self.table
+            .push(audio_context.create_channel_splitter(number_of_outputs as usize))
+            .unwrap()
     }
 
-    async fn create_delay(&mut self, audio_context: Resource<AudioContext>, max_delay_time: f32) -> Resource<DelayNode> {
+    async fn create_delay(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+        max_delay_time: f32,
+    ) -> Resource<DelayNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_delay(max_delay_time as f64)).unwrap()
+        self.table
+            .push(audio_context.create_delay(max_delay_time as f64))
+            .unwrap()
     }
 
-    async fn create_dynamics_compressor(&mut self, audio_context: Resource<AudioContext>) -> Resource<DynamicsCompressorNode> {
+    async fn create_dynamics_compressor(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<DynamicsCompressorNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_dynamics_compressor()).unwrap()
+        self.table
+            .push(audio_context.create_dynamics_compressor())
+            .unwrap()
     }
 
     async fn create_gain(&mut self, audio_context: Resource<AudioContext>) -> Resource<GainNode> {
@@ -141,39 +213,70 @@ impl HostAudioContext for RuneRuntimeState {
         self.table.push(audio_context.create_gain()).unwrap()
     }
 
-    async fn create_iir_filter(&mut self, audio_context: Resource<AudioContext>, feedforward: Vec<f32>, feedback: Vec<f32>) -> Resource<IIRFilterNode> {
+    async fn create_iir_filter(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+        feedforward: Vec<f32>,
+        feedback: Vec<f32>,
+    ) -> Resource<IIRFilterNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_iir_filter(feedforward.iter().map(|&x| x as f64).collect(), feedback.iter().map(|&x| x as f64).collect())).unwrap()
+        self.table
+            .push(audio_context.create_iir_filter(
+                feedforward.iter().map(|&x| x as f64).collect(),
+                feedback.iter().map(|&x| x as f64).collect(),
+            ))
+            .unwrap()
     }
 
-    async fn create_oscillator(&mut self, audio_context: Resource<AudioContext>) -> Resource<OscillatorNode> {
+    async fn create_oscillator(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<OscillatorNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.create_oscillator()).unwrap()
     }
 
-    async fn create_panner(&mut self, audio_context: Resource<AudioContext>) -> Resource<PannerNode> {
+    async fn create_panner(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<PannerNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.create_panner()).unwrap()
     }
 
-    async fn create_periodic_wave(&mut self, _audio_context: Resource<AudioContext>, _options: PeriodicWaveOptions) -> PeriodicWave {
+    async fn create_periodic_wave(
+        &mut self,
+        _audio_context: Resource<AudioContext>,
+        _options: PeriodicWaveOptions,
+    ) -> PeriodicWave {
         todo!()
         // let audio_context = self.table.get(&self_).unwrap();
         // let periodic_wave = audio_context.create_periodic_wave(options.into());
         // periodic_wave.into()
     }
 
-    async fn create_stereo_panner(&mut self, audio_context: Resource<AudioContext>) -> Resource<StereoPannerNode> {
+    async fn create_stereo_panner(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<StereoPannerNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
-        self.table.push(audio_context.create_stereo_panner()).unwrap()
+        self.table
+            .push(audio_context.create_stereo_panner())
+            .unwrap()
     }
 
-    async fn create_wave_shaper(&mut self, audio_context: Resource<AudioContext>) -> Resource<WaveShaperNode> {
+    async fn create_wave_shaper(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<WaveShaperNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.create_wave_shaper()).unwrap()
     }
 
-    async fn destination(&mut self, audio_context: Resource<AudioContext>) -> Resource<AudioDestinationNode> {
+    async fn destination(
+        &mut self,
+        audio_context: Resource<AudioContext>,
+    ) -> Resource<AudioDestinationNode> {
         let audio_context = self.table.get(&audio_context).unwrap();
         self.table.push(audio_context.destination()).unwrap()
     }
@@ -206,7 +309,9 @@ impl HostAudioContext for RuneRuntimeState {
 #[async_trait::async_trait]
 impl HostAudioBuffer for RuneRuntimeState {
     async fn new(&mut self, samples: Vec<Vec<f32>>, sample_rate: f32) -> Resource<AudioBuffer> {
-        self.table.push(web_audio_api::AudioBuffer::from(samples, sample_rate)).unwrap()
+        self.table
+            .push(web_audio_api::AudioBuffer::from(samples, sample_rate))
+            .unwrap()
     }
 
     async fn number_of_channels(&mut self, audio_buffer: Resource<AudioBuffer>) -> u32 {
@@ -229,9 +334,15 @@ impl HostAudioBuffer for RuneRuntimeState {
         audio_buffer.duration() as f32
     }
 
-    async fn get_channel_data(&mut self, audio_buffer: Resource<AudioBuffer>, channel_number: u32) -> Vec<f32> {
+    async fn get_channel_data(
+        &mut self,
+        audio_buffer: Resource<AudioBuffer>,
+        channel_number: u32,
+    ) -> Vec<f32> {
         let audio_buffer = self.table.get(&audio_buffer).unwrap();
-        audio_buffer.get_channel_data(channel_number as usize).to_vec()
+        audio_buffer
+            .get_channel_data(channel_number as usize)
+            .to_vec()
     }
 
     async fn drop(&mut self, _rep: Resource<AudioBuffer>) -> Result<()> {
@@ -246,7 +357,11 @@ impl HostAudioParam for RuneRuntimeState {
         audio_param.automation_rate().into()
     }
 
-    async fn set_automation_rate(&mut self, audio_param: Resource<AudioParam>, automation_rate: AutomationRate) {
+    async fn set_automation_rate(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        automation_rate: AutomationRate,
+    ) {
         let audio_param = self.table.get_mut(&audio_param).unwrap();
         audio_param.set_automation_rate(automation_rate.into());
     }
@@ -276,37 +391,72 @@ impl HostAudioParam for RuneRuntimeState {
         audio_param.set_value(value);
     }
 
-    async fn set_value_at_time(&mut self, audio_param: Resource<AudioParam>, value: f32, end_time: f32) {
+    async fn set_value_at_time(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        value: f32,
+        end_time: f32,
+    ) {
         let audio_param = self.table.get_mut(&audio_param).unwrap();
         audio_param.set_value_at_time(value, end_time as f64);
     }
 
-    async fn set_value_curve_at_time(&mut self, audio_param: Resource<AudioParam>, value: Vec<f32>, start_time: f32, duration: f32) {
+    async fn set_value_curve_at_time(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        value: Vec<f32>,
+        start_time: f32,
+        duration: f32,
+    ) {
         let audio_param = self.table.get_mut(&audio_param).unwrap();
         audio_param.set_value_curve_at_time(&value, start_time as f64, duration as f64);
     }
 
-    async fn linear_ramp_to_value_at_time(&mut self, audio_param: Resource<AudioParam>, value: f32, end_time: f32) {
+    async fn linear_ramp_to_value_at_time(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        value: f32,
+        end_time: f32,
+    ) {
         let audio_param = self.table.get(&audio_param).unwrap();
         audio_param.linear_ramp_to_value_at_time(value, end_time as f64);
     }
 
-    async fn exponential_ramp_to_value_at_time(&mut self, audio_param: Resource<AudioParam>, value: f32, end_time: f32) {
+    async fn exponential_ramp_to_value_at_time(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        value: f32,
+        end_time: f32,
+    ) {
         let audio_param = self.table.get(&audio_param).unwrap();
         audio_param.exponential_ramp_to_value_at_time(value, end_time as f64);
     }
 
-    async fn set_target_at_time(&mut self, audio_param: Resource<AudioParam>, value: f32, start_time: f32, time_constant: f32) {
+    async fn set_target_at_time(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        value: f32,
+        start_time: f32,
+        time_constant: f32,
+    ) {
         let audio_param = self.table.get_mut(&audio_param).unwrap();
         audio_param.set_target_at_time(value, start_time as f64, time_constant as f64);
     }
 
-    async fn cancel_scheduled_values(&mut self, audio_param: Resource<AudioParam>, cancel_time: f32) {
+    async fn cancel_scheduled_values(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        cancel_time: f32,
+    ) {
         let audio_param = self.table.get(&audio_param).unwrap();
         audio_param.cancel_scheduled_values(cancel_time as f64);
     }
 
-    async fn cancel_and_hold_at_time(&mut self, audio_param: Resource<AudioParam>, cancel_time: f32) {
+    async fn cancel_and_hold_at_time(
+        &mut self,
+        audio_param: Resource<AudioParam>,
+        cancel_time: f32,
+    ) {
         let audio_param = self.table.get(&audio_param).unwrap();
         audio_param.cancel_and_hold_at_time(cancel_time as f64);
     }
@@ -340,7 +490,11 @@ impl HostAnalyzerNode for RuneRuntimeState {
         audio_param.smoothing_time_constant() as f32
     }
 
-    async fn set_smoothing_time_constant(&mut self, node: Resource<AnalyzerNode>, smoothing_time_constant: f32) {
+    async fn set_smoothing_time_constant(
+        &mut self,
+        node: Resource<AnalyzerNode>,
+        smoothing_time_constant: f32,
+    ) {
         let audio_param = self.table.get_mut(&node).unwrap();
         audio_param.set_smoothing_time_constant(smoothing_time_constant as f64)
     }
@@ -394,10 +548,12 @@ impl HostAnalyzerNode for RuneRuntimeState {
         Vec::new()
     }
 
-    async fn connect(&mut self, node: Resource<AnalyzerNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<AnalyzerNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -405,7 +561,6 @@ impl HostAnalyzerNode for RuneRuntimeState {
         Ok(())
     }
 }
-
 
 #[async_trait::async_trait]
 impl HostBiquadFilterNode for RuneRuntimeState {
@@ -439,10 +594,12 @@ impl HostBiquadFilterNode for RuneRuntimeState {
         node.set_type(type_.into())
     }
 
-    async fn connect(&mut self, node: Resource<BiquadFilterNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<BiquadFilterNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -465,33 +622,52 @@ impl HostAudioDestinationNode for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostAudioBufferSourceNode for RuneRuntimeState {
-    async fn start_at_with_offset(&mut self, node: Resource<AudioBufferSourceNode>, start: f32, offset: f32) {
+    async fn start_at_with_offset(
+        &mut self,
+        node: Resource<AudioBufferSourceNode>,
+        start: f32,
+        offset: f32,
+    ) {
         let node = self.table.get_mut(&node).unwrap();
         node.start_at_with_offset(start as f64, offset as f64);
     }
 
-    async fn start_at_with_offset_and_duration(&mut self, node: Resource<AudioBufferSourceNode>, start: f32, offset: f32, duration: f32) {
+    async fn start_at_with_offset_and_duration(
+        &mut self,
+        node: Resource<AudioBufferSourceNode>,
+        start: f32,
+        offset: f32,
+        duration: f32,
+    ) {
         let node = self.table.get_mut(&node).unwrap();
         node.start_at_with_offset_and_duration(start as f64, offset as f64, duration as f64);
     }
 
-    async fn buffer(&mut self, node: Resource<AudioBufferSourceNode>) -> Option<Resource<AudioBuffer>> {
+    async fn buffer(
+        &mut self,
+        node: Resource<AudioBufferSourceNode>,
+    ) -> Option<Resource<AudioBuffer>> {
         let node = self.table.get(&node).unwrap();
         match node.buffer() {
             Some(buffer) => Some(self.table.push(buffer.clone()).unwrap()),
-            None => None
+            None => None,
         }
     }
 
-    async fn set_buffer(&mut self, node: Resource<AudioBufferSourceNode>, audio_buffer: Resource<AudioBuffer>) {
-        let audio_buffer = {
-            self.table.get(&audio_buffer).unwrap().clone()
-        };
+    async fn set_buffer(
+        &mut self,
+        node: Resource<AudioBufferSourceNode>,
+        audio_buffer: Resource<AudioBuffer>,
+    ) {
+        let audio_buffer = { self.table.get(&audio_buffer).unwrap().clone() };
         let node = self.table.get_mut(&node).unwrap();
         node.set_buffer(audio_buffer);
     }
 
-    async fn playback_rate(&mut self, node: Resource<AudioBufferSourceNode>) -> Resource<AudioParam> {
+    async fn playback_rate(
+        &mut self,
+        node: Resource<AudioBufferSourceNode>,
+    ) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
         self.table.push(node.playback_rate().clone()).unwrap()
     }
@@ -536,13 +712,15 @@ impl HostAudioBufferSourceNode for RuneRuntimeState {
         node.set_loop_end(value as f64);
     }
 
-    async fn connect(&mut self, node: Resource<AudioBufferSourceNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<AudioBufferSourceNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
-    
+
     async fn start(&mut self, node: Resource<AudioBufferSourceNode>) {
         let node = self.table.get_mut(&node).unwrap();
         node.start();
@@ -560,10 +738,12 @@ impl HostConstantSourceNode for RuneRuntimeState {
         self.table.push(node.offset().clone()).unwrap()
     }
 
-    async fn connect(&mut self, node: Resource<ConstantSourceNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<ConstantSourceNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -583,9 +763,7 @@ impl HostConvolverNode for RuneRuntimeState {
     }
 
     async fn set_buffer(&mut self, node: Resource<ConvolverNode>, buffer: Resource<AudioBuffer>) {
-        let buffer = {
-            self.table.get(&buffer).unwrap().clone()
-        };
+        let buffer = { self.table.get(&buffer).unwrap().clone() };
         let node = self.table.get_mut(&node).unwrap();
         node.set_buffer(buffer);
     }
@@ -600,10 +778,12 @@ impl HostConvolverNode for RuneRuntimeState {
         node.set_normalize(value);
     }
 
-    async fn connect(&mut self, node: Resource<ConvolverNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<ConvolverNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -614,10 +794,12 @@ impl HostConvolverNode for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostChannelMergerNode for RuneRuntimeState {
-    async fn connect(&mut self, node: Resource<ChannelMergerNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<ChannelMergerNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -628,10 +810,12 @@ impl HostChannelMergerNode for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostChannelSplitterNode for RuneRuntimeState {
-    async fn connect(&mut self, node: Resource<ChannelSplitterNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<ChannelSplitterNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -647,10 +831,12 @@ impl HostDelayNode for RuneRuntimeState {
         self.table.push(node.delay_time().clone()).unwrap()
     }
 
-    async fn connect(&mut self, node: Resource<DelayNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<DelayNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -691,10 +877,12 @@ impl HostDynamicsCompressorNode for RuneRuntimeState {
         node.reduction()
     }
 
-    async fn connect(&mut self, node: Resource<DynamicsCompressorNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<DynamicsCompressorNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -710,10 +898,12 @@ impl HostGainNode for RuneRuntimeState {
         self.table.push(node.gain().clone()).unwrap()
     }
 
-    async fn connect(&mut self, node: Resource<GainNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<GainNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -724,10 +914,12 @@ impl HostGainNode for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostIirFilterNode for RuneRuntimeState {
-    async fn connect(&mut self, node: Resource<IIRFilterNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<IIRFilterNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -758,16 +950,22 @@ impl HostOscillatorNode for RuneRuntimeState {
         node.set_type(_type.into());
     }
 
-    async fn set_periodic_wave(&mut self, _node: Resource<OscillatorNode>, _periodic_wave: PeriodicWave) {
+    async fn set_periodic_wave(
+        &mut self,
+        _node: Resource<OscillatorNode>,
+        _periodic_wave: PeriodicWave,
+    ) {
         // let node = self.table.get_mut(&self_).unwrap();
         // node.set_periodic_wave(periodic_wave.into());
         todo!()
     }
 
-    async fn connect(&mut self, node: Resource<OscillatorNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<OscillatorNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -898,10 +1096,12 @@ impl HostPannerNode for RuneRuntimeState {
         node.set_panning_model(value.into());
     }
 
-    async fn connect(&mut self, node: Resource<PannerNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<PannerNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -917,10 +1117,12 @@ impl HostStereoPannerNode for RuneRuntimeState {
         self.table.push(node.pan().clone()).unwrap()
     }
 
-    async fn connect(&mut self, node: Resource<StereoPannerNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<StereoPannerNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -951,10 +1153,12 @@ impl HostWaveShaperNode for RuneRuntimeState {
         node.set_oversample(oversample.into());
     }
 
-    async fn connect(&mut self, node: Resource<WaveShaperNode>, destination: crate::rune::runtime::audio::AudioNode) {
-        let source: &dyn web_audio_api::node::AudioNode = {
-            self.table.get(&node).unwrap()
-        };
+    async fn connect(
+        &mut self,
+        node: Resource<WaveShaperNode>,
+        destination: crate::rune::runtime::audio::AudioNode,
+    ) {
+        let source: &dyn web_audio_api::node::AudioNode = { self.table.get(&node).unwrap() };
         audio_node_connect(&self.table, source, destination);
     }
 
@@ -1015,7 +1219,11 @@ impl HostAudioListener for RuneRuntimeState {
     }
 }
 
-fn audio_node_connect(table: &ResourceTable, source: &dyn AudioNode, destination: crate::rune::runtime::audio::AudioNode) {
+fn audio_node_connect(
+    table: &ResourceTable,
+    source: &dyn AudioNode,
+    destination: crate::rune::runtime::audio::AudioNode,
+) {
     let audio_node: &dyn web_audio_api::node::AudioNode = {
         match destination {
             crate::rune::runtime::audio::AudioNode::Analyzer(d) => table.get(&d).unwrap(),

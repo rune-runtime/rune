@@ -3,11 +3,13 @@ use std::path::PathBuf;
 use anyhow::{Ok, Result};
 use gilrs::Gilrs;
 use uuid::Uuid;
-use wasmtime::{Engine, Config, component::{Component, Linker}, Store};
+use wasmtime::{
+    component::{Component, Linker},
+    Config, Engine, Store,
+};
 use winit::window::Window;
 
-use crate::{Runtime, RuntimePre, RuneRuntimeState};
-
+use crate::{RuneRuntimeState, Runtime, RuntimePre};
 
 /// Test is used to run wasm component
 
@@ -16,7 +18,7 @@ pub struct Tests {
     pub engine: Engine,
     pub instance_pre: RuntimePre<RuneRuntimeState>,
     pub runtime: Option<Runtime>,
-    pub store: Option<Store<RuneRuntimeState>>
+    pub store: Option<Store<RuneRuntimeState>>,
 }
 
 impl std::fmt::Debug for Tests {
@@ -36,9 +38,8 @@ impl Tests {
 
         let mut linker = Linker::new(&engine);
 
-        wasmtime_wasi::add_to_linker_sync(&mut linker)
-            .expect("add wasmtime_wasi::preview2 failed");
-        
+        wasmtime_wasi::add_to_linker_sync(&mut linker).expect("add wasmtime_wasi::preview2 failed");
+
         Runtime::add_to_linker(&mut linker, |state: &mut RuneRuntimeState| state)?;
 
         Ok(Self {
@@ -46,11 +47,22 @@ impl Tests {
             engine,
             instance_pre: RuntimePre::new(linker.instantiate_pre(&component)?)?,
             runtime: None,
-            store: None
+            store: None,
         })
     }
 
-    pub async fn init(&mut self, window: &Window, input_path: PathBuf, audio_device: cpal::Device, instance: wgpu_core::global::Global, surface: wgpu_core::id::SurfaceId, adapter: wgpu_core::id::AdapterId, device: wgpu_core::id::DeviceId, queue: wgpu_core::id::QueueId, gilrs: Gilrs) -> Result<(), anyhow::Error> {
+    pub async fn init(
+        &mut self,
+        window: &Window,
+        input_path: PathBuf,
+        audio_device: cpal::Device,
+        instance: wgpu_core::global::Global,
+        surface: wgpu_core::id::SurfaceId,
+        adapter: wgpu_core::id::AdapterId,
+        device: wgpu_core::id::DeviceId,
+        queue: wgpu_core::id::QueueId,
+        gilrs: Gilrs,
+    ) -> Result<(), anyhow::Error> {
         let window_size = window.inner_size();
 
         let runtime_state = RuneRuntimeState::new(
@@ -63,7 +75,7 @@ impl Tests {
             adapter,
             device,
             queue,
-            gilrs
+            gilrs,
         );
 
         let mut store = Store::new(&self.engine, runtime_state);
@@ -76,8 +88,5 @@ impl Tests {
         Ok(())
     }
 
-    pub async fn run(&mut self, _test_name: String)
-    {
-        
-    }
+    pub async fn run(&mut self, _test_name: String) {}
 }

@@ -16,17 +16,19 @@ use winit::{
     event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
     platform::macos::WindowBuilderExtMacOS,
     raw_window_handle::{HasDisplayHandle, HasWindowHandle},
-    window::{Window, WindowBuilder}
+    window::{Window, WindowBuilder},
 };
 
-use crate::{
-    wgpu_id_2,
-    game::Game
-};
+use crate::{game::Game, wgpu_id_2};
 
-enum GameEvent { }
+enum GameEvent {}
 
-async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: PathBuf, binary: Vec<u8>) -> Result<(), EventLoopError> {
+async fn run_loop(
+    event_loop: EventLoop<GameEvent>,
+    window: Window,
+    input_path: PathBuf,
+    binary: Vec<u8>,
+) -> Result<(), EventLoopError> {
     let instance = wgpu_core::global::Global::new(
         "webgpu",
         wgpu_types::InstanceDescriptor {
@@ -37,11 +39,13 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
         },
     );
     let surface_id = unsafe {
-        instance.instance_create_surface(
-            window.display_handle().unwrap().into(),
-            window.window_handle().unwrap().into(),
-            None,
-        ).unwrap()
+        instance
+            .instance_create_surface(
+                window.display_handle().unwrap().into(),
+                window.window_handle().unwrap().into(),
+                None,
+            )
+            .unwrap()
     };
     let adapter_id = instance
         .request_adapter(
@@ -50,7 +54,9 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
         )
         .unwrap();
 
-    let adapter_limits = instance.adapter_limits::<crate::Backend>(adapter_id).unwrap();
+    let adapter_limits = instance
+        .adapter_limits::<crate::Backend>(adapter_id)
+        .unwrap();
 
     // Create the logical device and command queue
     let (device_id, queue_id) = wgpu_id_2(instance.adapter_request_device::<crate::Backend>(
@@ -59,13 +65,13 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
             label: None,
             required_features: wgpu_types::Features::empty(),
             // Make sure we use the texture resolution limits from the adapter, so we can support images the size of the swapchain.
-            required_limits: wgpu_types::Limits::downlevel_webgl2_defaults()
-                .using_resolution(adapter_limits),
-            memory_hints: wgpu_types::MemoryHints::default()
+            required_limits:
+                wgpu_types::Limits::downlevel_webgl2_defaults().using_resolution(adapter_limits),
+            memory_hints: wgpu_types::MemoryHints::default(),
         },
         None,
         None,
-        None
+        None,
     ))
     .unwrap();
 
@@ -75,7 +81,19 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
     let gilrs = gilrs::Gilrs::new().unwrap();
 
     let mut game = Game::from_binary(&binary).unwrap();
-    game.init(&window, input_path, audio_device, instance, surface_id, adapter_id, device_id, queue_id, gilrs).await.expect("Game didn't initialize");
+    game.init(
+        &window,
+        input_path,
+        audio_device,
+        instance,
+        surface_id,
+        adapter_id,
+        device_id,
+        queue_id,
+        gilrs,
+    )
+    .await
+    .expect("Game didn't initialize");
 
     let start_time = std::time::Instant::now();
 
@@ -94,46 +112,56 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
         )));
 
         match event {
-            Event::UserEvent(_event) => {
-
-            },
+            Event::UserEvent(_event) => {}
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
                 game.resize(size);
-            },
+            }
             Event::WindowEvent {
-                event: WindowEvent::KeyboardInput {
-                    event: key_event,
-                    ..
-                },
+                event:
+                    WindowEvent::KeyboardInput {
+                        event: key_event, ..
+                    },
                 ..
             } => {
                 let generation = game.store.as_ref().unwrap().data().generation;
                 let keyboard_state = &mut game.store.as_mut().unwrap().data_mut().keyboard_state;
-                
+
                 if !key_event.state.is_pressed() || key_event.repeat {
-                    keyboard_state.active_keys.retain(|key| !(key.1.eq(&key_event.logical_key) && key.2.eq(&key_event.location)));
+                    keyboard_state.active_keys.retain(|key| {
+                        !(key.1.eq(&key_event.logical_key) && key.2.eq(&key_event.location))
+                    });
 
                     if key_event.repeat {
-                        keyboard_state.active_keys.push((generation, key_event.logical_key, key_event.location));
+                        keyboard_state.active_keys.push((
+                            generation,
+                            key_event.logical_key,
+                            key_event.location,
+                        ));
                     }
-                } else if !keyboard_state.active_keys.iter().any(|k| k.1.eq(&key_event.logical_key) && k.2.eq(&key_event.location)) {
-                    keyboard_state.active_keys.push((generation, key_event.logical_key, key_event.location));
+                } else if !keyboard_state
+                    .active_keys
+                    .iter()
+                    .any(|k| k.1.eq(&key_event.logical_key) && k.2.eq(&key_event.location))
+                {
+                    keyboard_state.active_keys.push((
+                        generation,
+                        key_event.logical_key,
+                        key_event.location,
+                    ));
                 }
-            },
+            }
             Event::AboutToWait => {
                 // start gamepad handling -- could this be a winit user event?
                 let generation = game.store.as_ref().unwrap().data().generation;
 
                 let game_store = game.store.as_mut().unwrap();
-                let gilrs_event = {
-                    game_store.data_mut().gilrs.next_event()
-                };
+                let gilrs_event = { game_store.data_mut().gilrs.next_event() };
                 let gamepad_state = &mut game_store.data_mut().gamepad_state;
 
-                while let Some(button_event)= gilrs_event {
+                while let Some(button_event) = gilrs_event {
                     //TODO: Handle multiple gamepads
 
                     match button_event.event {
@@ -141,19 +169,19 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
                             if !gamepad_state.active_buttons.iter().any(|b| b.1.eq(&button)) {
                                 gamepad_state.active_buttons.push((generation, button));
                             }
-                        },
+                        }
                         gilrs::EventType::ButtonRepeated(button, _) => {
                             if !gamepad_state.active_buttons.iter().any(|b| b.1.eq(&button)) {
                                 gamepad_state.active_buttons.push((generation, button));
                             }
 
                             // TODO: Set is_repeating = true on this button
-                        },
+                        }
                         gilrs::EventType::ButtonReleased(button, _) => {
                             gamepad_state.active_buttons.retain(|b| !b.1.eq(&button));
-                        },
-                        gilrs::EventType::ButtonChanged(_, _, _) => {},
-                        gilrs::EventType::AxisChanged(_, _, _) => {},
+                        }
+                        gilrs::EventType::ButtonChanged(_, _, _) => {}
+                        gilrs::EventType::AxisChanged(_, _, _) => {}
                         gilrs::EventType::Connected => todo!(),
                         gilrs::EventType::Disconnected => todo!(),
                         gilrs::EventType::Dropped => continue,
@@ -169,7 +197,7 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
 
                     let epoch_time = now - start_time;
                     let delta_time = now - last_render_update;
-                    
+
                     pollster::block_on(game.update(epoch_time, delta_time)).unwrap();
                     last_logic_update = now;
                 }
@@ -178,7 +206,7 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
                     window.request_redraw();
                     last_render_update = now;
                 }
-            },
+            }
             Event::WindowEvent {
                 event: WindowEvent::RedrawRequested,
                 ..
@@ -186,7 +214,7 @@ async fn run_loop(event_loop: EventLoop<GameEvent>, window: Window, input_path: 
                 let epoch_time = now - start_time;
                 let delta_time = now - last_render_update;
                 pollster::block_on(game.render(epoch_time, delta_time)).unwrap();
-            },
+            }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,
                 ..
@@ -206,12 +234,12 @@ pub fn run(input_path: PathBuf, binary: Vec<u8>) {
         .with_titlebar_hidden(true)
         .build(&event_loop)
         .unwrap();
-    
+
     // #[cfg(not(target_arch = "wasm32"))]
     // {
-        // env_logger::init();
-        // Temporarily avoid srgb formats for the swapchain on the web
-        pollster::block_on(run_loop(event_loop, window, input_path, binary)).ok();
+    // env_logger::init();
+    // Temporarily avoid srgb formats for the swapchain on the web
+    pollster::block_on(run_loop(event_loop, window, input_path, binary)).ok();
     // }
     // #[cfg(target_arch = "wasm32")]
     // {
@@ -227,7 +255,7 @@ pub fn run(input_path: PathBuf, binary: Vec<u8>) {
     //                 .ok()
     //         })
     //         .expect("couldn't append canvas to document body");
-        
+
     //     wasm_bindgen_futures::spawn_local(run_loop(event_loop, window));
     // }
 }
@@ -308,7 +336,7 @@ pub async fn test(_input_path: PathBuf, _binary: Vec<u8>) {
     // let mut gilrs = gilrs::Gilrs::new().unwrap();
 
     // let mut test = Tests::from_binary(&binary).unwrap();
-    // test.init(&window, input_path, audio_device, instance, surface_id, adapter_id, device_id, queue_id).await.expect("Tests didn't initialize");    
+    // test.init(&window, input_path, audio_device, instance, surface_id, adapter_id, device_id, queue_id).await.expect("Tests didn't initialize");
 
     libtest_mimic::run(&args, tests).exit_code();
 }

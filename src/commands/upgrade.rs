@@ -1,4 +1,8 @@
-use std::{fs::File, io::{Cursor, Read}, path::PathBuf};
+use std::{
+    fs::File,
+    io::{Cursor, Read},
+    path::PathBuf,
+};
 
 use flate2::bufread::GzDecoder;
 use tar::Archive;
@@ -11,7 +15,11 @@ pub async fn upgrade() -> Result<()> {
     let platform = "";
     let bin_name = format!("rune-{latest_version}-{platform}");
 
-    let tmp_path = download_bin(latest_version, &format!("https://rune.sh/releases/{bin_name}")).await?;
+    let tmp_path = download_bin(
+        latest_version,
+        &format!("https://rune.sh/releases/{bin_name}"),
+    )
+    .await?;
 
     let mut tar_gz = File::open(tmp_path.clone())?;
     let mut tar_bytes = Vec::new();
@@ -30,13 +38,13 @@ async fn download_bin(version: &str, url: &str) -> Result<PathBuf> {
     let response = reqwest::get(url).await?;
 
     let tmp_dir = tempfile::Builder::new()
-            .prefix(&format!(".update-{version}"))
-            .tempdir_in(::std::env::current_dir()?)?;
+        .prefix(&format!(".update-{version}"))
+        .tempdir_in(::std::env::current_dir()?)?;
 
     let tmp_path = tmp_dir.path().to_path_buf();
 
     let mut file = std::fs::File::open(tmp_dir)?;
-    let mut content =  Cursor::new(response.bytes().await?);
+    let mut content = Cursor::new(response.bytes().await?);
     std::io::copy(&mut content, &mut file)?;
     Ok(tmp_path)
 }

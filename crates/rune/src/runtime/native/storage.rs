@@ -1,29 +1,31 @@
 use std::fs;
 use std::io::Write;
 
-use vfs::{VfsPath, AltrootFS, PhysicalFS, FileSystem};
+use vfs::{AltrootFS, FileSystem, PhysicalFS, VfsPath};
 
 use wasmtime::component::Resource;
 use wasmtime::Result;
 
-use crate::RuneRuntimeState;
-use crate::runtime::storage::Storage;
 use crate::rune::runtime::storage::*;
+use crate::runtime::storage::Storage;
+use crate::RuneRuntimeState;
 
 #[async_trait::async_trait]
 impl Host for RuneRuntimeState {
-    async fn local(&mut self) ->  Resource<StorageDevice> {
+    async fn local(&mut self) -> Resource<StorageDevice> {
         let app_root_path = &self.input_path;
         if !app_root_path.exists() {
             fs::create_dir(app_root_path.clone()).unwrap();
         }
         let app_root_path = VfsPath::new(PhysicalFS::new(app_root_path.clone()));
         let app_root = AltrootFS::new(app_root_path.clone());
-        let storage = self.storages.insert(Storage::Local(app_root_path.clone(), app_root));
+        let storage = self
+            .storages
+            .insert(Storage::Local(app_root_path.clone(), app_root));
         Resource::new_own(storage as u32)
     }
 
-    async fn cloud(&mut self) ->  Option<Resource<StorageDevice>> {
+    async fn cloud(&mut self) -> Option<Resource<StorageDevice>> {
         None
     }
 }
@@ -32,33 +34,39 @@ impl Host for RuneRuntimeState {
 impl HostStorageDevice for RuneRuntimeState {
     async fn create_dir(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
-        
+
         match storage {
             Storage::Local(_root, vfs) => {
                 let full_path = self.paths.get(path.rep() as usize).unwrap();
                 vfs.create_dir(full_path.as_str()).unwrap();
-            },
+            }
             Storage::Cloud => todo!(),
         }
 
         ()
     }
 
-    async fn list_dir(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) -> Vec<Resource<Path>> {
+    async fn list_dir(
+        &mut self,
+        storage: Resource<StorageDevice>,
+        path: Resource<Path>,
+    ) -> Vec<Resource<Path>> {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
-        
+
         match storage {
             Storage::Local(root, vfs) => {
                 let full_path = self.paths.get(path.rep() as usize).unwrap();
                 match vfs.read_dir(full_path.as_str()) {
-                    Ok(entries) => {
-                        entries.filter_map(|entry| {
-                            Some(Resource::new_borrow(self.paths.insert(root.join(entry).unwrap()) as u32))
-                        }).collect()
-                    },
-                    Err(err) => panic!("{}", err)
+                    Ok(entries) => entries
+                        .filter_map(|entry| {
+                            Some(Resource::new_borrow(
+                                self.paths.insert(root.join(entry).unwrap()) as u32,
+                            ))
+                        })
+                        .collect(),
+                    Err(err) => panic!("{}", err),
                 }
-            },
+            }
             Storage::Cloud => todo!(),
         }
     }
@@ -66,49 +74,60 @@ impl HostStorageDevice for RuneRuntimeState {
     async fn exists(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) -> bool {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
         let path = self.paths.get(path.rep() as usize).unwrap();
-        
+
         match storage {
-            Storage::Local(_root, vfs) => {
-                vfs.exists(path.as_str()).unwrap()
-            },
+            Storage::Local(_root, vfs) => vfs.exists(path.as_str()).unwrap(),
             Storage::Cloud => todo!(),
         }
     }
 
-    async fn read(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) -> Option<Vec<u8>> {
+    async fn read(
+        &mut self,
+        storage: Resource<StorageDevice>,
+        path: Resource<Path>,
+    ) -> Option<Vec<u8>> {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
         let path = self.paths.get(path.rep() as usize).unwrap();
-        
+
         match storage {
             Storage::Local(_root, vfs) => {
                 let mut file = vfs.open_file(path.as_str()).unwrap();
                 let mut buffer = Vec::new();
                 file.read_to_end(&mut buffer).unwrap();
                 Some(buffer)
-            },
+            }
             Storage::Cloud => todo!(),
         }
     }
 
-    async fn read_string(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) -> Option<String> {
+    async fn read_string(
+        &mut self,
+        storage: Resource<StorageDevice>,
+        path: Resource<Path>,
+    ) -> Option<String> {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
         let path = self.paths.get(path.rep() as usize).unwrap();
-        
+
         match storage {
             Storage::Local(_, vfs) => {
                 let mut file = vfs.open_file(path.as_str()).unwrap();
                 let mut str = String::new();
                 file.read_to_string(&mut str).unwrap();
                 Some(str)
-            },
+            }
             Storage::Cloud => todo!(),
         }
     }
 
-    async fn write(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>, content: WriteableContent) {
+    async fn write(
+        &mut self,
+        storage: Resource<StorageDevice>,
+        path: Resource<Path>,
+        content: WriteableContent,
+    ) {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
         let path = self.paths.get(path.rep() as usize).unwrap();
-        
+
         match storage {
             Storage::Local(_, vfs) => {
                 let mut file: Box<dyn Write + Send>;
@@ -121,17 +140,21 @@ impl HostStorageDevice for RuneRuntimeState {
                 match content {
                     WriteableContent::Stream(_) => todo!(),
                     WriteableContent::String(data) => file.write_all(data.as_bytes()).unwrap(),
-                    WriteableContent::Bytes(bytes) => file.write_all(&bytes).unwrap()
+                    WriteableContent::Bytes(bytes) => file.write_all(&bytes).unwrap(),
                 }
-            },
+            }
             Storage::Cloud => todo!(),
         }
     }
 
-    async fn remove(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) -> Option<bool> {
+    async fn remove(
+        &mut self,
+        storage: Resource<StorageDevice>,
+        path: Resource<Path>,
+    ) -> Option<bool> {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
         let path = self.paths.get(path.rep() as usize).unwrap();
-        
+
         match storage {
             Storage::Local(_, vfs) => {
                 if path.is_root() {
@@ -149,7 +172,7 @@ impl HostStorageDevice for RuneRuntimeState {
                         Some(false)
                     }
                 }
-            },
+            }
             Storage::Cloud => todo!(),
         }
     }
@@ -166,9 +189,7 @@ impl HostPath for RuneRuntimeState {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
 
         Resource::new_own(match storage {
-            Storage::Local(root, _) => {
-                self.paths.insert(root.join(path).unwrap()) as u32
-            },
+            Storage::Local(root, _) => self.paths.insert(root.join(path).unwrap()) as u32,
             Storage::Cloud => todo!(),
         })
     }

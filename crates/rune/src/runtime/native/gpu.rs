@@ -1,16 +1,28 @@
 use std::{borrow::Cow, collections::HashMap, num::NonZeroU64};
 
-use wgpu_core::{binding_model::{BindGroupLayoutDescriptor, PipelineLayoutDescriptor}, command::PassChannel, pipeline::VertexBufferLayout, resource::TextureViewDescriptor};
-use wgpu_types::{BindGroupLayoutEntry, Color, ColorTargetState, ColorWrites, DepthBiasState, DepthStencilState, DynamicOffset, Face, FrontFace, ImageCopyTexture, ImageDataLayout, ImageSubresourceRange, MultisampleState, Origin3d, PolygonMode, PrimitiveState, PrimitiveTopology, StencilFaceState, StencilState, VertexAttribute};
-use wasmtime::{Result, component::Resource};
+use wasmtime::{component::Resource, Result};
+use wgpu_core::{
+    binding_model::{BindGroupLayoutDescriptor, PipelineLayoutDescriptor},
+    command::PassChannel,
+    pipeline::VertexBufferLayout,
+    resource::TextureViewDescriptor,
+};
+use wgpu_types::{
+    BindGroupLayoutEntry, Color, ColorTargetState, ColorWrites, DepthBiasState, DepthStencilState,
+    DynamicOffset, Face, FrontFace, ImageCopyTexture, ImageDataLayout, ImageSubresourceRange,
+    MultisampleState, Origin3d, PolygonMode, PrimitiveState, PrimitiveTopology, StencilFaceState,
+    StencilState, VertexAttribute,
+};
 
-use crate::{rune::runtime::gpu::*, runtime::gpu::{Buffer, QuerySet, Texture}, wgpu_id, RuneRuntimeState};
+use crate::{
+    rune::runtime::gpu::*,
+    runtime::gpu::{Buffer, QuerySet, Texture},
+    wgpu_id, RuneRuntimeState,
+};
 
 use super::utilities::{convert_bind_group_entry, vec_to_color};
 
-impl RuneRuntimeState {
-    
-}
+impl RuneRuntimeState {}
 
 #[async_trait::async_trait]
 impl Host for RuneRuntimeState {
@@ -35,12 +47,15 @@ impl Host for RuneRuntimeState {
 #[async_trait::async_trait]
 impl HostGpuSurface for RuneRuntimeState {
     async fn current_texture(&mut self, _surface: Resource<GpuSurface>) -> Resource<GpuTexture> {
-        let surface_output = self.instance.surface_get_current_texture::<crate::Backend>(self.surface, None).unwrap();
+        let surface_output = self
+            .instance
+            .surface_get_current_texture::<crate::Backend>(self.surface, None)
+            .unwrap();
 
         self.table.push(surface_output.texture_id.unwrap()).unwrap()
     }
 
-    async fn drop(&mut self, _rep: Resource<GpuSurface>) -> Result<()>  {
+    async fn drop(&mut self, _rep: Resource<GpuSurface>) -> Result<()> {
         Ok(())
     }
 }
@@ -59,11 +74,9 @@ impl HostGpuQuerySet for RuneRuntimeState {
         query_set.count
     }
 
-    async fn destroy(&mut self, _self_: Resource<GpuQuerySet>) {
-        
-    }
+    async fn destroy(&mut self, _self_: Resource<GpuQuerySet>) {}
 
-    async fn drop(&mut self, rep: Resource<GpuQuerySet>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuQuerySet>) -> Result<()> {
         let query_set_id = self.table.delete(rep).unwrap();
         self.instance.query_set_drop::<crate::Backend>(query_set_id);
         Ok(())
@@ -90,7 +103,7 @@ impl HostGpuAdapter for RuneRuntimeState {
         Resource::new_own(self.device_resource_id)
     }
 
-    async fn drop(&mut self, _rep: Resource<GpuAdapter>) -> Result<()>  {
+    async fn drop(&mut self, _rep: Resource<GpuAdapter>) -> Result<()> {
         // let adapter_id = self.table.delete(rep).unwrap();
         // self.instance.adapter_drop::<crate::Backend>(adapter_id);
         Ok(())
@@ -99,7 +112,11 @@ impl HostGpuAdapter for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostGpuDevice for RuneRuntimeState {
-    async fn create_buffer(&mut self, device: Resource<GpuDevice>, descriptor: GpuBufferDescriptor) -> Resource<GpuBuffer> {
+    async fn create_buffer(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuBufferDescriptor,
+    ) -> Resource<GpuBuffer> {
         let device_id = self.table.get(&device).unwrap();
 
         let buffer_descriptor;
@@ -123,10 +140,14 @@ impl HostGpuDevice for RuneRuntimeState {
             let buffer_id = wgpu_id(self.instance.device_create_buffer::<crate::Backend>(
                 *device_id,
                 &buffer_descriptor,
-                None
-            )).unwrap();
+                None,
+            ))
+            .unwrap();
 
-            let (buffer, buffer_length) = self.instance.buffer_get_mapped_range::<crate::Backend>(buffer_id, 0, Some(unpadded_size)).unwrap();
+            let (buffer, buffer_length) = self
+                .instance
+                .buffer_get_mapped_range::<crate::Backend>(buffer_id, 0, Some(unpadded_size))
+                .unwrap();
 
             unsafe {
                 assert!(buffer_length as usize >= contents.len());
@@ -141,25 +162,33 @@ impl HostGpuDevice for RuneRuntimeState {
                 label: None,
                 size: descriptor.size,
                 usage: descriptor.usage.into(),
-                mapped_at_creation: false
+                mapped_at_creation: false,
             };
 
             wgpu_id(self.instance.device_create_buffer::<crate::Backend>(
                 *device_id,
                 &buffer_descriptor,
-                None
-            )).unwrap()
+                None,
+            ))
+            .unwrap()
         };
 
-        self.gpu_state.buffers.insert(buffer_id, Buffer {
-            size: buffer_descriptor.size,
-            usage: buffer_descriptor.usage
-        });
+        self.gpu_state.buffers.insert(
+            buffer_id,
+            Buffer {
+                size: buffer_descriptor.size,
+                usage: buffer_descriptor.usage,
+            },
+        );
 
         self.table.push_child(buffer_id, &device).unwrap()
     }
 
-    async fn create_texture(&mut self, device: Resource<GpuDevice>, descriptor: GpuTextureDescriptor) -> Resource<GpuTexture> {
+    async fn create_texture(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuTextureDescriptor,
+    ) -> Resource<GpuTexture> {
         let device_id = self.table.get(&device).unwrap();
 
         let texture_descriptor = wgpu_types::TextureDescriptor {
@@ -170,29 +199,41 @@ impl HostGpuDevice for RuneRuntimeState {
             dimension: descriptor.dimension.into(),
             format: descriptor.format.into(),
             usage: descriptor.usage.into(),
-            view_formats: descriptor.view_formats.iter().map(|vf| (*vf).into()).collect()
+            view_formats: descriptor
+                .view_formats
+                .iter()
+                .map(|vf| (*vf).into())
+                .collect(),
         };
 
         let texture_id = wgpu_id(self.instance.device_create_texture::<crate::Backend>(
             *device_id,
             &texture_descriptor,
-            None
-        )).unwrap();
+            None,
+        ))
+        .unwrap();
 
-        self.gpu_state.textures.insert(texture_id, Texture {
-            height: 0,
-            width: 0,
-            dimension: texture_descriptor.dimension,
-            format: texture_descriptor.format,
-            mip_level_count: texture_descriptor.mip_level_count,
-            sample_count: texture_descriptor.sample_count,
-            usage: texture_descriptor.usage
-        });
+        self.gpu_state.textures.insert(
+            texture_id,
+            Texture {
+                height: 0,
+                width: 0,
+                dimension: texture_descriptor.dimension,
+                format: texture_descriptor.format,
+                mip_level_count: texture_descriptor.mip_level_count,
+                sample_count: texture_descriptor.sample_count,
+                usage: texture_descriptor.usage,
+            },
+        );
 
         self.table.push_child(texture_id, &device).unwrap()
     }
 
-    async fn create_sampler(&mut self, device: Resource<GpuDevice>, descriptor: GpuSamplerDescriptor) -> Resource<GpuSampler> {
+    async fn create_sampler(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuSamplerDescriptor,
+    ) -> Resource<GpuSampler> {
         let device_id = self.table.get(&device).unwrap();
 
         let sampler_id = wgpu_id(self.instance.device_create_sampler::<crate::Backend>(
@@ -202,7 +243,7 @@ impl HostGpuDevice for RuneRuntimeState {
                 address_modes: [
                     descriptor.address_mode_u.into(),
                     descriptor.address_mode_v.into(),
-                    descriptor.address_mode_w.into()
+                    descriptor.address_mode_w.into(),
                 ],
                 mag_filter: descriptor.mag_filter.into(),
                 min_filter: descriptor.min_filter.into(),
@@ -211,68 +252,98 @@ impl HostGpuDevice for RuneRuntimeState {
                 lod_max_clamp: descriptor.lod_max_clamp,
                 compare: descriptor.compare.map(|c| c.into()),
                 anisotropy_clamp: descriptor.max_anisotrophy,
-                border_color: None
+                border_color: None,
             },
-            None
-        )).unwrap();
+            None,
+        ))
+        .unwrap();
 
         self.table.push_child(sampler_id, &device).unwrap()
     }
 
-    async fn import_external_texture(&mut self, _self_: Resource<GpuDevice>, _descriptor: GpuExternalTextureDescriptor) -> Resource<GpuExternalTexture> {
+    async fn import_external_texture(
+        &mut self,
+        _self_: Resource<GpuDevice>,
+        _descriptor: GpuExternalTextureDescriptor,
+    ) -> Resource<GpuExternalTexture> {
         todo!()
     }
 
-    async fn create_bind_group_layout(&mut self, device: Resource<GpuDevice>, descriptor: GpuBindGroupLayoutDescriptor) -> Resource<GpuBindGroupLayout> {
+    async fn create_bind_group_layout(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuBindGroupLayoutDescriptor,
+    ) -> Resource<GpuBindGroupLayout> {
         let device_id = self.table.get(&device).unwrap();
-        let bind_group_layout_entries: Vec<_> = descriptor.entries
+        let bind_group_layout_entries: Vec<_> = descriptor
+            .entries
             .iter()
             .map(|entry| BindGroupLayoutEntry {
                 binding: entry.binding,
                 visibility: entry.visibility.into(),
                 ty: todo!(),
                 #[allow(unreachable_code)]
-                count: todo!()
+                count: todo!(),
             })
             .collect();
 
-        let bind_group_layout_id = wgpu_id(self.instance.device_create_bind_group_layout::<crate::Backend>(
-            *device_id,
-            &BindGroupLayoutDescriptor {
-                label: None,
-                entries: Cow::Owned(bind_group_layout_entries)
-            },
-            None
-        )).unwrap();
+        let bind_group_layout_id = wgpu_id(
+            self.instance
+                .device_create_bind_group_layout::<crate::Backend>(
+                    *device_id,
+                    &BindGroupLayoutDescriptor {
+                        label: None,
+                        entries: Cow::Owned(bind_group_layout_entries),
+                    },
+                    None,
+                ),
+        )
+        .unwrap();
 
-        self.table.push_child(bind_group_layout_id, &device).unwrap()
+        self.table
+            .push_child(bind_group_layout_id, &device)
+            .unwrap()
     }
 
-    async fn create_pipeline_layout(&mut self, device: Resource<GpuDevice>, descriptor: GpuPipelineLayoutDescriptor) -> Resource<GpuPipelineLayout> {
+    async fn create_pipeline_layout(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuPipelineLayoutDescriptor,
+    ) -> Resource<GpuPipelineLayout> {
         let device_id = self.table.get(&device).unwrap();
-        let bind_group_layouts: Vec<_> = descriptor.bind_group_layouts
+        let bind_group_layouts: Vec<_> = descriptor
+            .bind_group_layouts
             .iter()
             .map(|layout| *self.table.get(&layout).unwrap())
             .collect();
-        
-        let pipeline_layout_id = wgpu_id(self.instance.device_create_pipeline_layout::<crate::Backend>(
-            *device_id,
-            &PipelineLayoutDescriptor {
-                label: None,
-                bind_group_layouts: Cow::Owned(bind_group_layouts),
-                push_constant_ranges: Cow::Owned(Vec::new()),
-            },
-            None
-        )).unwrap();
+
+        let pipeline_layout_id = wgpu_id(
+            self.instance
+                .device_create_pipeline_layout::<crate::Backend>(
+                    *device_id,
+                    &PipelineLayoutDescriptor {
+                        label: None,
+                        bind_group_layouts: Cow::Owned(bind_group_layouts),
+                        push_constant_ranges: Cow::Owned(Vec::new()),
+                    },
+                    None,
+                ),
+        )
+        .unwrap();
 
         self.table.push_child(pipeline_layout_id, &device).unwrap()
     }
 
-    async fn create_bind_group(&mut self, device: Resource<GpuDevice>, descriptor: GpuBindGroupDescriptor,) -> Resource<GpuBindGroup> {
+    async fn create_bind_group(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuBindGroupDescriptor,
+    ) -> Resource<GpuBindGroup> {
         let device_id = self.table.get(&device).unwrap();
         let bind_group_layout_id = self.table.get(&descriptor.layout).unwrap();
 
-        let bind_group_entries: Vec<_> = descriptor.entries
+        let bind_group_entries: Vec<_> = descriptor
+            .entries
             .into_iter()
             .map(|entry| convert_bind_group_entry(&self.table, entry))
             .collect();
@@ -282,15 +353,20 @@ impl HostGpuDevice for RuneRuntimeState {
             &wgpu_core::binding_model::BindGroupDescriptor {
                 label: descriptor.label.map(|label| label.into()),
                 layout: *bind_group_layout_id,
-                entries: Cow::Owned(bind_group_entries)
+                entries: Cow::Owned(bind_group_entries),
             },
             None,
-        )).unwrap();
+        ))
+        .unwrap();
 
         self.table.push_child(bind_group_id, &device).unwrap()
     }
 
-    async fn create_shader_module(&mut self, device: Resource<GpuDevice>, descriptor: GpuShaderModuleDescriptor) -> Resource<GpuShaderModule> {
+    async fn create_shader_module(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuShaderModuleDescriptor,
+    ) -> Resource<GpuShaderModule> {
         let device_id = self.table.get(&device).unwrap();
 
         let shader_module = wgpu_id(self.instance.device_create_shader_module::<crate::Backend>(
@@ -307,57 +383,83 @@ impl HostGpuDevice for RuneRuntimeState {
         self.table.push(shader_module).unwrap()
     }
 
-    async fn create_compute_pipeline(&mut self, _self_: Resource<GpuDevice>, _descriptor: GpuComputePipelineDescriptor) -> Resource<GpuComputePipeline> {
+    async fn create_compute_pipeline(
+        &mut self,
+        _self_: Resource<GpuDevice>,
+        _descriptor: GpuComputePipelineDescriptor,
+    ) -> Resource<GpuComputePipeline> {
         todo!()
     }
 
-    async fn create_render_pipeline(&mut self, device: Resource<GpuDevice>, descriptor: GpuRenderPipelineDescriptor) -> Resource<GpuRenderPipeline> {
+    async fn create_render_pipeline(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuRenderPipelineDescriptor,
+    ) -> Resource<GpuRenderPipeline> {
         let layout = match descriptor.layout {
             GpuLayout::Auto => None,
-            GpuLayout::Pipeline(pipeline_layout) => Some(*self.table.get(&pipeline_layout).unwrap()),
+            GpuLayout::Pipeline(pipeline_layout) => {
+                Some(*self.table.get(&pipeline_layout).unwrap())
+            }
         };
 
         let fragment_targets = match descriptor.fragment {
-            Some(ref fragment) => fragment.targets.iter().map(|c| Some(ColorTargetState {
-                format: c.format.into(),
-                blend: match c.blend {
-                    None => None,
-                    Some(blend) => Some(blend.into())
-                },
-                write_mask: match c.write_mask {
-                    None => ColorWrites::default(),
-                    Some(write_mask) => write_mask.into()
-                },
-            })).collect::<Vec<Option<ColorTargetState>>>(),
-            None => Vec::<Option<ColorTargetState>>::new()
+            Some(ref fragment) => fragment
+                .targets
+                .iter()
+                .map(|c| {
+                    Some(ColorTargetState {
+                        format: c.format.into(),
+                        blend: match c.blend {
+                            None => None,
+                            Some(blend) => Some(blend.into()),
+                        },
+                        write_mask: match c.write_mask {
+                            None => ColorWrites::default(),
+                            Some(write_mask) => write_mask.into(),
+                        },
+                    })
+                })
+                .collect::<Vec<Option<ColorTargetState>>>(),
+            None => Vec::<Option<ColorTargetState>>::new(),
         };
 
         let vertex_buffer_attributes = match descriptor.vertex.buffers {
             Some(ref buffers) => {
                 let mut attrs = Vec::<Vec<VertexAttribute>>::with_capacity(buffers.len());
                 buffers.iter().enumerate().for_each(|(i, v)| {
-                    attrs.insert(i, v.attributes.iter().map(|a| VertexAttribute {
-                        format: unsafe { std::mem::transmute(a.format as u32) },
-                        offset: a.offset,
-                        shader_location: a.shader_location,
-                    }).collect::<Vec<VertexAttribute>>());
+                    attrs.insert(
+                        i,
+                        v.attributes
+                            .iter()
+                            .map(|a| VertexAttribute {
+                                format: unsafe { std::mem::transmute(a.format as u32) },
+                                offset: a.offset,
+                                shader_location: a.shader_location,
+                            })
+                            .collect::<Vec<VertexAttribute>>(),
+                    );
                 });
                 attrs
-            },
-            None => Vec::<Vec<VertexAttribute>>::new()
+            }
+            None => Vec::<Vec<VertexAttribute>>::new(),
         };
 
         let vertex_buffers = match descriptor.vertex.buffers {
-            Some(ref buffers) => buffers.iter().enumerate().map(|(i, v)| {
-                let attributes = vertex_buffer_attributes.get(i).unwrap();
-                
-                VertexBufferLayout {
-                    array_stride: v.array_stride,
-                    step_mode: unsafe { std::mem::transmute(v.step_mode as u32) },
-                    attributes: Cow::Borrowed(&attributes.as_slice()),
-                }
-            }).collect::<Vec<VertexBufferLayout>>(),
-            None => Vec::<VertexBufferLayout>::new()
+            Some(ref buffers) => buffers
+                .iter()
+                .enumerate()
+                .map(|(i, v)| {
+                    let attributes = vertex_buffer_attributes.get(i).unwrap();
+
+                    VertexBufferLayout {
+                        array_stride: v.array_stride,
+                        step_mode: unsafe { std::mem::transmute(v.step_mode as u32) },
+                        attributes: Cow::Borrowed(&attributes.as_slice()),
+                    }
+                })
+                .collect::<Vec<VertexBufferLayout>>(),
+            None => Vec::<VertexBufferLayout>::new(),
         };
 
         let vertex_module = self.table.get(&descriptor.vertex.module).unwrap();
@@ -367,7 +469,7 @@ impl HostGpuDevice for RuneRuntimeState {
                 entry_point: Some(descriptor.vertex.entry_point.into()),
                 constants: Cow::Owned(HashMap::new()),
                 zero_initialize_workgroup_memory: false,
-                vertex_pulling_transform: false
+                vertex_pulling_transform: false,
             },
             buffers: Cow::Borrowed(vertex_buffers.as_slice()),
         };
@@ -380,7 +482,7 @@ impl HostGpuDevice for RuneRuntimeState {
                     entry_point: Some(fragment.entry_point.into()),
                     constants: Cow::Owned(HashMap::new()),
                     zero_initialize_workgroup_memory: false,
-                    vertex_pulling_transform: false
+                    vertex_pulling_transform: false,
                 },
                 targets: Cow::Borrowed(fragment_targets.as_slice()),
             }
@@ -396,15 +498,17 @@ impl HostGpuDevice for RuneRuntimeState {
                 Some(primitive) => PrimitiveState {
                     topology: match primitive.topology {
                         None => PrimitiveTopology::default(),
-                        Some(topology) => unsafe { std::mem::transmute(topology as u32) }
+                        Some(topology) => unsafe { std::mem::transmute(topology as u32) },
                     },
                     strip_index_format: match primitive.strip_index_format {
                         None => None,
-                        Some(strip_index_format) => unsafe { std::mem::transmute(strip_index_format as u32) }
+                        Some(strip_index_format) => unsafe {
+                            std::mem::transmute(strip_index_format as u32)
+                        },
                     },
                     front_face: match primitive.front_face {
                         None => FrontFace::default(),
-                        Some(front_face) => unsafe { std::mem::transmute(front_face as u32) }
+                        Some(front_face) => unsafe { std::mem::transmute(front_face as u32) },
                     },
                     cull_mode: match primitive.cull_mode {
                         GpuCullMode::None => None,
@@ -414,7 +518,7 @@ impl HostGpuDevice for RuneRuntimeState {
                     unclipped_depth: primitive.unclipped_depth,
                     polygon_mode: PolygonMode::default(),
                     conservative: false,
-                }
+                },
             },
             depth_stencil: match descriptor.depth_stencil {
                 None => None,
@@ -425,11 +529,11 @@ impl HostGpuDevice for RuneRuntimeState {
                     stencil: StencilState {
                         front: match depth_stencil.stencil_front {
                             None => StencilFaceState::default(),
-                            Some(front) => front.into()
+                            Some(front) => front.into(),
                         },
                         back: match depth_stencil.stencil_back {
                             None => StencilFaceState::default(),
-                            Some(front) => front.into()
+                            Some(front) => front.into(),
                         },
                         read_mask: match depth_stencil.stencil_read_mask {
                             Some(read_mask) => read_mask,
@@ -443,39 +547,38 @@ impl HostGpuDevice for RuneRuntimeState {
                     bias: DepthBiasState {
                         constant: depth_stencil.depth_bias.unwrap_or_default(),
                         slope_scale: depth_stencil.depth_bias_slope_scale.unwrap_or_default(),
-                        clamp: depth_stencil.depth_bias_clamp.unwrap_or_default()
+                        clamp: depth_stencil.depth_bias_clamp.unwrap_or_default(),
                     },
-                })
+                }),
             },
             multisample: match descriptor.multisample {
                 None => MultisampleState::default(),
                 Some(ref multisample) => MultisampleState {
                     count: multisample.count,
                     mask: multisample.mask as u64,
-                    alpha_to_coverage_enabled: multisample.alpha_to_coverage_enabled
-                }
+                    alpha_to_coverage_enabled: multisample.alpha_to_coverage_enabled,
+                },
             },
             multiview: Default::default(),
             label: Default::default(),
             layout,
-            cache: None
+            cache: None,
         };
 
         let render_pipeline_id = wgpu_id(
             self.instance
-                .device_create_render_pipeline::<crate::Backend>(
-                    *device_id,
-                    desc,
-                    None,
-                    None
-                ),
+                .device_create_render_pipeline::<crate::Backend>(*device_id, desc, None, None),
         )
         .unwrap();
 
         self.table.push_child(render_pipeline_id, &device).unwrap()
     }
 
-    async fn create_command_encoder(&mut self, device: Resource<GpuDevice>, _descriptor: GpuCommandEncoderDescriptor) -> Resource<GpuCommandEncoder> {
+    async fn create_command_encoder(
+        &mut self,
+        device: Resource<GpuDevice>,
+        _descriptor: GpuCommandEncoderDescriptor,
+    ) -> Resource<GpuCommandEncoder> {
         let device_id = self.table.get(&device).unwrap();
 
         let command_encoder_id = wgpu_id(
@@ -491,52 +594,61 @@ impl HostGpuDevice for RuneRuntimeState {
         self.table.push_child(command_encoder_id, &device).unwrap()
     }
 
-    async fn create_render_bundle_encoder(&mut self, device: Resource<GpuDevice>, _descriptor: GpuRenderBundleDescriptor) -> Resource<GpuRenderBundleEncoder> {
+    async fn create_render_bundle_encoder(
+        &mut self,
+        device: Resource<GpuDevice>,
+        _descriptor: GpuRenderBundleDescriptor,
+    ) -> Resource<GpuRenderBundleEncoder> {
         let device_id = self.table.get(&device).unwrap();
 
         #[allow(unused_variables)]
-        let (render_bundle_encoder, _) = self.instance
-            .device_create_render_bundle_encoder(
-                *device_id,
-                &wgpu_core::command::RenderBundleEncoderDescriptor {
-                    label: todo!(),
-                    #[allow(unreachable_code)]
-                    color_formats: todo!(),
-                    #[allow(unreachable_code)]
-                    depth_stencil: todo!(),
-                    #[allow(unreachable_code)]
-                    sample_count: todo!(),
-                    #[allow(unreachable_code)]
-                    multiview: todo!()
-                }
-            );
+        let (render_bundle_encoder, _) = self.instance.device_create_render_bundle_encoder(
+            *device_id,
+            &wgpu_core::command::RenderBundleEncoderDescriptor {
+                label: todo!(),
+                #[allow(unreachable_code)]
+                color_formats: todo!(),
+                #[allow(unreachable_code)]
+                depth_stencil: todo!(),
+                #[allow(unreachable_code)]
+                sample_count: todo!(),
+                #[allow(unreachable_code)]
+                multiview: todo!(),
+            },
+        );
 
-        self.table.push_child(unsafe { *Box::from_raw(render_bundle_encoder) }, &device).unwrap()
+        self.table
+            .push_child(unsafe { *Box::from_raw(render_bundle_encoder) }, &device)
+            .unwrap()
     }
 
-    async fn create_query_set(&mut self, device: Resource<GpuDevice>, descriptor: GpuQuerySetDescriptor) -> Resource<GpuQuerySet> {
+    async fn create_query_set(
+        &mut self,
+        device: Resource<GpuDevice>,
+        descriptor: GpuQuerySetDescriptor,
+    ) -> Resource<GpuQuerySet> {
         let device_id = self.table.get(&device).unwrap();
 
         let query_set_descriptor = wgpu_types::QuerySetDescriptor {
             label: Some(descriptor.label.into()),
             ty: descriptor.type_.into(),
-            count: descriptor.count
+            count: descriptor.count,
         };
 
-        let query_set_id = wgpu_id(
-            self.instance
-                .device_create_query_set::<crate::Backend>(
-                    *device_id,
-                    &query_set_descriptor,
-                    None,
-                ),
-        )
+        let query_set_id = wgpu_id(self.instance.device_create_query_set::<crate::Backend>(
+            *device_id,
+            &query_set_descriptor,
+            None,
+        ))
         .unwrap();
 
-        self.gpu_state.query_sets.insert(query_set_id, QuerySet {
-            type_: query_set_descriptor.ty,
-            count: query_set_descriptor.count
-        });
+        self.gpu_state.query_sets.insert(
+            query_set_id,
+            QuerySet {
+                type_: query_set_descriptor.ty,
+                count: query_set_descriptor.count,
+            },
+        );
 
         self.table.push_child(query_set_id, &device).unwrap()
     }
@@ -545,14 +657,18 @@ impl HostGpuDevice for RuneRuntimeState {
         Resource::new_own(self.queue_resource_id)
     }
 
-    async fn drop(&mut self, _rep: Resource<GpuDevice>) -> Result<()>  {
+    async fn drop(&mut self, _rep: Resource<GpuDevice>) -> Result<()> {
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuQueue for RuneRuntimeState {
-    async fn submit(&mut self, queue: Resource<GpuQueue>, command_buffers: Vec<Resource<GpuCommandBuffer>>) -> () {
+    async fn submit(
+        &mut self,
+        queue: Resource<GpuQueue>,
+        command_buffers: Vec<Resource<GpuCommandBuffer>>,
+    ) -> () {
         let command_buffers = command_buffers
             .into_iter()
             .map(|buffer| self.table.delete(buffer).unwrap())
@@ -566,44 +682,69 @@ impl HostGpuQueue for RuneRuntimeState {
         ()
     }
 
-    async fn write_buffer(&mut self, queue: Resource<GpuQueue>, buffer: Resource<GpuBuffer>, buffer_offset: GpuSizeU64, data: BufferSource, _data_offset: GpuSizeU64, _size: GpuSizeU64) -> () {
+    async fn write_buffer(
+        &mut self,
+        queue: Resource<GpuQueue>,
+        buffer: Resource<GpuBuffer>,
+        buffer_offset: GpuSizeU64,
+        data: BufferSource,
+        _data_offset: GpuSizeU64,
+        _size: GpuSizeU64,
+    ) -> () {
         let queue_id = self.table.get(&queue).unwrap();
         let buffer_id = self.table.get(&buffer).unwrap();
 
-        self.instance.queue_write_buffer::<crate::Backend>(*queue_id, *buffer_id, buffer_offset, &data).unwrap();
+        self.instance
+            .queue_write_buffer::<crate::Backend>(*queue_id, *buffer_id, buffer_offset, &data)
+            .unwrap();
 
         ()
     }
 
-    async fn write_texture(&mut self, queue: Resource<GpuQueue>, destination: GpuImageCopyTexture, data: BufferSource, data_layout: GpuImageDataLayout, size: GpuExtentD3) -> () {
+    async fn write_texture(
+        &mut self,
+        queue: Resource<GpuQueue>,
+        destination: GpuImageCopyTexture,
+        data: BufferSource,
+        data_layout: GpuImageDataLayout,
+        size: GpuExtentD3,
+    ) -> () {
         let queue_id = self.table.get(&queue).unwrap();
         let texture_id = self.table.get(&destination.texture).unwrap();
 
-        self.instance.queue_write_texture::<crate::Backend>(
-            *queue_id,
-            &ImageCopyTexture {
-                texture: *texture_id,
-                mip_level: destination.mip_level,
-                origin: Origin3d {
-                    x: destination.origin[0],
-                    y: destination.origin[1],
-                    z: destination.origin[2]
+        self.instance
+            .queue_write_texture::<crate::Backend>(
+                *queue_id,
+                &ImageCopyTexture {
+                    texture: *texture_id,
+                    mip_level: destination.mip_level,
+                    origin: Origin3d {
+                        x: destination.origin[0],
+                        y: destination.origin[1],
+                        z: destination.origin[2],
+                    },
+                    aspect: destination.aspect.into(),
                 },
-                aspect: destination.aspect.into()
-            },
-            &data,
-            &ImageDataLayout {
-                offset: data_layout.offset,
-                bytes_per_row: Some(data_layout.bytes_per_row),
-                rows_per_image: Some(data_layout.rows_per_image)
-            },
-            &size.into()
-        ).unwrap();
+                &data,
+                &ImageDataLayout {
+                    offset: data_layout.offset,
+                    bytes_per_row: Some(data_layout.bytes_per_row),
+                    rows_per_image: Some(data_layout.rows_per_image),
+                },
+                &size.into(),
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn copy_external_image_to_texture(&mut self, queue: Resource<GpuQueue>, _source: GpuImageCopyExternalImage, _destination: GpuImageCopyTextureTagged, _copy_size: GpuExtentD3) -> () {
+    async fn copy_external_image_to_texture(
+        &mut self,
+        queue: Resource<GpuQueue>,
+        _source: GpuImageCopyExternalImage,
+        _destination: GpuImageCopyTextureTagged,
+        _copy_size: GpuExtentD3,
+    ) -> () {
         let _queue_id = self.table.get(&queue).unwrap();
 
         todo!()
@@ -621,128 +762,141 @@ impl HostGpuBuffer for RuneRuntimeState {
         let buffer = self.gpu_state.buffers.get(&buffer_id).unwrap();
         buffer.size
     }
-    
+
     async fn usage(&mut self, buffer: Resource<GpuBuffer>) -> GpuBufferUsage {
         let buffer_id = self.table.get(&buffer).unwrap();
         let buffer = self.gpu_state.buffers.get(&buffer_id).unwrap();
         buffer.usage.into()
     }
-    
+
     async fn map_state(&mut self, _self_: Resource<GpuBuffer>) -> GpuBufferMapState {
         todo!()
     }
 
-    
-    async fn map(&mut self, buffer: Resource<GpuBuffer>, mode: GpuMapMode, offset: GpuSizeU64, size: GpuSizeU64) -> () {
+    async fn map(
+        &mut self,
+        buffer: Resource<GpuBuffer>,
+        mode: GpuMapMode,
+        offset: GpuSizeU64,
+        size: GpuSizeU64,
+    ) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
-        self.instance.buffer_map_async::<crate::Backend>(
-            *buffer_id,
-            offset,
-            Some(size),
-            mode.into()
-        ).ok();
+        self.instance
+            .buffer_map_async::<crate::Backend>(*buffer_id, offset, Some(size), mode.into())
+            .ok();
         ()
     }
 
-    
-    async fn get_mapped_range(&mut self, buffer: Resource<GpuBuffer>, offset: GpuSizeU64, size: GpuSizeU64) -> Vec<u8> {
+    async fn get_mapped_range(
+        &mut self,
+        buffer: Resource<GpuBuffer>,
+        offset: GpuSizeU64,
+        size: GpuSizeU64,
+    ) -> Vec<u8> {
         let buffer_id = self.table.get(&buffer).unwrap();
-        let (mapped_range, range_length) = self.instance.buffer_get_mapped_range::<crate::Backend>(
-            *buffer_id,
-            offset,
-            Some(size)
-        ).unwrap();
+        let (mapped_range, range_length) = self
+            .instance
+            .buffer_get_mapped_range::<crate::Backend>(*buffer_id, offset, Some(size))
+            .unwrap();
 
-        unsafe { Vec::from_raw_parts(mapped_range.as_ptr(), range_length.try_into().unwrap(), range_length.try_into().unwrap()) }
+        unsafe {
+            Vec::from_raw_parts(
+                mapped_range.as_ptr(),
+                range_length.try_into().unwrap(),
+                range_length.try_into().unwrap(),
+            )
+        }
     }
 
-    
     async fn unmap(&mut self, buffer: Resource<GpuBuffer>) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
-        self.instance.buffer_unmap::<crate::Backend>(*buffer_id).ok();
+        self.instance
+            .buffer_unmap::<crate::Backend>(*buffer_id)
+            .ok();
         ()
     }
 
-    
     async fn destroy(&mut self, buffer: Resource<GpuBuffer>) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
-        self.instance.buffer_destroy::<crate::Backend>(*buffer_id).ok();
+        self.instance
+            .buffer_destroy::<crate::Backend>(*buffer_id)
+            .ok();
         ()
     }
 
     async fn drop(&mut self, rep: Resource<GpuBuffer>) -> Result<()> {
         let buffer_id = self.table.delete(rep).unwrap();
         self.gpu_state.buffers.remove(&buffer_id);
-        self.instance.buffer_drop::<crate::Backend>(buffer_id, false);
+        self.instance
+            .buffer_drop::<crate::Backend>(buffer_id, false);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuTexture for RuneRuntimeState {
-    
     async fn width(&mut self, texture: Resource<GpuTexture>) -> GpuIntegerCoordinate {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.width
     }
 
-    
     async fn height(&mut self, texture: Resource<GpuTexture>) -> GpuIntegerCoordinate {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.height
     }
 
-    
-    async fn depth_or_array_layers(&mut self, _self_: Resource<GpuTexture>) -> GpuIntegerCoordinate {
+    async fn depth_or_array_layers(
+        &mut self,
+        _self_: Resource<GpuTexture>,
+    ) -> GpuIntegerCoordinate {
         todo!()
     }
 
-    
     async fn mip_level_count(&mut self, texture: Resource<GpuTexture>) -> GpuIntegerCoordinate {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.mip_level_count
     }
 
-    
     async fn sample_count(&mut self, texture: Resource<GpuTexture>) -> GpuSizeU32 {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.sample_count
     }
 
-    
     async fn dimension(&mut self, texture: Resource<GpuTexture>) -> GpuTextureDimension {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.dimension.into()
     }
 
-    
     async fn format(&mut self, texture: Resource<GpuTexture>) -> GpuTextureFormat {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.format.into()
     }
 
-    
     async fn usage(&mut self, texture: Resource<GpuTexture>) -> GpuTextureUsage {
         let texture_id = self.table.get(&texture).unwrap();
         let texture = self.gpu_state.textures.get(&texture_id).unwrap();
         texture.usage.into()
     }
-    
-    async fn create_view(&mut self, texture_resource: Resource<GpuTexture>) -> Resource<GpuTextureView> {
+
+    async fn create_view(
+        &mut self,
+        texture_resource: Resource<GpuTexture>,
+    ) -> Resource<GpuTextureView> {
         let texture_id = self.table.get(&texture_resource).unwrap();
-        
-        let texture_view_descriptor = if let Some(texture) = self.gpu_state.textures.get(texture_id) {
+
+        let texture_view_descriptor = if let Some(texture) = self.gpu_state.textures.get(texture_id)
+        {
             TextureViewDescriptor {
                 label: None,
                 format: Some(texture.format),
                 dimension: None,
-                range: ImageSubresourceRange::default()
+                range: ImageSubresourceRange::default(),
             }
         } else {
             TextureViewDescriptor::default()
@@ -751,48 +905,53 @@ impl HostGpuTexture for RuneRuntimeState {
         let texture_view_id = wgpu_id(self.instance.texture_create_view::<crate::Backend>(
             *texture_id,
             &texture_view_descriptor,
-            None
-        )).unwrap();
+            None,
+        ))
+        .unwrap();
 
-        self.table.push_child(texture_view_id, &texture_resource).unwrap()
+        self.table
+            .push_child(texture_view_id, &texture_resource)
+            .unwrap()
     }
-    
+
     async fn destroy(&mut self, texture: Resource<GpuTexture>) -> () {
         let texture_id = self.table.get(&texture).unwrap();
-        self.instance.texture_destroy::<crate::Backend>(*texture_id).unwrap();
+        self.instance
+            .texture_destroy::<crate::Backend>(*texture_id)
+            .unwrap();
         self.table.delete(texture).unwrap();
         ()
     }
 
-    async fn drop(&mut self, _texture: Resource<GpuTexture>) -> Result<()>  {
+    async fn drop(&mut self, _texture: Resource<GpuTexture>) -> Result<()> {
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuTextureView for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuTextureView>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuTextureView>) -> Result<()> {
         let texture_view_id = self.table.delete(rep).unwrap();
-        self.instance.texture_view_drop::<crate::Backend>(texture_view_id, false).unwrap();
+        self.instance
+            .texture_view_drop::<crate::Backend>(texture_view_id, false)
+            .unwrap();
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuExternalTexture for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuExternalTexture>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuExternalTexture>) -> Result<()> {
         let texture_id = self.table.delete(rep).unwrap();
-        self.instance.texture_drop::<crate::Backend>(texture_id, false);
+        self.instance
+            .texture_drop::<crate::Backend>(texture_id, false);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuSampler for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuSampler>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuSampler>) -> Result<()> {
         let sampler_id = self.table.delete(rep).unwrap();
         self.instance.sampler_drop::<crate::Backend>(sampler_id);
         Ok(())
@@ -801,101 +960,124 @@ impl HostGpuSampler for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostGpuBindGroupLayout for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuBindGroupLayout>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuBindGroupLayout>) -> Result<()> {
         let bind_group_layout_id = self.table.delete(rep).unwrap();
-        self.instance.bind_group_layout_drop::<crate::Backend>(bind_group_layout_id);
+        self.instance
+            .bind_group_layout_drop::<crate::Backend>(bind_group_layout_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuBindGroup for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuBindGroup>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuBindGroup>) -> Result<()> {
         let bind_group_id = self.table.delete(rep).unwrap();
-        self.instance.bind_group_drop::<crate::Backend>(bind_group_id);
+        self.instance
+            .bind_group_drop::<crate::Backend>(bind_group_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuPipelineLayout for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuPipelineLayout>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuPipelineLayout>) -> Result<()> {
         let pipeline_layout_id = self.table.delete(rep).unwrap();
-        self.instance.pipeline_layout_drop::<crate::Backend>(pipeline_layout_id);
+        self.instance
+            .pipeline_layout_drop::<crate::Backend>(pipeline_layout_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuShaderModule for RuneRuntimeState {
-    
-    async fn get_compilation_info(&mut self, _self_: Resource<GpuShaderModule>) -> GpuCompilationInfo {
+    async fn get_compilation_info(
+        &mut self,
+        _self_: Resource<GpuShaderModule>,
+    ) -> GpuCompilationInfo {
         todo!()
     }
 
-    async fn drop(&mut self, rep: Resource<GpuShaderModule>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuShaderModule>) -> Result<()> {
         let shader_module_id = self.table.delete(rep).unwrap();
-        self.instance.shader_module_drop::<crate::Backend>(shader_module_id);
+        self.instance
+            .shader_module_drop::<crate::Backend>(shader_module_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuComputePipeline for RuneRuntimeState {
-
-    async fn get_bind_group_layout(&mut self, pipeline: Resource<GpuComputePipeline>, index: u32) -> Resource<GpuBindGroupLayout> {
+    async fn get_bind_group_layout(
+        &mut self,
+        pipeline: Resource<GpuComputePipeline>,
+        index: u32,
+    ) -> Resource<GpuBindGroupLayout> {
         let pipeline_id = self.table.get(&pipeline).unwrap();
-        let bind_group_layout_id = wgpu_id(self.instance.compute_pipeline_get_bind_group_layout::<crate::Backend>(
-            *pipeline_id,
-            index,
-            None
-        )).unwrap();
-        self.table.push_child(bind_group_layout_id, &pipeline).unwrap()
+        let bind_group_layout_id = wgpu_id(
+            self.instance
+                .compute_pipeline_get_bind_group_layout::<crate::Backend>(
+                    *pipeline_id,
+                    index,
+                    None,
+                ),
+        )
+        .unwrap();
+        self.table
+            .push_child(bind_group_layout_id, &pipeline)
+            .unwrap()
     }
 
-    async fn drop(&mut self, rep: Resource<GpuComputePipeline>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuComputePipeline>) -> Result<()> {
         let pipeline_id = self.table.delete(rep).unwrap();
-        self.instance.compute_pipeline_drop::<crate::Backend>(pipeline_id);
+        self.instance
+            .compute_pipeline_drop::<crate::Backend>(pipeline_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuRenderPipeline for RuneRuntimeState {
-    
-    async fn get_bind_group_layout(&mut self, pipeline: Resource<GpuRenderPipeline>, index: u32) -> Resource<GpuBindGroupLayout> {
+    async fn get_bind_group_layout(
+        &mut self,
+        pipeline: Resource<GpuRenderPipeline>,
+        index: u32,
+    ) -> Resource<GpuBindGroupLayout> {
         let pipeline_id = self.table.get(&pipeline).unwrap();
-        let bind_group_layout_id = wgpu_id(self.instance.render_pipeline_get_bind_group_layout::<crate::Backend>(
-            *pipeline_id,
-            index,
-            None
-        )).unwrap();
-        self.table.push_child(bind_group_layout_id, &pipeline).unwrap()
+        let bind_group_layout_id = wgpu_id(
+            self.instance
+                .render_pipeline_get_bind_group_layout::<crate::Backend>(*pipeline_id, index, None),
+        )
+        .unwrap();
+        self.table
+            .push_child(bind_group_layout_id, &pipeline)
+            .unwrap()
     }
 
-    async fn drop(&mut self, rep: Resource<GpuRenderPipeline>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuRenderPipeline>) -> Result<()> {
         let render_pipeline_id = self.table.delete(rep).unwrap();
-        self.instance.render_pipeline_drop::<crate::Backend>(render_pipeline_id);
+        self.instance
+            .render_pipeline_drop::<crate::Backend>(render_pipeline_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuCommandBuffer for RuneRuntimeState {
-    
-    async fn drop(&mut self, rep: Resource<GpuCommandBuffer>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuCommandBuffer>) -> Result<()> {
         let command_buffer_id = self.table.delete(rep).unwrap();
-        self.instance.command_buffer_drop::<crate::Backend>(command_buffer_id);
+        self.instance
+            .command_buffer_drop::<crate::Backend>(command_buffer_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuCommandEncoder for RuneRuntimeState {
-    async fn begin_render_pass(&mut self, command_encoder: Resource<GpuCommandEncoder>, descriptor: GpuRenderPassDescriptor) -> Resource<GpuRenderPassEncoder> {        
+    async fn begin_render_pass(
+        &mut self,
+        command_encoder: Resource<GpuCommandEncoder>,
+        descriptor: GpuRenderPassDescriptor,
+    ) -> Resource<GpuRenderPassEncoder> {
         let command_encoder = self.table.get(&command_encoder).unwrap();
         let views = descriptor
             .color_attachments
@@ -905,52 +1087,68 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
 
         let mut color_attachments = vec![];
         for (i, color_attachment) in descriptor.color_attachments.iter().enumerate() {
-            let resolve_target = color_attachment.resolve_target.as_ref().map(|t| *self.table.get(t).unwrap());
+            let resolve_target = color_attachment
+                .resolve_target
+                .as_ref()
+                .map(|t| *self.table.get(t).unwrap());
             color_attachments.push(Some(wgpu_core::command::RenderPassColorAttachment {
                 view: views[i],
                 resolve_target,
                 channel: wgpu_core::command::PassChannel {
                     load_op: color_attachment.load_op.into(),
                     store_op: color_attachment.store_op.into(),
-                    clear_value: color_attachment.clear_value.as_ref().map(|v| vec_to_color(v)).unwrap_or(Color::BLACK),
+                    clear_value: color_attachment
+                        .clear_value
+                        .as_ref()
+                        .map(|v| vec_to_color(v))
+                        .unwrap_or(Color::BLACK),
                     read_only: false,
                 },
             }));
         }
 
-        let depth_stencil_attachment = descriptor.depth_stencil_attachment.map(|depth_stencil_attachment| {
-            wgpu_core::command::RenderPassDepthStencilAttachment {
-                view: *self.table.get(&depth_stencil_attachment.view).unwrap(),
-                depth: PassChannel {
-                    load_op: depth_stencil_attachment.depth_load_op.into(),
-                    store_op: depth_stencil_attachment.depth_store_op.into(),
-                    clear_value: depth_stencil_attachment.depth_clear_value,
-                    read_only: depth_stencil_attachment.depth_read_only
-                },
-                stencil: PassChannel {
-                    load_op: depth_stencil_attachment.stencil_load_op.into(),
-                    store_op: depth_stencil_attachment.stencil_store_op.into(),
-                    clear_value: depth_stencil_attachment.stencil_clear_value,
-                    read_only: depth_stencil_attachment.stencil_read_only
-                }
-            }
-        });
+        let depth_stencil_attachment =
+            descriptor
+                .depth_stencil_attachment
+                .map(|depth_stencil_attachment| {
+                    wgpu_core::command::RenderPassDepthStencilAttachment {
+                        view: *self.table.get(&depth_stencil_attachment.view).unwrap(),
+                        depth: PassChannel {
+                            load_op: depth_stencil_attachment.depth_load_op.into(),
+                            store_op: depth_stencil_attachment.depth_store_op.into(),
+                            clear_value: depth_stencil_attachment.depth_clear_value,
+                            read_only: depth_stencil_attachment.depth_read_only,
+                        },
+                        stencil: PassChannel {
+                            load_op: depth_stencil_attachment.stencil_load_op.into(),
+                            store_op: depth_stencil_attachment.stencil_store_op.into(),
+                            clear_value: depth_stencil_attachment.stencil_clear_value,
+                            read_only: depth_stencil_attachment.stencil_read_only,
+                        },
+                    }
+                });
 
-        let (render_pass, _) = self.instance.command_encoder_create_render_pass::<crate::Backend>(
-            *command_encoder,
-            &wgpu_core::command::RenderPassDescriptor {
-                label: None,
-                color_attachments: color_attachments.into(),
-                depth_stencil_attachment: depth_stencil_attachment.as_ref(),
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            }
-        );
+        let (render_pass, _) = self
+            .instance
+            .command_encoder_create_render_pass::<crate::Backend>(
+                *command_encoder,
+                &wgpu_core::command::RenderPassDescriptor {
+                    label: None,
+                    color_attachments: color_attachments.into(),
+                    depth_stencil_attachment: depth_stencil_attachment.as_ref(),
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
+                },
+            );
 
         self.table.push(render_pass).unwrap()
     }
 
-    async fn begin_compute_pass(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, _descriptor: Option<GpuComputePassDescriptor>) -> Resource<GpuComputePassEncoder> {
+    async fn begin_compute_pass(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        _descriptor: Option<GpuComputePassDescriptor>,
+    ) -> Resource<GpuComputePassEncoder> {
         let command_encoder = self.table.get(&command_encoder).unwrap();
 
         let (compute_pass, _) = self.instance.command_encoder_create_compute_pass(
@@ -964,16 +1162,39 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         self.table.push(compute_pass).unwrap()
     }
 
-    async fn copy_buffer_to_buffer(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, source: wasmtime::component::Resource<GpuBuffer>, source_offset: GpuSizeU64, destination: wasmtime::component::Resource<GpuBuffer>, destination_offset: GpuSizeU64, size: GpuSizeU64) -> () {
+    async fn copy_buffer_to_buffer(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        source: wasmtime::component::Resource<GpuBuffer>,
+        source_offset: GpuSizeU64,
+        destination: wasmtime::component::Resource<GpuBuffer>,
+        destination_offset: GpuSizeU64,
+        size: GpuSizeU64,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let source_id = self.table.get(&source).unwrap();
         let destination_id = self.table.get(&destination).unwrap();
 
-        self.instance.command_encoder_copy_buffer_to_buffer::<crate::Backend>(*command_encoder_id, *source_id, source_offset, *destination_id, destination_offset, size).ok();
+        self.instance
+            .command_encoder_copy_buffer_to_buffer::<crate::Backend>(
+                *command_encoder_id,
+                *source_id,
+                source_offset,
+                *destination_id,
+                destination_offset,
+                size,
+            )
+            .ok();
         ()
     }
 
-    async fn copy_buffer_to_texture(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, source: GpuImageCopyBuffer, destination: GpuImageCopyTexture, copy_size: GpuExtentD3) -> () {
+    async fn copy_buffer_to_texture(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        source: GpuImageCopyBuffer,
+        destination: GpuImageCopyTexture,
+        copy_size: GpuExtentD3,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let source_buffer_id = self.table.get(&source.buffer).unwrap();
         let destination_texture_id = self.table.get(&destination.texture).unwrap();
@@ -989,15 +1210,32 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let destination = wgpu_core::command::ImageCopyTexture {
             texture: *destination_texture_id,
             mip_level: destination.mip_level,
-            origin: Origin3d { x: destination.origin[0], y: destination.origin[1], z: destination.origin[2] },
+            origin: Origin3d {
+                x: destination.origin[0],
+                y: destination.origin[1],
+                z: destination.origin[2],
+            },
             aspect: destination.aspect.into(),
         };
 
-        self.instance.command_encoder_copy_buffer_to_texture::<crate::Backend>(*command_encoder_id, &source, &destination, &copy_size.into()).ok();
+        self.instance
+            .command_encoder_copy_buffer_to_texture::<crate::Backend>(
+                *command_encoder_id,
+                &source,
+                &destination,
+                &copy_size.into(),
+            )
+            .ok();
         ()
     }
 
-    async fn copy_texture_to_buffer(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, source: GpuImageCopyTexture, destination: GpuImageCopyBuffer, copy_size: GpuExtentD3) -> () {
+    async fn copy_texture_to_buffer(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        source: GpuImageCopyTexture,
+        destination: GpuImageCopyBuffer,
+        copy_size: GpuExtentD3,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let source_texture_id = self.table.get(&source.texture).unwrap();
         let destination_texture_id = self.table.get(&destination.buffer).unwrap();
@@ -1005,7 +1243,11 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let source = wgpu_core::command::ImageCopyTexture {
             texture: *source_texture_id,
             mip_level: source.mip_level,
-            origin: Origin3d { x: source.origin[0], y: source.origin[1], z: source.origin[2] },
+            origin: Origin3d {
+                x: source.origin[0],
+                y: source.origin[1],
+                z: source.origin[2],
+            },
             aspect: source.aspect.into(),
         };
         let destination = wgpu_core::command::ImageCopyBuffer {
@@ -1017,11 +1259,24 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
             },
         };
 
-        self.instance.command_encoder_copy_texture_to_buffer::<crate::Backend>(*command_encoder_id, &source, &destination, &copy_size.into()).ok();
+        self.instance
+            .command_encoder_copy_texture_to_buffer::<crate::Backend>(
+                *command_encoder_id,
+                &source,
+                &destination,
+                &copy_size.into(),
+            )
+            .ok();
         ()
     }
 
-    async fn copy_texture_to_texture(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, source: GpuImageCopyTexture, destination: GpuImageCopyTexture, copy_size: GpuExtentD3) -> () {
+    async fn copy_texture_to_texture(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        source: GpuImageCopyTexture,
+        destination: GpuImageCopyTexture,
+        copy_size: GpuExtentD3,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let source_texture_id = self.table.get(&source.texture).unwrap();
         let destination_texture_id = self.table.get(&destination.texture).unwrap();
@@ -1029,76 +1284,155 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let source = wgpu_core::command::ImageCopyTexture {
             texture: *source_texture_id,
             mip_level: source.mip_level,
-            origin: Origin3d { x: source.origin[0], y: source.origin[1], z: source.origin[2] },
+            origin: Origin3d {
+                x: source.origin[0],
+                y: source.origin[1],
+                z: source.origin[2],
+            },
             aspect: source.aspect.into(),
         };
         let destination = wgpu_core::command::ImageCopyTexture {
             texture: *destination_texture_id,
             mip_level: destination.mip_level,
-            origin: Origin3d { x: destination.origin[0], y: destination.origin[1], z: destination.origin[2] },
+            origin: Origin3d {
+                x: destination.origin[0],
+                y: destination.origin[1],
+                z: destination.origin[2],
+            },
             aspect: destination.aspect.into(),
         };
 
-        self.instance.command_encoder_copy_texture_to_texture::<crate::Backend>(*command_encoder_id, &source, &destination, &copy_size.into()).ok();
+        self.instance
+            .command_encoder_copy_texture_to_texture::<crate::Backend>(
+                *command_encoder_id,
+                &source,
+                &destination,
+                &copy_size.into(),
+            )
+            .ok();
         ()
     }
 
-    async fn clear_buffer(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, buffer: wasmtime::component::Resource<GpuBuffer>, offset: Option<GpuSizeU64>, size: Option<GpuSizeU64>) -> () {
+    async fn clear_buffer(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        buffer: wasmtime::component::Resource<GpuBuffer>,
+        offset: Option<GpuSizeU64>,
+        size: Option<GpuSizeU64>,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let buffer_id = self.table.get(&buffer).unwrap();
 
-        self.instance.command_encoder_clear_buffer::<crate::Backend>(*command_encoder_id, *buffer_id, offset.unwrap_or(0), size).ok();
+        self.instance
+            .command_encoder_clear_buffer::<crate::Backend>(
+                *command_encoder_id,
+                *buffer_id,
+                offset.unwrap_or(0),
+                size,
+            )
+            .ok();
         ()
     }
 
-    async fn write_timestamp(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, query_set: wasmtime::component::Resource<GpuQuerySet>, query_index: GpuSizeU32) -> () {
+    async fn write_timestamp(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        query_set: wasmtime::component::Resource<GpuQuerySet>,
+        query_index: GpuSizeU32,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let query_set_id = self.table.get(&query_set).unwrap();
 
-        self.instance.command_encoder_write_timestamp::<crate::Backend>(*command_encoder_id, *query_set_id, query_index).ok();
+        self.instance
+            .command_encoder_write_timestamp::<crate::Backend>(
+                *command_encoder_id,
+                *query_set_id,
+                query_index,
+            )
+            .ok();
         ()
     }
 
-    async fn resolve_query_set(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>, query_set: wasmtime::component::Resource<GpuQuerySet>, first_query: GpuSizeU32, query_count: GpuSizeU32, destination: wasmtime::component::Resource<GpuBuffer>, destination_offset: GpuSizeU64) -> () {
+    async fn resolve_query_set(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+        query_set: wasmtime::component::Resource<GpuQuerySet>,
+        first_query: GpuSizeU32,
+        query_count: GpuSizeU32,
+        destination: wasmtime::component::Resource<GpuBuffer>,
+        destination_offset: GpuSizeU64,
+    ) -> () {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
         let query_set_id = self.table.get(&query_set).unwrap();
         let destination_id = self.table.get(&destination).unwrap();
 
-        self.instance.command_encoder_resolve_query_set::<crate::Backend>(*command_encoder_id, *query_set_id, first_query, query_count, *destination_id, destination_offset).ok();
+        self.instance
+            .command_encoder_resolve_query_set::<crate::Backend>(
+                *command_encoder_id,
+                *query_set_id,
+                first_query,
+                query_count,
+                *destination_id,
+                destination_offset,
+            )
+            .ok();
         ()
     }
 
-    async fn finish(&mut self, command_encoder: wasmtime::component::Resource<GpuCommandEncoder>) -> Resource<GpuCommandBuffer> {
+    async fn finish(
+        &mut self,
+        command_encoder: wasmtime::component::Resource<GpuCommandEncoder>,
+    ) -> Resource<GpuCommandBuffer> {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
 
         let command_buffer_id = wgpu_id(self.instance.command_encoder_finish::<crate::Backend>(
             *command_encoder_id,
-            &wgpu_types::CommandBufferDescriptor {
-                label: None
-            }
-        )).unwrap();
-        
-        self.table.push_child(command_buffer_id, &command_encoder).unwrap()
+            &wgpu_types::CommandBufferDescriptor { label: None },
+        ))
+        .unwrap();
+
+        self.table
+            .push_child(command_buffer_id, &command_encoder)
+            .unwrap()
     }
 
-    async fn drop(&mut self, rep: wasmtime::component::Resource<GpuCommandEncoder>) -> wasmtime::Result<()> {
+    async fn drop(
+        &mut self,
+        rep: wasmtime::component::Resource<GpuCommandEncoder>,
+    ) -> wasmtime::Result<()> {
         let command_encoder_id = self.table.delete(rep).unwrap();
-        self.instance.command_encoder_drop::<crate::Backend>(command_encoder_id);
+        self.instance
+            .command_encoder_drop::<crate::Backend>(command_encoder_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuComputePassEncoder for RuneRuntimeState {
-    async fn set_pipeline(&mut self, _self_: Resource<GpuComputePassEncoder>, _pipeline: Resource<GpuComputePipeline>) -> () {
+    async fn set_pipeline(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _pipeline: Resource<GpuComputePipeline>,
+    ) -> () {
         todo!()
     }
 
-    async fn dispatch_workgroups(&mut self, _self_: Resource<GpuComputePassEncoder>, _workgroup_count_x: GpuSizeU32, _workgroup_count_y: Option<GpuSizeU32>, _workgroup_count_z: Option<GpuSizeU32>) -> () {
+    async fn dispatch_workgroups(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _workgroup_count_x: GpuSizeU32,
+        _workgroup_count_y: Option<GpuSizeU32>,
+        _workgroup_count_z: Option<GpuSizeU32>,
+    ) -> () {
         todo!()
     }
 
-    async fn dispatch_workgroups_indirect(&mut self, _self_: Resource<GpuComputePassEncoder>, _indirect_buffer: Resource<GpuBuffer>, _indirect_offset: GpuSizeU64,) -> () {
+    async fn dispatch_workgroups_indirect(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _indirect_buffer: Resource<GpuBuffer>,
+        _indirect_offset: GpuSizeU64,
+    ) -> () {
         todo!()
     }
 
@@ -1106,15 +1440,33 @@ impl HostGpuComputePassEncoder for RuneRuntimeState {
         todo!()
     }
 
-    async fn set_bind_group(&mut self, _self_: Resource<GpuComputePassEncoder>, _index: GpuIndexU32, _bind_group: Option<Resource<GpuBindGroup>>, _dynamic_offsets: Option<Vec<GpuBufferDynamicOffset>>) -> () {
+    async fn set_bind_group(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _index: GpuIndexU32,
+        _bind_group: Option<Resource<GpuBindGroup>>,
+        _dynamic_offsets: Option<Vec<GpuBufferDynamicOffset>>,
+    ) -> () {
         todo!()
     }
 
-    async fn set_bind_group_with_data(&mut self, _self_: Resource<GpuComputePassEncoder>, _index: GpuIndexU32, _bind_group: Option<Resource<GpuBindGroup>>, _dynamic_offsets_data: Vec<u32>, _dynamic_offsets_data_start: GpuSizeU64, _dynamic_offsets_data_lengh: GpuSizeU32,) -> () {
+    async fn set_bind_group_with_data(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _index: GpuIndexU32,
+        _bind_group: Option<Resource<GpuBindGroup>>,
+        _dynamic_offsets_data: Vec<u32>,
+        _dynamic_offsets_data_start: GpuSizeU64,
+        _dynamic_offsets_data_lengh: GpuSizeU32,
+    ) -> () {
         todo!()
     }
 
-    async fn push_debug_group(&mut self, _self_: Resource<GpuComputePassEncoder>, _group_label: String,) -> () {
+    async fn push_debug_group(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _group_label: String,
+    ) -> () {
         todo!()
     }
 
@@ -1122,11 +1474,15 @@ impl HostGpuComputePassEncoder for RuneRuntimeState {
         todo!()
     }
 
-    async fn insert_debug_marker(&mut self, _self_: Resource<GpuComputePassEncoder>, _marker_label: String,) -> () {
+    async fn insert_debug_marker(
+        &mut self,
+        _self_: Resource<GpuComputePassEncoder>,
+        _marker_label: String,
+    ) -> () {
         todo!()
     }
 
-    async fn drop(&mut self, rep: Resource<GpuComputePassEncoder>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuComputePassEncoder>) -> Result<()> {
         self.table.delete(rep).unwrap();
         Ok(())
     }
@@ -1134,222 +1490,380 @@ impl HostGpuComputePassEncoder for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostGpuRenderPassEncoder for RuneRuntimeState {
-    async fn set_pipeline(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, pipeline: Resource<GpuRenderPipeline>) -> () {
+    async fn set_pipeline(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        pipeline: Resource<GpuRenderPipeline>,
+    ) -> () {
         let render_pipeline_id = *self.table.get(&pipeline).unwrap();
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
-        self.instance.render_pass_set_pipeline::<crate::Backend>(
-            render_pass_encoder_id,
-            render_pipeline_id
-        ).unwrap();
+        self.instance
+            .render_pass_set_pipeline::<crate::Backend>(render_pass_encoder_id, render_pipeline_id)
+            .unwrap();
         ()
     }
-    
-    async fn set_index_buffer(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, buffer: Resource<GpuBuffer>, index_format: GpuIndexFormat, offset: GpuSizeU64, size: Option<GpuSizeU64>) -> () {
+
+    async fn set_index_buffer(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        buffer: Resource<GpuBuffer>,
+        index_format: GpuIndexFormat,
+        offset: GpuSizeU64,
+        size: Option<GpuSizeU64>,
+    ) -> () {
         let buffer_id = *self.table.get(&buffer).unwrap();
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
-        self.instance.render_pass_set_index_buffer(
-            render_pass_encoder_id,
-            buffer_id,
-            index_format.into(),
-            offset,
-            size.map(|s| NonZeroU64::new(s).unwrap())
-        ).unwrap();
+        self.instance
+            .render_pass_set_index_buffer(
+                render_pass_encoder_id,
+                buffer_id,
+                index_format.into(),
+                offset,
+                size.map(|s| NonZeroU64::new(s).unwrap()),
+            )
+            .unwrap();
 
         ()
     }
-    
-    async fn set_vertex_buffer(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, slot: GpuIndexU32, buffer: Resource<GpuBuffer>, offset: GpuSizeU64, size: Option<GpuSizeU64>) -> () {
+
+    async fn set_vertex_buffer(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        slot: GpuIndexU32,
+        buffer: Resource<GpuBuffer>,
+        offset: GpuSizeU64,
+        size: Option<GpuSizeU64>,
+    ) -> () {
         let buffer_id = *self.table.get(&buffer).unwrap();
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
-        self.instance.render_pass_set_vertex_buffer::<crate::Backend>(
-            render_pass_encoder_id,
-            slot,
-            buffer_id,
-            offset,
-            size.map(|s| NonZeroU64::new(s).unwrap())
-        ).unwrap();
+        self.instance
+            .render_pass_set_vertex_buffer::<crate::Backend>(
+                render_pass_encoder_id,
+                slot,
+                buffer_id,
+                offset,
+                size.map(|s| NonZeroU64::new(s).unwrap()),
+            )
+            .unwrap();
 
         ()
     }
- 
-    async fn draw(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, vertex_count: GpuSizeU32, instance_count: GpuSizeU32, first_vertex: GpuSizeU32, first_instance: GpuSizeU32) -> () {
+
+    async fn draw(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        vertex_count: GpuSizeU32,
+        instance_count: GpuSizeU32,
+        first_vertex: GpuSizeU32,
+        first_instance: GpuSizeU32,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
-        self.instance.render_pass_draw::<crate::Backend>(
-            render_pass_encoder_id,
-            vertex_count,
-            instance_count,
-            first_vertex,
-            first_instance,
-        ).unwrap();
+        self.instance
+            .render_pass_draw::<crate::Backend>(
+                render_pass_encoder_id,
+                vertex_count,
+                instance_count,
+                first_vertex,
+                first_instance,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn draw_indexed(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, index_count: GpuSizeU32, instance_count: GpuSizeU32, first_index: GpuSizeU32, base_vertex: GpuSignedOffsetS32, first_instance: GpuSizeU32) -> () {
+    async fn draw_indexed(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        index_count: GpuSizeU32,
+        instance_count: GpuSizeU32,
+        first_index: GpuSizeU32,
+        base_vertex: GpuSignedOffsetS32,
+        first_instance: GpuSizeU32,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        
-        self.instance.render_pass_draw_indexed::<crate::Backend>(
-            render_pass_encoder_id,
-            index_count,
-            instance_count,
-            first_index,
-            base_vertex,
-            first_instance,
-        ).unwrap();
+
+        self.instance
+            .render_pass_draw_indexed::<crate::Backend>(
+                render_pass_encoder_id,
+                index_count,
+                instance_count,
+                first_index,
+                base_vertex,
+                first_instance,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn draw_indirect(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, indirect_buffer: Resource<GpuBuffer>, indirect_offset: GpuSizeU64,) -> () {
+    async fn draw_indirect(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        indirect_buffer: Resource<GpuBuffer>,
+        indirect_offset: GpuSizeU64,
+    ) -> () {
         let buffer_id = *self.table.get(&indirect_buffer).unwrap();
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        
-        self.instance.render_pass_draw_indirect::<crate::Backend>(
-            render_pass_encoder_id,
-            buffer_id,
-            indirect_offset
-        ).unwrap();
+
+        self.instance
+            .render_pass_draw_indirect::<crate::Backend>(
+                render_pass_encoder_id,
+                buffer_id,
+                indirect_offset,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn draw_indexed_indirect(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, indirect_buffer: Resource<GpuBuffer>, indirect_offset: GpuSizeU64) -> () {
+    async fn draw_indexed_indirect(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        indirect_buffer: Resource<GpuBuffer>,
+        indirect_offset: GpuSizeU64,
+    ) -> () {
         let buffer_id = *self.table.get(&indirect_buffer).unwrap();
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        
-        self.instance.render_pass_draw_indexed_indirect::<crate::Backend>(
-            render_pass_encoder_id,
-            buffer_id,
-            indirect_offset
-        ).unwrap();
+
+        self.instance
+            .render_pass_draw_indexed_indirect::<crate::Backend>(
+                render_pass_encoder_id,
+                buffer_id,
+                indirect_offset,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn set_viewport(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, x: f32, y: f32, width: f32, height: f32, min_depth: f32, max_depth: f32) -> () {
+    async fn set_viewport(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        min_depth: f32,
+        max_depth: f32,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_set_viewport::<crate::Backend>(render_pass_encoder_id, x, y, width, height, min_depth, max_depth).unwrap();
+        self.instance
+            .render_pass_set_viewport::<crate::Backend>(
+                render_pass_encoder_id,
+                x,
+                y,
+                width,
+                height,
+                min_depth,
+                max_depth,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn set_scissor_rect(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, x: GpuIntegerCoordinate, y: GpuIntegerCoordinate, width: GpuIntegerCoordinate, height: GpuIntegerCoordinate) -> () {
+    async fn set_scissor_rect(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        x: GpuIntegerCoordinate,
+        y: GpuIntegerCoordinate,
+        width: GpuIntegerCoordinate,
+        height: GpuIntegerCoordinate,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_set_scissor_rect::<crate::Backend>(
-            render_pass_encoder_id,
-            x,
-            y,
-            width,
-            height
-        ).unwrap();
+        self.instance
+            .render_pass_set_scissor_rect::<crate::Backend>(
+                render_pass_encoder_id,
+                x,
+                y,
+                width,
+                height,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn set_blend_constant(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, color: GpuColor) -> () {
+    async fn set_blend_constant(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        color: GpuColor,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_set_blend_constant::<crate::Backend>(render_pass_encoder_id, Color {
-            r: color[0],
-            g: color[1],
-            b: color[2],
-            a: color[3]
-        }).unwrap();
+        self.instance
+            .render_pass_set_blend_constant::<crate::Backend>(
+                render_pass_encoder_id,
+                Color {
+                    r: color[0],
+                    g: color[1],
+                    b: color[2],
+                    a: color[3],
+                },
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn set_stencil_reference(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, reference: GpuStencilValue) -> () {
+    async fn set_stencil_reference(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        reference: GpuStencilValue,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_set_stencil_reference::<crate::Backend>(render_pass_encoder_id, reference).unwrap();
+        self.instance
+            .render_pass_set_stencil_reference::<crate::Backend>(render_pass_encoder_id, reference)
+            .unwrap();
 
         ()
     }
 
-    async fn begin_occlusion_query(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, query_index: GpuSizeU32) -> () {
+    async fn begin_occlusion_query(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        query_index: GpuSizeU32,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_begin_occlusion_query::<crate::Backend>(render_pass_encoder_id, query_index).unwrap();
+        self.instance
+            .render_pass_begin_occlusion_query::<crate::Backend>(
+                render_pass_encoder_id,
+                query_index,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn end_occlusion_query(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>) -> () {
+    async fn end_occlusion_query(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_end_occlusion_query::<crate::Backend>(render_pass_encoder_id).unwrap();
+        self.instance
+            .render_pass_end_occlusion_query::<crate::Backend>(render_pass_encoder_id)
+            .unwrap();
 
         ()
     }
 
-    async fn execute_bundles(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, bundles: Vec<Resource<GpuRenderBundle>>) -> () {
-        let render_bundle_ids: Vec<_> = bundles.iter()
+    async fn execute_bundles(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        bundles: Vec<Resource<GpuRenderBundle>>,
+    ) -> () {
+        let render_bundle_ids: Vec<_> = bundles
+            .iter()
             .map(|b| *self.table.get(b).unwrap())
             .collect();
-        
+
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-    
-        self.instance.render_pass_execute_bundles::<crate::Backend>(render_pass_encoder_id, &render_bundle_ids[..]).unwrap();
+
+        self.instance
+            .render_pass_execute_bundles::<crate::Backend>(
+                render_pass_encoder_id,
+                &render_bundle_ids[..],
+            )
+            .unwrap();
 
         ()
     }
 
     async fn end(&mut self, render_pass: Resource<GpuRenderPassEncoder>) -> () {
         let render_pass = self.table.get_mut(&render_pass).unwrap();
-        
+
         self.instance
             .render_pass_end::<crate::Backend>(render_pass)
             .unwrap();
         ()
     }
 
-    async fn set_bind_group(&mut self, render_pass: Resource<GpuRenderPassEncoder>, index: GpuIndexU32, bind_group: Option<Resource<GpuBindGroup>>, dynamic_offsets: Option<Vec<GpuBufferDynamicOffset>>) -> () {
+    async fn set_bind_group(
+        &mut self,
+        render_pass: Resource<GpuRenderPassEncoder>,
+        index: GpuIndexU32,
+        bind_group: Option<Resource<GpuBindGroup>>,
+        dynamic_offsets: Option<Vec<GpuBufferDynamicOffset>>,
+    ) -> () {
         let bind_group_id = *self.table.get(&bind_group.unwrap()).unwrap();
         let render_pass = self.table.get_mut(&render_pass).unwrap();
 
         let dynamic_offsets = if let Some(dynamic_offsets) = dynamic_offsets {
-            dynamic_offsets.into_iter().map(|o| o as DynamicOffset).collect()
+            dynamic_offsets
+                .into_iter()
+                .map(|o| o as DynamicOffset)
+                .collect()
         } else {
             Vec::new()
         };
-        
-        self.instance.render_pass_set_bind_group::<crate::Backend>(
-            render_pass,
-            index,
-            bind_group_id,
-            &dynamic_offsets
-        ).unwrap();
+
+        self.instance
+            .render_pass_set_bind_group::<crate::Backend>(
+                render_pass,
+                index,
+                bind_group_id,
+                &dynamic_offsets,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn set_bind_group_with_data(&mut self, _render_pass_encoder: Resource<GpuRenderPassEncoder>, _index: GpuIndexU32, _bind_group: Option<Resource<GpuBindGroup>>, _dynamic_offsets_data: Vec<u32>, _dynamic_offsets_data_start: GpuSizeU64, _dynamic_offsets_data_length: GpuSizeU32,) -> () {
+    async fn set_bind_group_with_data(
+        &mut self,
+        _render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        _index: GpuIndexU32,
+        _bind_group: Option<Resource<GpuBindGroup>>,
+        _dynamic_offsets_data: Vec<u32>,
+        _dynamic_offsets_data_start: GpuSizeU64,
+        _dynamic_offsets_data_length: GpuSizeU32,
+    ) -> () {
         todo!()
     }
 
-    async fn push_debug_group(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, group_label: String) -> () {
+    async fn push_debug_group(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        group_label: String,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_push_debug_group::<crate::Backend>(render_pass_encoder_id, &group_label, 0).unwrap();
+        self.instance
+            .render_pass_push_debug_group::<crate::Backend>(render_pass_encoder_id, &group_label, 0)
+            .unwrap();
 
         ()
     }
 
     async fn pop_debug_group(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_pop_debug_group::<crate::Backend>(render_pass_encoder_id).unwrap();
+        self.instance
+            .render_pass_pop_debug_group::<crate::Backend>(render_pass_encoder_id)
+            .unwrap();
 
         ()
     }
 
-    async fn insert_debug_marker(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>, marker_label: String) -> () {
+    async fn insert_debug_marker(
+        &mut self,
+        render_pass_encoder: Resource<GpuRenderPassEncoder>,
+        marker_label: String,
+    ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
-        self.instance.render_pass_insert_debug_marker::<crate::Backend>(render_pass_encoder_id, &marker_label, 0).unwrap();
+        self.instance
+            .render_pass_insert_debug_marker::<crate::Backend>(
+                render_pass_encoder_id,
+                &marker_label,
+                0,
+            )
+            .unwrap();
 
         ()
     }
 
-    async fn drop(&mut self, rep: Resource<GpuRenderPassEncoder>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuRenderPassEncoder>) -> Result<()> {
         self.table.delete(rep).unwrap();
         Ok(())
     }
@@ -1357,31 +1871,38 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
 
 #[async_trait::async_trait]
 impl HostGpuRenderBundle for RuneRuntimeState {
-
-    async fn drop(&mut self, rep: Resource<GpuRenderBundle>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuRenderBundle>) -> Result<()> {
         let render_bundle_id = self.table.delete(rep).unwrap();
-        self.instance.render_bundle_drop::<crate::Backend>(render_bundle_id);
+        self.instance
+            .render_bundle_drop::<crate::Backend>(render_bundle_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuRenderBundleEncoder for RuneRuntimeState {
-
-    async fn finish(&mut self, render_bundle_encoder_resource: Resource<GpuRenderBundleEncoder>, descriptor: GpuRenderBundleDescriptor) -> Resource<GpuRenderBundle> {
+    async fn finish(
+        &mut self,
+        render_bundle_encoder_resource: Resource<GpuRenderBundleEncoder>,
+        descriptor: GpuRenderBundleDescriptor,
+    ) -> Resource<GpuRenderBundle> {
         let render_bundle_encoder = self.table.delete(render_bundle_encoder_resource).unwrap();
-        let render_bundle_id = wgpu_id(self.instance.render_bundle_encoder_finish::<crate::Backend>(
-            render_bundle_encoder,
-            &wgpu_core::command::RenderBundleDescriptor {
-                label: Some(descriptor.label.into())
-            },
-            None
-        )).unwrap();
-        
+        let render_bundle_id = wgpu_id(
+            self.instance
+                .render_bundle_encoder_finish::<crate::Backend>(
+                    render_bundle_encoder,
+                    &wgpu_core::command::RenderBundleDescriptor {
+                        label: Some(descriptor.label.into()),
+                    },
+                    None,
+                ),
+        )
+        .unwrap();
+
         self.table.push(render_bundle_id).unwrap()
     }
 
-    async fn drop(&mut self, rep: Resource<GpuRenderBundleEncoder>) -> Result<()>  {
+    async fn drop(&mut self, rep: Resource<GpuRenderBundleEncoder>) -> Result<()> {
         self.table.delete(rep).unwrap();
         Ok(())
     }
