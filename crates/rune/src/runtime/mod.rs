@@ -14,10 +14,12 @@ use winit::{
     error::EventLoopError,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopBuilder},
-    platform::macos::WindowBuilderExtMacOS,
     raw_window_handle::{HasDisplayHandle, HasWindowHandle},
     window::{Window, WindowBuilder},
 };
+
+#[cfg(target_os = "macos")]
+use winit::platform::macos::WindowBuilderExtMacOS;
 
 use crate::{game::Game, wgpu_id_2};
 
@@ -229,11 +231,13 @@ pub fn run(input_path: PathBuf, binary: Vec<u8>) {
         .build()
         .unwrap();
 
-    let window = WindowBuilder::new()
-        .with_title("Game")
-        .with_titlebar_hidden(true)
-        .build(&event_loop)
-        .unwrap();
+    let window_builder = WindowBuilder::new()
+        .with_title("Game");
+
+    #[cfg(target_os = "macos")]
+    let window_builder = window_builder.with_titlebar_hidden(true);
+
+    let window = window_builder.build(&event_loop).unwrap();
 
     // #[cfg(not(target_arch = "wasm32"))]
     // {
