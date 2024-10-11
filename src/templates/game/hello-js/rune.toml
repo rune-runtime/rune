@@ -4,7 +4,7 @@ version = "0.1.0"
 type = "game"
 
 [runtime]
-version = "0.1.0"
+version = "{{ runtime_version }}"
 
 [build]
 input = "./dist" # Your guest code build output, the files you want to package

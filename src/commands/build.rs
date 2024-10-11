@@ -1,12 +1,21 @@
+use rust_embed::Embed;
+use subprocess::{Exec, Redirection};
 use std::env;
-use std::path::Path;
-use std::process::Command;
+use std::path::{Path, PathBuf};
 
 use toml::Table;
+
+use wit_component::{
+    ComponentEncoder, DecodedWasm, Linker, StringEncoding, WitPrinter,
+};
 
 use crate::cli::NewSubcommand;
 
 use crate::Result;
+
+#[derive(Embed)]
+#[folder = "wasi"]
+struct WasiWasm;
 
 pub async fn build(release: &bool) -> Result<()> {
     let current_dir = env::current_dir()?;
@@ -14,6 +23,17 @@ pub async fn build(release: &bool) -> Result<()> {
         .unwrap()
         .parse::<Table>()
         .unwrap();
+
+    let build = config.get("build").unwrap();
+
+    let pre_command = build.get("pre");
+    if let Some(command) = pre_command {
+        let output = Exec::shell(command.as_str().unwrap())
+            .stdout(Redirection::Pipe)
+            .capture()?
+            .stdout_str();
+        print!("{}", output);
+    }
 
     let entrypoint = match config["build"]["entrypoint"].as_str() {
         Some(entrypoint) => entrypoint,
@@ -35,21 +55,29 @@ pub async fn build(release: &bool) -> Result<()> {
     let output_entrypoint_path = current_dir.join(&output_path).join(&entrypoint);
 
     // TODO: Concatenate rune dependencies read from config to wasm binary
-
-    // TODO: Use wasm-tools library instead of CLI
-    let output = Command::new("wasm-tools")
-        .args([
-            "component",
-            "new",
-            output_entrypoint_path.to_str().unwrap(),
-            "-o",
-            output_entrypoint_path.to_str().unwrap(),
-            "--adapt",
-            "./wasi_snapshot_preview1.reactor.wasm",
-        ])
-        .current_dir(current_dir)
-        .output()
-        .expect("Failed to execute wasm-tools");
+    
+    componentize_wasm(output_entrypoint_path);
 
     Ok(())
+}
+
+fn componentize_wasm(output_entrypoint_path: PathBuf) {
+    let parser = wat::Parser::new();
+    let wasm = parser.parse_file(&output_entrypoint_path).expect("Unable to read game wasm");
+    let mut encoder = ComponentEncoder::default()
+        .validate(true)
+        .reject_legacy_names(false);
+
+    // encoder = encoder.merge_imports_based_on_semver(merge); // TODO: Needed?
+    encoder = encoder.module(&wasm).expect("Unable to read game as a wasm module");
+
+    let adapter = WasiWasm::get("wasi_snapshot_preview1.reactor.wasm").unwrap();
+    let adapter = wat::parse_bytes(&adapter.data).unwrap();
+    encoder = encoder.adapter("wasi_snapshot_preview1", &adapter).expect("Unable to read adapter");
+
+    let bytes = encoder
+        .encode()
+        .expect("Failed to encode a component from provided module");
+
+    std::fs::write(&output_entrypoint_path, bytes).expect("Unable to write wasm");
 }

@@ -49,7 +49,7 @@ impl HostGpuSurface for RuneRuntimeState {
     async fn current_texture(&mut self, _surface: Resource<GpuSurface>) -> Resource<GpuTexture> {
         let surface_output = self
             .instance
-            .surface_get_current_texture::<crate::Backend>(self.surface, None)
+            .surface_get_current_texture(self.surface, None)
             .unwrap();
 
         self.table.push(surface_output.texture_id.unwrap()).unwrap()
@@ -78,7 +78,7 @@ impl HostGpuQuerySet for RuneRuntimeState {
 
     async fn drop(&mut self, rep: Resource<GpuQuerySet>) -> Result<()> {
         let query_set_id = self.table.delete(rep).unwrap();
-        self.instance.query_set_drop::<crate::Backend>(query_set_id);
+        self.instance.query_set_drop(query_set_id);
         Ok(())
     }
 }
@@ -87,7 +87,7 @@ impl HostGpuQuerySet for RuneRuntimeState {
 impl HostGpuAdapter for RuneRuntimeState {
     async fn request_device(&mut self, _adapter: Resource<GpuAdapter>) -> Resource<GpuDevice> {
         // let adapter_id = self.table.get(&adapter).unwrap();
-        // let (device_id, queue_id) = wgpu_id_2(self.instance.adapter_request_device::<crate::Backend>(
+        // let (device_id, queue_id) = self.instance.adapter_request_device(
         //     *adapter_id,
         //     &DeviceDescriptor {
         //         label: None,
@@ -97,7 +97,7 @@ impl HostGpuAdapter for RuneRuntimeState {
         //     None,
         //     (),
         //     ()
-        // )).unwrap();
+        // ).unwrap();
         // self.table.push(queue_id).unwrap();
         // Ok(self.table.push(device_id).unwrap())
         Resource::new_own(self.device_resource_id)
@@ -105,7 +105,7 @@ impl HostGpuAdapter for RuneRuntimeState {
 
     async fn drop(&mut self, _rep: Resource<GpuAdapter>) -> Result<()> {
         // let adapter_id = self.table.delete(rep).unwrap();
-        // self.instance.adapter_drop::<crate::Backend>(adapter_id);
+        // self.instance.adapter_drop(adapter_id);
         Ok(())
     }
 }
@@ -137,7 +137,7 @@ impl HostGpuDevice for RuneRuntimeState {
                 mapped_at_creation: true,
             };
 
-            let buffer_id = wgpu_id(self.instance.device_create_buffer::<crate::Backend>(
+            let buffer_id = wgpu_id(self.instance.device_create_buffer(
                 *device_id,
                 &buffer_descriptor,
                 None,
@@ -146,7 +146,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
             let (buffer, buffer_length) = self
                 .instance
-                .buffer_get_mapped_range::<crate::Backend>(buffer_id, 0, Some(unpadded_size))
+                .buffer_get_mapped_range(buffer_id, 0, Some(unpadded_size))
                 .unwrap();
 
             unsafe {
@@ -154,7 +154,7 @@ impl HostGpuDevice for RuneRuntimeState {
                 std::ptr::copy_nonoverlapping(contents.as_ptr(), buffer.as_ptr(), contents.len());
             }
 
-            self.instance.buffer_unmap::<crate::Backend>(buffer_id).ok();
+            self.instance.buffer_unmap(buffer_id).ok();
 
             buffer_id
         } else {
@@ -165,7 +165,7 @@ impl HostGpuDevice for RuneRuntimeState {
                 mapped_at_creation: false,
             };
 
-            wgpu_id(self.instance.device_create_buffer::<crate::Backend>(
+            wgpu_id(self.instance.device_create_buffer(
                 *device_id,
                 &buffer_descriptor,
                 None,
@@ -206,7 +206,7 @@ impl HostGpuDevice for RuneRuntimeState {
                 .collect(),
         };
 
-        let texture_id = wgpu_id(self.instance.device_create_texture::<crate::Backend>(
+        let texture_id = wgpu_id(self.instance.device_create_texture(
             *device_id,
             &texture_descriptor,
             None,
@@ -236,7 +236,7 @@ impl HostGpuDevice for RuneRuntimeState {
     ) -> Resource<GpuSampler> {
         let device_id = self.table.get(&device).unwrap();
 
-        let sampler_id = wgpu_id(self.instance.device_create_sampler::<crate::Backend>(
+        let sampler_id = wgpu_id(self.instance.device_create_sampler(
             *device_id,
             &wgpu_core::resource::SamplerDescriptor {
                 label: None,
@@ -289,7 +289,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
         let bind_group_layout_id = wgpu_id(
             self.instance
-                .device_create_bind_group_layout::<crate::Backend>(
+                .device_create_bind_group_layout(
                     *device_id,
                     &BindGroupLayoutDescriptor {
                         label: None,
@@ -319,7 +319,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
         let pipeline_layout_id = wgpu_id(
             self.instance
-                .device_create_pipeline_layout::<crate::Backend>(
+                .device_create_pipeline_layout(
                     *device_id,
                     &PipelineLayoutDescriptor {
                         label: None,
@@ -348,7 +348,7 @@ impl HostGpuDevice for RuneRuntimeState {
             .map(|entry| convert_bind_group_entry(&self.table, entry))
             .collect();
 
-        let bind_group_id = wgpu_id(self.instance.device_create_bind_group::<crate::Backend>(
+        let bind_group_id = wgpu_id(self.instance.device_create_bind_group(
             *device_id,
             &wgpu_core::binding_model::BindGroupDescriptor {
                 label: descriptor.label.map(|label| label.into()),
@@ -369,7 +369,7 @@ impl HostGpuDevice for RuneRuntimeState {
     ) -> Resource<GpuShaderModule> {
         let device_id = self.table.get(&device).unwrap();
 
-        let shader_module = wgpu_id(self.instance.device_create_shader_module::<crate::Backend>(
+        let shader_module = wgpu_id(self.instance.device_create_shader_module(
             *device_id,
             &wgpu_core::pipeline::ShaderModuleDescriptor {
                 label: descriptor.label.map(|label| label.into()),
@@ -469,7 +469,6 @@ impl HostGpuDevice for RuneRuntimeState {
                 entry_point: Some(descriptor.vertex.entry_point.into()),
                 constants: Cow::Owned(HashMap::new()),
                 zero_initialize_workgroup_memory: false,
-                vertex_pulling_transform: false,
             },
             buffers: Cow::Borrowed(vertex_buffers.as_slice()),
         };
@@ -482,7 +481,6 @@ impl HostGpuDevice for RuneRuntimeState {
                     entry_point: Some(fragment.entry_point.into()),
                     constants: Cow::Owned(HashMap::new()),
                     zero_initialize_workgroup_memory: false,
-                    vertex_pulling_transform: false,
                 },
                 targets: Cow::Borrowed(fragment_targets.as_slice()),
             }
@@ -567,7 +565,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
         let render_pipeline_id = wgpu_id(
             self.instance
-                .device_create_render_pipeline::<crate::Backend>(*device_id, desc, None, None),
+                .device_create_render_pipeline(*device_id, desc, None, None),
         )
         .unwrap();
 
@@ -583,7 +581,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
         let command_encoder_id = wgpu_id(
             self.instance
-                .device_create_command_encoder::<crate::Backend>(
+                .device_create_command_encoder(
                     *device_id,
                     &wgpu_types::CommandEncoderDescriptor { label: None },
                     None,
@@ -635,7 +633,7 @@ impl HostGpuDevice for RuneRuntimeState {
             count: descriptor.count,
         };
 
-        let query_set_id = wgpu_id(self.instance.device_create_query_set::<crate::Backend>(
+        let query_set_id = wgpu_id(self.instance.device_create_query_set(
             *device_id,
             &query_set_descriptor,
             None,
@@ -676,7 +674,7 @@ impl HostGpuQueue for RuneRuntimeState {
 
         let queue_id = self.table.get(&queue).unwrap();
         self.instance
-            .queue_submit::<crate::Backend>(*queue_id, &command_buffers)
+            .queue_submit(*queue_id, &command_buffers)
             .unwrap();
 
         ()
@@ -695,7 +693,7 @@ impl HostGpuQueue for RuneRuntimeState {
         let buffer_id = self.table.get(&buffer).unwrap();
 
         self.instance
-            .queue_write_buffer::<crate::Backend>(*queue_id, *buffer_id, buffer_offset, &data)
+            .queue_write_buffer(*queue_id, *buffer_id, buffer_offset, &data)
             .unwrap();
 
         ()
@@ -713,7 +711,7 @@ impl HostGpuQueue for RuneRuntimeState {
         let texture_id = self.table.get(&destination.texture).unwrap();
 
         self.instance
-            .queue_write_texture::<crate::Backend>(
+            .queue_write_texture(
                 *queue_id,
                 &ImageCopyTexture {
                     texture: *texture_id,
@@ -782,7 +780,7 @@ impl HostGpuBuffer for RuneRuntimeState {
     ) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
         self.instance
-            .buffer_map_async::<crate::Backend>(*buffer_id, offset, Some(size), mode.into())
+            .buffer_map_async(*buffer_id, offset, Some(size), mode.into())
             .ok();
         ()
     }
@@ -796,7 +794,7 @@ impl HostGpuBuffer for RuneRuntimeState {
         let buffer_id = self.table.get(&buffer).unwrap();
         let (mapped_range, range_length) = self
             .instance
-            .buffer_get_mapped_range::<crate::Backend>(*buffer_id, offset, Some(size))
+            .buffer_get_mapped_range(*buffer_id, offset, Some(size))
             .unwrap();
 
         unsafe {
@@ -811,7 +809,7 @@ impl HostGpuBuffer for RuneRuntimeState {
     async fn unmap(&mut self, buffer: Resource<GpuBuffer>) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
         self.instance
-            .buffer_unmap::<crate::Backend>(*buffer_id)
+            .buffer_unmap(*buffer_id)
             .ok();
         ()
     }
@@ -819,7 +817,7 @@ impl HostGpuBuffer for RuneRuntimeState {
     async fn destroy(&mut self, buffer: Resource<GpuBuffer>) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
         self.instance
-            .buffer_destroy::<crate::Backend>(*buffer_id)
+            .buffer_destroy(*buffer_id)
             .ok();
         ()
     }
@@ -827,8 +825,7 @@ impl HostGpuBuffer for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuBuffer>) -> Result<()> {
         let buffer_id = self.table.delete(rep).unwrap();
         self.gpu_state.buffers.remove(&buffer_id);
-        self.instance
-            .buffer_drop::<crate::Backend>(buffer_id, false);
+        self.instance.buffer_drop(buffer_id);
         Ok(())
     }
 }
@@ -902,7 +899,7 @@ impl HostGpuTexture for RuneRuntimeState {
             TextureViewDescriptor::default()
         };
 
-        let texture_view_id = wgpu_id(self.instance.texture_create_view::<crate::Backend>(
+        let texture_view_id = wgpu_id(self.instance.texture_create_view(
             *texture_id,
             &texture_view_descriptor,
             None,
@@ -917,7 +914,7 @@ impl HostGpuTexture for RuneRuntimeState {
     async fn destroy(&mut self, texture: Resource<GpuTexture>) -> () {
         let texture_id = self.table.get(&texture).unwrap();
         self.instance
-            .texture_destroy::<crate::Backend>(*texture_id)
+            .texture_destroy(*texture_id)
             .unwrap();
         self.table.delete(texture).unwrap();
         ()
@@ -933,7 +930,7 @@ impl HostGpuTextureView for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuTextureView>) -> Result<()> {
         let texture_view_id = self.table.delete(rep).unwrap();
         self.instance
-            .texture_view_drop::<crate::Backend>(texture_view_id, false)
+            .texture_view_drop(texture_view_id)
             .unwrap();
         Ok(())
     }
@@ -944,7 +941,7 @@ impl HostGpuExternalTexture for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuExternalTexture>) -> Result<()> {
         let texture_id = self.table.delete(rep).unwrap();
         self.instance
-            .texture_drop::<crate::Backend>(texture_id, false);
+            .texture_drop(texture_id);
         Ok(())
     }
 }
@@ -953,7 +950,7 @@ impl HostGpuExternalTexture for RuneRuntimeState {
 impl HostGpuSampler for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuSampler>) -> Result<()> {
         let sampler_id = self.table.delete(rep).unwrap();
-        self.instance.sampler_drop::<crate::Backend>(sampler_id);
+        self.instance.sampler_drop(sampler_id);
         Ok(())
     }
 }
@@ -963,7 +960,7 @@ impl HostGpuBindGroupLayout for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuBindGroupLayout>) -> Result<()> {
         let bind_group_layout_id = self.table.delete(rep).unwrap();
         self.instance
-            .bind_group_layout_drop::<crate::Backend>(bind_group_layout_id);
+            .bind_group_layout_drop(bind_group_layout_id);
         Ok(())
     }
 }
@@ -973,7 +970,7 @@ impl HostGpuBindGroup for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuBindGroup>) -> Result<()> {
         let bind_group_id = self.table.delete(rep).unwrap();
         self.instance
-            .bind_group_drop::<crate::Backend>(bind_group_id);
+            .bind_group_drop(bind_group_id);
         Ok(())
     }
 }
@@ -983,7 +980,7 @@ impl HostGpuPipelineLayout for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuPipelineLayout>) -> Result<()> {
         let pipeline_layout_id = self.table.delete(rep).unwrap();
         self.instance
-            .pipeline_layout_drop::<crate::Backend>(pipeline_layout_id);
+            .pipeline_layout_drop(pipeline_layout_id);
         Ok(())
     }
 }
@@ -1000,7 +997,7 @@ impl HostGpuShaderModule for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuShaderModule>) -> Result<()> {
         let shader_module_id = self.table.delete(rep).unwrap();
         self.instance
-            .shader_module_drop::<crate::Backend>(shader_module_id);
+            .shader_module_drop(shader_module_id);
         Ok(())
     }
 }
@@ -1015,7 +1012,7 @@ impl HostGpuComputePipeline for RuneRuntimeState {
         let pipeline_id = self.table.get(&pipeline).unwrap();
         let bind_group_layout_id = wgpu_id(
             self.instance
-                .compute_pipeline_get_bind_group_layout::<crate::Backend>(
+                .compute_pipeline_get_bind_group_layout(
                     *pipeline_id,
                     index,
                     None,
@@ -1030,7 +1027,7 @@ impl HostGpuComputePipeline for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuComputePipeline>) -> Result<()> {
         let pipeline_id = self.table.delete(rep).unwrap();
         self.instance
-            .compute_pipeline_drop::<crate::Backend>(pipeline_id);
+            .compute_pipeline_drop(pipeline_id);
         Ok(())
     }
 }
@@ -1045,7 +1042,7 @@ impl HostGpuRenderPipeline for RuneRuntimeState {
         let pipeline_id = self.table.get(&pipeline).unwrap();
         let bind_group_layout_id = wgpu_id(
             self.instance
-                .render_pipeline_get_bind_group_layout::<crate::Backend>(*pipeline_id, index, None),
+                .render_pipeline_get_bind_group_layout(*pipeline_id, index, None),
         )
         .unwrap();
         self.table
@@ -1056,17 +1053,14 @@ impl HostGpuRenderPipeline for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuRenderPipeline>) -> Result<()> {
         let render_pipeline_id = self.table.delete(rep).unwrap();
         self.instance
-            .render_pipeline_drop::<crate::Backend>(render_pipeline_id);
+            .render_pipeline_drop(render_pipeline_id);
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl HostGpuCommandBuffer for RuneRuntimeState {
-    async fn drop(&mut self, rep: Resource<GpuCommandBuffer>) -> Result<()> {
-        let command_buffer_id = self.table.delete(rep).unwrap();
-        self.instance
-            .command_buffer_drop::<crate::Backend>(command_buffer_id);
+    async fn drop(&mut self, _: Resource<GpuCommandBuffer>) -> Result<()> {
         Ok(())
     }
 }
@@ -1130,7 +1124,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
 
         let (render_pass, _) = self
             .instance
-            .command_encoder_create_render_pass::<crate::Backend>(
+            .command_encoder_create_render_pass(
                 *command_encoder,
                 &wgpu_core::command::RenderPassDescriptor {
                     label: None,
@@ -1176,7 +1170,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let destination_id = self.table.get(&destination).unwrap();
 
         self.instance
-            .command_encoder_copy_buffer_to_buffer::<crate::Backend>(
+            .command_encoder_copy_buffer_to_buffer(
                 *command_encoder_id,
                 *source_id,
                 source_offset,
@@ -1219,7 +1213,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         };
 
         self.instance
-            .command_encoder_copy_buffer_to_texture::<crate::Backend>(
+            .command_encoder_copy_buffer_to_texture(
                 *command_encoder_id,
                 &source,
                 &destination,
@@ -1260,7 +1254,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         };
 
         self.instance
-            .command_encoder_copy_texture_to_buffer::<crate::Backend>(
+            .command_encoder_copy_texture_to_buffer(
                 *command_encoder_id,
                 &source,
                 &destination,
@@ -1303,7 +1297,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         };
 
         self.instance
-            .command_encoder_copy_texture_to_texture::<crate::Backend>(
+            .command_encoder_copy_texture_to_texture(
                 *command_encoder_id,
                 &source,
                 &destination,
@@ -1324,7 +1318,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let buffer_id = self.table.get(&buffer).unwrap();
 
         self.instance
-            .command_encoder_clear_buffer::<crate::Backend>(
+            .command_encoder_clear_buffer(
                 *command_encoder_id,
                 *buffer_id,
                 offset.unwrap_or(0),
@@ -1344,7 +1338,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let query_set_id = self.table.get(&query_set).unwrap();
 
         self.instance
-            .command_encoder_write_timestamp::<crate::Backend>(
+            .command_encoder_write_timestamp(
                 *command_encoder_id,
                 *query_set_id,
                 query_index,
@@ -1367,7 +1361,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
         let destination_id = self.table.get(&destination).unwrap();
 
         self.instance
-            .command_encoder_resolve_query_set::<crate::Backend>(
+            .command_encoder_resolve_query_set(
                 *command_encoder_id,
                 *query_set_id,
                 first_query,
@@ -1385,7 +1379,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
     ) -> Resource<GpuCommandBuffer> {
         let command_encoder_id = self.table.get(&command_encoder).unwrap();
 
-        let command_buffer_id = wgpu_id(self.instance.command_encoder_finish::<crate::Backend>(
+        let command_buffer_id = wgpu_id(self.instance.command_encoder_finish(
             *command_encoder_id,
             &wgpu_types::CommandBufferDescriptor { label: None },
         ))
@@ -1402,7 +1396,7 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
     ) -> wasmtime::Result<()> {
         let command_encoder_id = self.table.delete(rep).unwrap();
         self.instance
-            .command_encoder_drop::<crate::Backend>(command_encoder_id);
+            .command_encoder_drop(command_encoder_id);
         Ok(())
     }
 }
@@ -1499,7 +1493,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_set_pipeline::<crate::Backend>(render_pass_encoder_id, render_pipeline_id)
+            .render_pass_set_pipeline(render_pass_encoder_id, render_pipeline_id)
             .unwrap();
         ()
     }
@@ -1540,7 +1534,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_set_vertex_buffer::<crate::Backend>(
+            .render_pass_set_vertex_buffer(
                 render_pass_encoder_id,
                 slot,
                 buffer_id,
@@ -1563,7 +1557,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_draw::<crate::Backend>(
+            .render_pass_draw(
                 render_pass_encoder_id,
                 vertex_count,
                 instance_count,
@@ -1587,7 +1581,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_draw_indexed::<crate::Backend>(
+            .render_pass_draw_indexed(
                 render_pass_encoder_id,
                 index_count,
                 instance_count,
@@ -1610,7 +1604,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_draw_indirect::<crate::Backend>(
+            .render_pass_draw_indirect(
                 render_pass_encoder_id,
                 buffer_id,
                 indirect_offset,
@@ -1630,7 +1624,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_draw_indexed_indirect::<crate::Backend>(
+            .render_pass_draw_indexed_indirect(
                 render_pass_encoder_id,
                 buffer_id,
                 indirect_offset,
@@ -1652,7 +1646,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_set_viewport::<crate::Backend>(
+            .render_pass_set_viewport(
                 render_pass_encoder_id,
                 x,
                 y,
@@ -1676,7 +1670,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_set_scissor_rect::<crate::Backend>(
+            .render_pass_set_scissor_rect(
                 render_pass_encoder_id,
                 x,
                 y,
@@ -1695,7 +1689,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_set_blend_constant::<crate::Backend>(
+            .render_pass_set_blend_constant(
                 render_pass_encoder_id,
                 Color {
                     r: color[0],
@@ -1716,7 +1710,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_set_stencil_reference::<crate::Backend>(render_pass_encoder_id, reference)
+            .render_pass_set_stencil_reference(render_pass_encoder_id, reference)
             .unwrap();
 
         ()
@@ -1729,7 +1723,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_begin_occlusion_query::<crate::Backend>(
+            .render_pass_begin_occlusion_query(
                 render_pass_encoder_id,
                 query_index,
             )
@@ -1744,7 +1738,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_end_occlusion_query::<crate::Backend>(render_pass_encoder_id)
+            .render_pass_end_occlusion_query(render_pass_encoder_id)
             .unwrap();
 
         ()
@@ -1763,7 +1757,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
 
         self.instance
-            .render_pass_execute_bundles::<crate::Backend>(
+            .render_pass_execute_bundles(
                 render_pass_encoder_id,
                 &render_bundle_ids[..],
             )
@@ -1776,7 +1770,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         let render_pass = self.table.get_mut(&render_pass).unwrap();
 
         self.instance
-            .render_pass_end::<crate::Backend>(render_pass)
+            .render_pass_end(render_pass)
             .unwrap();
         ()
     }
@@ -1801,10 +1795,10 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         };
 
         self.instance
-            .render_pass_set_bind_group::<crate::Backend>(
+            .render_pass_set_bind_group(
                 render_pass,
                 index,
-                bind_group_id,
+                Some(bind_group_id),
                 &dynamic_offsets,
             )
             .unwrap();
@@ -1831,7 +1825,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_push_debug_group::<crate::Backend>(render_pass_encoder_id, &group_label, 0)
+            .render_pass_push_debug_group(render_pass_encoder_id, &group_label, 0)
             .unwrap();
 
         ()
@@ -1840,7 +1834,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     async fn pop_debug_group(&mut self, render_pass_encoder: Resource<GpuRenderPassEncoder>) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_pop_debug_group::<crate::Backend>(render_pass_encoder_id)
+            .render_pass_pop_debug_group(render_pass_encoder_id)
             .unwrap();
 
         ()
@@ -1853,7 +1847,7 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     ) -> () {
         let render_pass_encoder_id = self.table.get_mut(&render_pass_encoder).unwrap();
         self.instance
-            .render_pass_insert_debug_marker::<crate::Backend>(
+            .render_pass_insert_debug_marker(
                 render_pass_encoder_id,
                 &marker_label,
                 0,
@@ -1874,7 +1868,7 @@ impl HostGpuRenderBundle for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuRenderBundle>) -> Result<()> {
         let render_bundle_id = self.table.delete(rep).unwrap();
         self.instance
-            .render_bundle_drop::<crate::Backend>(render_bundle_id);
+            .render_bundle_drop(render_bundle_id);
         Ok(())
     }
 }
@@ -1889,7 +1883,7 @@ impl HostGpuRenderBundleEncoder for RuneRuntimeState {
         let render_bundle_encoder = self.table.delete(render_bundle_encoder_resource).unwrap();
         let render_bundle_id = wgpu_id(
             self.instance
-                .render_bundle_encoder_finish::<crate::Backend>(
+                .render_bundle_encoder_finish(
                     render_bundle_encoder,
                     &wgpu_core::command::RenderBundleDescriptor {
                         label: Some(descriptor.label.into()),

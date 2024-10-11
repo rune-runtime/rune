@@ -21,7 +21,7 @@ use winit::{
 #[cfg(target_os = "macos")]
 use winit::platform::macos::WindowBuilderExtMacOS;
 
-use crate::{game::Game, wgpu_id_2};
+use crate::{game::Game};
 
 enum GameEvent {}
 
@@ -52,16 +52,16 @@ async fn run_loop(
     let adapter_id = instance
         .request_adapter(
             &Default::default(),
-            wgpu_core::instance::AdapterInputs::Mask(wgpu_types::Backends::all(), |_| None),
+            wgpu_types::Backends::all(),
+            None
         )
         .unwrap();
 
     let adapter_limits = instance
-        .adapter_limits::<crate::Backend>(adapter_id)
-        .unwrap();
+        .adapter_limits(adapter_id);
 
     // Create the logical device and command queue
-    let (device_id, queue_id) = wgpu_id_2(instance.adapter_request_device::<crate::Backend>(
+    let (device_id, queue_id) = instance.adapter_request_device(
         adapter_id,
         &wgpu_types::DeviceDescriptor {
             label: None,
@@ -74,8 +74,7 @@ async fn run_loop(
         None,
         None,
         None,
-    ))
-    .unwrap();
+    ).unwrap();
 
     let audio_host = cpal::default_host();
     let audio_device = audio_host.default_output_device().unwrap();
@@ -319,7 +318,7 @@ pub async fn test(_input_path: PathBuf, _binary: Vec<u8>) {
     // let adapter_limits = instance.adapter_limits::<crate::Backend>(adapter_id).unwrap();
 
     // // Create the logical device and command queue
-    // let (device_id, queue_id) = wgpu_id_2(instance.adapter_request_device::<crate::Backend>(
+    // let (device_id, queue_id) = instance.adapter_request_device::<crate::Backend>(
     //     adapter_id,
     //     &wgpu_types::DeviceDescriptor {
     //         label: None,
@@ -331,7 +330,7 @@ pub async fn test(_input_path: PathBuf, _binary: Vec<u8>) {
     //     None,
     //     None,
     //     None
-    // ))
+    // )
     // .unwrap();
 
     // let audio_host = cpal::default_host();

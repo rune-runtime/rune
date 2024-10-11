@@ -31,7 +31,8 @@ pub async fn game(
 
     let globals = liquid::object!({
         "identifier": identifier,
-        "name": name
+        "name": name,
+        "runtime_version": env!("CARGO_PKG_VERSION")
     });
 
     template_files(

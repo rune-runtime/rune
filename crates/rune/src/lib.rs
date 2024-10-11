@@ -11,15 +11,6 @@ pub mod runtime;
 pub mod tests;
 // pub mod debug;
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
-pub(crate) type Backend = wgpu_core::api::Vulkan;
-
-#[cfg(target_os = "windows")]
-pub(crate) type Backend = wgpu_core::api::Dx12;
-
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub(crate) type Backend = wgpu_core::api::Metal;
-
 // needed for wasmtime::component::bindgen! as it only looks in the current crate.
 pub(crate) use gilrs;
 pub(crate) use wgpu_core;
@@ -32,15 +23,6 @@ pub fn wgpu_id<I: wgpu_core::id::Marker, E>(
     match error {
         Some(error) => Err(error),
         None => core::result::Result::Ok(id),
-    }
-}
-
-pub fn wgpu_id_2<I: wgpu_core::id::Marker, I2: wgpu_core::id::Marker, E>(
-    (id1, id2, error): (wgpu_core::id::Id<I>, wgpu_core::id::Id<I2>, Option<E>),
-) -> Result<(wgpu_core::id::Id<I>, wgpu_core::id::Id<I2>), E> {
-    match error {
-        Some(error) => Err(error),
-        None => core::result::Result::Ok((id1, id2)),
     }
 }
 
@@ -76,8 +58,8 @@ wasmtime::component::bindgen!({
         "rune:runtime/gpu/gpu-queue": wgpu_core::id::QueueId,
         "rune:runtime/gpu/gpu-buffer": wgpu_core::id::BufferId,
         "rune:runtime/gpu/gpu-command-encoder": wgpu_core::id::CommandEncoderId,
-        "rune:runtime/gpu/gpu-compute-pass-encoder": crate::runtime::gpu::ComputePass,
-        "rune:runtime/gpu/gpu-render-pass-encoder": crate::runtime::gpu::RenderPass,
+        "rune:runtime/gpu/gpu-compute-pass-encoder": wgpu_core::command::ComputePass,
+        "rune:runtime/gpu/gpu-render-pass-encoder": wgpu_core::command::RenderPass,
         "rune:runtime/gpu/gpu-render-bundle": wgpu_core::id::RenderBundleId,
         "rune:runtime/gpu/gpu-render-bundle-encoder": wgpu_core::command::RenderBundleEncoder,
         "rune:runtime/gpu/gpu-shader-module": wgpu_core::id::ShaderModuleId,
@@ -190,7 +172,7 @@ impl RuneRuntimeState {
         let mut table = ResourceTable::new();
 
         let swapchain_capabilities = instance
-            .surface_get_capabilities::<crate::Backend>(surface, adapter)
+            .surface_get_capabilities(surface, adapter)
             .unwrap();
         let swapchain_format = swapchain_capabilities.formats[0];
 
@@ -205,7 +187,7 @@ impl RuneRuntimeState {
             desired_maximum_frame_latency: 1,
         };
 
-        instance.surface_configure::<crate::Backend>(surface, device, &surface_config);
+        instance.surface_configure(surface, device, &surface_config);
 
         RuneRuntimeState {
             id,

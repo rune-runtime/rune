@@ -125,7 +125,7 @@ impl Game {
         let store = self.store.as_mut().expect("Store must be initialized");
         let ctx = store.data_mut();
         let surface_id = ctx.surface;
-        ctx.instance.surface_present::<crate::Backend>(surface_id)?;
+        ctx.instance.surface_present(surface_id)?;
 
         Ok(())
     }
@@ -142,6 +142,6 @@ impl Game {
         surface_config.height = size.height;
 
         ctx.instance
-            .surface_configure::<crate::Backend>(surface_id, device_id, &surface_config);
+            .surface_configure(surface_id, device_id, &surface_config);
     }
 }

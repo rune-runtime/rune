@@ -53,6 +53,9 @@ tui-widget-list = "0.12.1"
 self-replace = "1.5.0"
 tempfile = { version = "3.12.0" }
 rust-embed = "8.5.0"
+wat = "1.219.1"
+wit-component = "0.219.1"
+subprocess = "0.2.9"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = [ "build", "git", "gitoxide", "cargo" ]}
