@@ -1,5 +1,6 @@
+use color_eyre::eyre;
 use rust_embed::Embed;
-use subprocess::{Exec, Redirection};
+use subprocess::{Exec, ExitStatus, Redirection};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -28,11 +29,18 @@ pub async fn build(release: &bool) -> Result<()> {
 
     let pre_command = build.get("pre");
     if let Some(command) = pre_command {
-        let output = Exec::shell(command.as_str().unwrap())
-            .stdout(Redirection::Pipe)
-            .capture()?
-            .stdout_str();
-        print!("{}", output);
+        let result = Exec::shell(command.as_str().unwrap())
+            .stdout(Redirection::Pipe) 
+            .stderr(Redirection::Merge)
+            .capture()
+            .expect("pre command execution failed");
+
+        let stdout = result.stdout_str();
+        println!("{}", stdout);
+
+        if !result.success() {
+            return Err(eyre::eyre!("pre command execution failed"));
+        }
     }
 
     let entrypoint = match config["build"]["entrypoint"].as_str() {
