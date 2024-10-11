@@ -1,25 +1,41 @@
 use std::{
-    fs::File,
-    io::{Cursor, Read},
-    path::PathBuf,
+    env, fs::File, io::{Cursor, Read}, path::PathBuf
 };
 
 use flate2::bufread::GzDecoder;
+use reqwest::{header::{HeaderMap, HeaderValue, USER_AGENT}, Client};
 use tar::Archive;
+use serde_json::Value;
 
 use crate::Result;
 
 pub async fn upgrade() -> Result<()> {
-    // TODO: Get latest version & compare to current
-    let latest_version = "";
-    let platform = "";
-    let bin_name = format!("rune-{latest_version}-{platform}");
+    println!("upgrade");
+
+    let latest_version = {
+        let client = Client::new();
+
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_static("Rune CLI (https://rune.sh)"));
+
+        let response = client
+            .get("https://api.github.com/repos/rune-runtime/rune/tags")
+            .headers(headers)
+            .send()
+            .await?;
+
+        let json = response.text().await?;
+        let value: Value = serde_json::from_str(&json)?;
+        value[0]["name"].as_str().unwrap().to_string()
+    };
+    let platform = format!("{}-{}", env::consts::OS, env::consts::ARCH);
+    let tarball_name = format!("rune-cli-{latest_version}-{platform}.tar.gz");
+    let tarball_url = format!("https://github.com/rune-runtime/rune/releases/download/{latest_version}/{tarball_name}");
 
     let tmp_path = download_bin(
-        latest_version,
-        &format!("https://rune.sh/releases/{bin_name}"),
-    )
-    .await?;
+        &latest_version,
+        &tarball_url,
+    ).await?;
 
     let mut tar_gz = File::open(tmp_path.clone())?;
     let mut tar_bytes = Vec::new();
@@ -28,7 +44,7 @@ pub async fn upgrade() -> Result<()> {
     let mut archive = Archive::new(&tar_bytes[..]);
     archive.unpack(".")?;
 
-    let new_bin = tmp_path.join(bin_name);
+    let new_bin = tmp_path.join("rune-cli");
     self_replace::self_replace(new_bin)?;
 
     Ok(())

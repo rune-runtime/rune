@@ -27,7 +27,7 @@ jobs:
           - os: macos-latest
             os-name: macos
             target: aarch64-apple-darwin
-            architecture: arm64
+            architecture: aarch64
             binary-postfix: ""
             use-cross: false
             binary-name: rune-cli
@@ -48,7 +48,7 @@ jobs:
           # - os: ubuntu-latest
           #   os-name: linux
           #   target: aarch64-unknown-linux-gnu
-          #   architecture: arm64
+          #   architecture: aarch64
           #   binary-postfix: ""
           #   use-cross: true
           #   binary-name: rune-cli
