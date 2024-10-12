@@ -1,8 +1,5 @@
 use std::{
     env,
-    fs::{self, File, OpenOptions, Permissions},
-    io::{self, BufWriter, ErrorKind, Read, Write},
-    os::unix::fs::{OpenOptionsExt, PermissionsExt},
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };

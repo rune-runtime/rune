@@ -5,10 +5,12 @@ use std::{
     env,
     fs::{self, File, OpenOptions},
     io::{self, BufWriter, Write},
-    os::unix::fs::OpenOptionsExt,
     path::PathBuf,
     process::{Command, Stdio},
 };
+
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::fs::OpenOptionsExt;
 
 use current_platform::CURRENT_PLATFORM;
 use semver::Version;
@@ -167,11 +169,16 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
 
     let out_path = rustup_dir.join(filename);
     println!("{}", out_path.to_str().unwrap());
-    let file = OpenOptions::new()
+    
+    let mut open_options = OpenOptions::new();
+    let open_options = open_options
         .write(true)
-        .create(true)
-        .mode(0o755) // set the permissions at creation
-        .open(&out_path)?;
+        .create(true);
+
+    #[cfg(not(target_os = "windows"))]
+    let open_options = open_options.mode(0o755);
+    
+    let file = open_options.open(&out_path)?;
 
     let mut out = BufWriter::new(file);
     out.write_all(&content.as_ref())?;
