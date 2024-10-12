@@ -63,28 +63,7 @@ impl App {
                 rune::runtime::test(input_path.to_path_buf(), binary).await;
             }
             Some(CliCommand::Run { release }) => {
-                crate::commands::build::build(release).await?;
-
-                let current_dir = env::current_dir()?;
-                let config = std::fs::read_to_string(current_dir.join("rune.toml"))
-                    .unwrap()
-                    .parse::<Table>()
-                    .unwrap();
-
-                let entrypoint_path = match config["build"]["entrypoint"].as_str() {
-                    Some(entrypoint_path) => entrypoint_path,
-                    None => panic!("No build input provided in config!"),
-                };
-
-                match config["build"]["output"].as_str() {
-                    Some(output_path) => {
-                        let output_path = current_dir.join(output_path);
-                        let entrypoint_path = output_path.join(entrypoint_path);
-                        let binary = std::fs::read(entrypoint_path).unwrap();
-                        rune::runtime::run(output_path.to_path_buf(), binary);
-                    }
-                    None => panic!("No build input provided in config!"),
-                }
+                crate::commands::run::run(release).await?;
             }
             Some(CliCommand::Build { release }) => {
                 crate::commands::build::build(release).await?;

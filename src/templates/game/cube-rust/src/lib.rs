@@ -1,6 +1,6 @@
 wit_bindgen::generate!({
     world: "runtime",
-    path: "../.rune/wit/runtime",
+    path: ".rune/wit/runtime",
     exports: {
         "rune:runtime/guest": Game
     },

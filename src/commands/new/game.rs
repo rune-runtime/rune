@@ -6,13 +6,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::Result;
+use crate::{assets::{RuneWits, Templates}, Result};
 
 use liquid::Object;
-
-#[derive(Embed)]
-#[folder = "src/templates"]
-struct Templates;
 
 pub async fn game(
     identifier: &Option<String>,
@@ -43,6 +39,8 @@ pub async fn game(
         &globals,
     )?;
 
+    copy_wits(project_root_path.as_path())?;
+
     Ok(())
 }
 
@@ -59,6 +57,10 @@ pub fn template_files(
             .strip_prefix(&format!("{template_type}/{template_key}/"))
             .unwrap();
         let destination_path = project_root.join(PathBuf::from(relative_path));
+
+        let destination_parent = destination_path.as_path().parent().unwrap();
+        std::fs::create_dir_all(destination_parent).unwrap();
+        
         let mut file = fs::OpenOptions::new()
             .create(true)
             .read(true)
@@ -74,6 +76,30 @@ pub fn template_files(
         let contents = template.render(&globals).unwrap();
 
         file.write_all(contents.as_bytes())?;
+    }
+
+    Ok(())
+}
+
+pub fn copy_wits(
+    project_root: &Path,
+) -> crate::Result<()> {
+    for wit_path in RuneWits::iter() {
+        let contents = RuneWits::get(wit_path.as_ref()).unwrap();
+        let destination_path = project_root
+            .join(".rune/wit")
+            .join(PathBuf::from(wit_path.as_ref()));
+
+        let destination_parent = destination_path.as_path().parent().unwrap();
+        std::fs::create_dir_all(destination_parent).unwrap();
+        
+        let mut file = fs::OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .open(&destination_path.clone())?;
+
+        file.write_all(&contents.data)?;
     }
 
     Ok(())
