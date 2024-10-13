@@ -1,13 +1,13 @@
-wit_bindgen::generate!({
-    world: "runtime",
-    path: ".rune/wit/runtime",
-    exports: {
-        "rune:runtime/guest": Game
-    },
-});
+use wit_bindgen::generate;
 
 use crate::exports::rune::runtime::guest::Guest;
 use crate::rune::runtime::debug::log;
+
+generate!({
+    world: "runtime",
+    path: ".rune/wit/runtime"
+});
+export!(Game);
 
 struct Game;
 

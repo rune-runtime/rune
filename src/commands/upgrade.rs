@@ -38,7 +38,6 @@ pub async fn upgrade() -> Result<()> {
     let tmp_path = tmp_dir.path().to_path_buf();
 
     download_tarball(
-        &latest_version,
         &tarball_url,
         &tmp_path
     ).await?;
@@ -52,7 +51,7 @@ pub async fn upgrade() -> Result<()> {
     Ok(())
 }
 
-async fn download_tarball(version: &str, url: &str, tmp_path: &PathBuf) -> Result<()> {
+async fn download_tarball(url: &str, tmp_path: &PathBuf) -> Result<()> {
     let response = reqwest::get(url).await?;
     let tmp_tarball = tmp_path.join("rune.tar.gz");
     let targz_bytes = response.bytes().await?;

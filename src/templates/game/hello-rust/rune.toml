@@ -8,8 +8,8 @@ version = "{{ runtime_version }}"
 
 [build]
 pre = "cargo build --target wasm32-wasi"
-input = "./dist" # Your guest code build output, the files you want to package
-entrypoint = "game.wasm" # The path to your wasm binary relative to the "input" directory
+input = "./target/wasm32-wasi/debug" # Your guest code build output, the files you want to package
+entrypoint = "{{ identifier_underscored }}.wasm" # The path to your wasm binary relative to the "input" directory
 output = "./bin" # Rune's build output
 
 [bundle]

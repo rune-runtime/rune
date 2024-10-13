@@ -1,16 +1,15 @@
-wit_bindgen::generate!({
-    world: "runtime",
-    path: ".rune/wit/runtime",
-    exports: {
-        "rune:runtime/guest": Game
-    },
-});
-
 use glam::{Mat4, Vec3};
 use once_cell::sync::OnceCell;
+use wit_bindgen::generate;
 
 use crate::exports::rune::runtime::guest::Guest;
 use crate::rune::runtime::gpu::*;
+
+generate!({
+    world: "runtime",
+    path: ".rune/wit/runtime"
+});
+export!(Game);
 
 struct Game;
 static RENDER_PIPELINE: OnceCell<GpuRenderPipeline> = OnceCell::new();

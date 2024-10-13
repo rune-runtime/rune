@@ -27,6 +27,7 @@ pub async fn game(
 
     let globals = liquid::object!({
         "identifier": identifier,
+        "identifier_underscored": to_snake_case(&identifier),
         "name": name,
         "runtime_version": env!("CARGO_PKG_VERSION")
     });
@@ -103,4 +104,21 @@ pub fn copy_wits(
     }
 
     Ok(())
+}
+
+fn to_snake_case(input: &str) -> String {
+    let mut snake_case = String::new();
+    
+    for (i, c) in input.chars().enumerate() {
+        if c.is_uppercase() && i != 0 {
+            // Add an underscore before uppercase letters (except for the first character)
+            snake_case.push('_');
+        }
+
+        // Convert the character to lowercase
+        snake_case.push(c.to_ascii_lowercase());
+    }
+
+    // Replace spaces with underscores
+    snake_case.replace(" ", "_")
 }
