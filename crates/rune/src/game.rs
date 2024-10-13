@@ -125,7 +125,11 @@ impl Game {
         let store = self.store.as_mut().expect("Store must be initialized");
         let ctx = store.data_mut();
         let surface_id = ctx.surface;
-        ctx.instance.surface_present(surface_id)?;
+
+        if ctx.gpu_state.present_surface {
+            ctx.instance.surface_present(surface_id)?;
+            ctx.gpu_state.present_surface = false;
+        }
 
         Ok(())
     }

@@ -27,6 +27,7 @@ pub struct GpuState {
     pub buffers: HashMap<BufferId, Buffer>,
     pub query_sets: HashMap<QuerySetId, QuerySet>,
     pub textures: HashMap<TextureId, Texture>,
+    pub present_surface: bool
 }
 
 impl GpuState {
@@ -35,6 +36,7 @@ impl GpuState {
             buffers: HashMap::new(),
             query_sets: HashMap::new(),
             textures: HashMap::new(),
+            present_surface: false
         }
     }
 }

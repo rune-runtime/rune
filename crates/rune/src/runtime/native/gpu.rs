@@ -52,6 +52,8 @@ impl HostGpuSurface for RuneRuntimeState {
             .surface_get_current_texture(self.surface, None)
             .unwrap();
 
+        self.gpu_state.present_surface = true;
+
         self.table.push(surface_output.texture_id.unwrap()).unwrap()
     }
 
