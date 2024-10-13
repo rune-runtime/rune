@@ -26,9 +26,13 @@ interface audio {
     sink-id: func() -> string;
     /// Sets the Sink ID for the current output audio device
     set-sink-id: func(sink-id: string);
+    /// Returns an AudioRenderCapacity instance associated with an AudioContext
     render-capacity: func() -> audio-render-capacity;
+    /// Suspends the progression of time in the audio context
     suspend: func();
+    /// Resumes the progression of time in an audio context that has previously been suspended/paused
     resume: func();
+    /// Closes the AudioContext, releasing the system resources being used
     close: func();
 
     /// Decode audio file data contained in a byte array

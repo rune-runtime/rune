@@ -1,5 +1,5 @@
 {
-  "name": "{{ identifier }}",
+  "name": "{{ idnetifier }}",
   "type": "module",
   "version": "0.1.0",
   "main": "index.js",
@@ -17,5 +17,7 @@
     "rollup-plugin-polyfill-node": "^0.13.0"
   },
   "dependencies": {
+    "rune-threejs": "0.1.0",
+    "three": "^0.162.0"
   }
 }
