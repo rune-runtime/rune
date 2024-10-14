@@ -67,10 +67,10 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Lochlan Wansbrough"]
 edition = "2021"
 rust-version = "1.80.0"
 
 [workspace.dependencies]
-rune = { path = "crates/rune", version = "0.1.8" }
+rune = { path = "crates/rune", version = "0.1.9" }

@@ -13,11 +13,11 @@ use liquid::Object;
 pub async fn game(
     identifier: &Option<String>,
     name: &Option<String>,
-    template: &Option<String>,
+    template: &String,
 ) -> Result<()> {
     let identifier = identifier.clone().unwrap_or("my-game".to_owned());
     let name = name.clone().unwrap_or("My Game".to_owned());
-    let template_key = template.clone().unwrap_or("hello-js".to_owned());
+    let template_key = template.clone();
 
     let paths = Templates::iter()
         .filter(|p| p.starts_with(&format!("game/{template_key}")))
@@ -120,5 +120,5 @@ fn to_snake_case(input: &str) -> String {
     }
 
     // Replace spaces with underscores
-    snake_case.replace(" ", "_")
+    snake_case.replace(" ", "_").replace("-", "_")
 }

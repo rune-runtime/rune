@@ -15,7 +15,7 @@ pub struct Cli {
 pub enum CliCommand {
     /// View Rune API documentation
     Docs,
-    /// Create a new Rune project, optionally specifying a template
+    /// Create a new Rune project, specifying a template
     #[command(subcommand)]
     New(NewSubcommand),
     // /// Pushes a new release candidate for an unreleased version. Will NOT publish
@@ -63,7 +63,8 @@ pub enum NewSubcommand {
         identifier: Option<String>,
         #[clap(long, short = 'n', value_name = "NAME")]
         name: Option<String>,
+        /// One of: hello-js, hello-rust, cube-rust
         #[clap(long, short = 't', value_name = "TEMPLATE")]
-        template: Option<String>,
+        template: String,
     },
 }
