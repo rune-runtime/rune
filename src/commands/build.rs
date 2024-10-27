@@ -1,6 +1,7 @@
 use color_eyre::eyre;
 use rust_embed::Embed;
 use subprocess::{Exec, ExitStatus, Redirection};
+use wasmparser::{Encoding, Payload};
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -76,16 +77,32 @@ fn componentize_wasm(output_entrypoint_path: PathBuf) {
         .validate(true)
         .reject_legacy_names(false);
 
-    // encoder = encoder.merge_imports_based_on_semver(merge); // TODO: Needed?
-    encoder = encoder.module(&wasm).expect("Unable to read game as a wasm module");
+    let bytes: Vec<u8>;
+    let mut is_component = false;
+    for payload in wasmparser::Parser::new(0).parse_all(&wasm) {
+        let payload = payload.expect("No wasm payload");
+        match payload {
+            wasmparser::Payload::Version { encoding, .. } if encoding != Encoding::Module => {
+                is_component = true;
+            }
+            _ => { }
+        }
+    }
 
-    let adapter = WasiWasm::get("wasi_snapshot_preview1.reactor.wasm").unwrap();
-    let adapter = wat::parse_bytes(&adapter.data).unwrap();
-    encoder = encoder.adapter("wasi_snapshot_preview1", &adapter).expect("Unable to read adapter");
+    if is_component {
+        bytes = wasm;
+    } else {
+        // encoder = encoder.merge_imports_based_on_semver(merge); // TODO: Needed?
+        encoder = encoder.module(&wasm).expect("Unable to read game as a wasm module");
 
-    let bytes = encoder
-        .encode()
-        .expect("Failed to encode a component from provided module");
+        let adapter = WasiWasm::get("wasi_snapshot_preview1.reactor.wasm").unwrap();
+        let adapter = wat::parse_bytes(&adapter.data).unwrap();
+        encoder = encoder.adapter("wasi_snapshot_preview1", &adapter).expect("Unable to read adapter");
+
+        bytes = encoder
+            .encode()
+            .expect("Failed to encode a component from provided module");
+    }
 
     std::fs::write(&output_entrypoint_path, bytes).expect("Unable to write wasm");
 }

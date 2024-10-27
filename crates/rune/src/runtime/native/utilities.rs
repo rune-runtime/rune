@@ -143,7 +143,6 @@ impl Into<TextureFormat> for GpuTextureFormat {
             GpuTextureFormat::Bgra8unorm => TextureFormat::Bgra8Unorm,
             GpuTextureFormat::Bgra8unormsrgb => TextureFormat::Bgra8UnormSrgb,
             GpuTextureFormat::Rgb9e5ufloat => TextureFormat::Rgb9e5Ufloat,
-            GpuTextureFormat::Rgb10a2uint => panic!("Unsupported Texture Format"),
             GpuTextureFormat::Rgb10a2unorm => TextureFormat::Rgb10a2Unorm,
             GpuTextureFormat::Rg11b10ufloat => TextureFormat::Rg11b10Ufloat,
             GpuTextureFormat::Rg32uint => TextureFormat::Rg32Uint,

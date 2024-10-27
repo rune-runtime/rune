@@ -56,6 +56,7 @@ rust-embed = "8.5.0"
 wat = "1.219.1"
 wit-component = "0.219.1"
 subprocess = "0.2.9"
+wasmparser = "0.219.1"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = [ "build", "git", "gitoxide", "cargo" ]}
@@ -67,10 +68,10 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.9"
+version = "0.1.10"
 authors = ["Lochlan Wansbrough"]
 edition = "2021"
 rust-version = "1.80.0"
 
 [workspace.dependencies]
-rune = { path = "crates/rune", version = "0.1.9" }
+rune = { path = "crates/rune", version = "0.1.10" }

@@ -14,6 +14,3 @@ output = "./bin" # Rune's build output
 
 [bundle]
 name = "{{ name }}"
-
-[dependencies]
-three = "165.0"
