@@ -178,7 +178,7 @@ impl Guest for Game {
                 entry_point: "main".to_owned(),
                 constants: Vec::new(),
                 targets: vec![GpuColorTargetState {
-                    format: GpuTextureFormat::Bgra8unormsrgb,
+                    format: GpuTextureFormat::Rgba8unormsrgb,
                     blend: Some(GpuBlendState {
                         color: GpuBlendComponent {
                             src_factor: Some(GpuBlendFactor::One),
