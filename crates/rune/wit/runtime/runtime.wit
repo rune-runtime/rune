@@ -2,7 +2,7 @@ package rune:runtime;
 
 // How Rune interfaces with your game :)
 interface guest {
-  init: func();
+  init: func() -> result<_, string>;
   update: func(time: f64, delta-time: f64);
   render: func(time: f64, delta-time: f64);
 }

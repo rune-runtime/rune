@@ -12,8 +12,9 @@ export!(Game);
 struct Game;
 
 impl Guest for Game {
-    fn init() {
+    fn init() -> Result<(), String> {
         log("init");
+        Ok(())
     }
 
     fn update(time: f64, delta_time: f64) {

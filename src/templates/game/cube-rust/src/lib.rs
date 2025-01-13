@@ -61,7 +61,7 @@ fn get_transform_matrix(projection_matrix: Mat4, time: f64) -> Mat4 {
 }
 
 impl Guest for Game {
-    fn init() {
+    fn init() -> Result<(), String> {
         let adapter = crate::rune::runtime::gpu::request_adapter();
         let device = adapter.request_device();
         let (window_width, window_height) = crate::rune::runtime::window::dimensions();
@@ -234,6 +234,8 @@ impl Guest for Game {
         UNIFORM_BUFFER.set(uniform_buffer).unwrap();
 
         RENDER_PIPELINE.set(pipeline).unwrap();
+
+        Ok(())
     }
 
     fn update(time: f64, delta_time: f64) { }

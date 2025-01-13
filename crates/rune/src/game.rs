@@ -82,7 +82,9 @@ impl Game {
 
         let runtime = self.instance_pre.instantiate_async(&mut store).await?;
 
-        runtime.rune_runtime_guest().call_init(&mut store).await?;
+        if let Err(msg) = runtime.rune_runtime_guest().call_init(&mut store).await {
+            panic!("{}", msg);
+        }
 
         self.runtime = Some(runtime);
         self.store = Some(store);

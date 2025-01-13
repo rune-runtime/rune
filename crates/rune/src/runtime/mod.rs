@@ -6,6 +6,9 @@ use libtest_mimic::{Arguments, Trial};
 use pollster;
 
 mod common;
+#[cfg(target_arch = "wasm32")]
+mod web;
+#[cfg(not(target_arch = "wasm32"))]
 mod native;
 
 pub use common::*;
