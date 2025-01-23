@@ -94,8 +94,6 @@ interface gpu {
     create-texture: func(descriptor: gpu-texture-descriptor) -> gpu-texture;
     /// Create a sampler from a sampler descriptor.
     create-sampler: func(descriptor: gpu-sampler-descriptor) -> gpu-sampler;
-    /// Import an external texture from a texture descriptor.
-    import-external-texture: func(descriptor: gpu-external-texture-descriptor) -> gpu-external-texture;
     /// Create a bind group layout from a descriptor.
     create-bind-group-layout: func(descriptor: gpu-bind-group-layout-descriptor) -> gpu-bind-group-layout;
     /// Create a pipeline layout from a descriptor.
@@ -425,17 +423,6 @@ interface gpu {
     d3
   }
 
-  resource gpu-external-texture {
-    
-  }
-
-  /// Options for external GPU texture
-  record gpu-external-texture-descriptor {
-    label: option<string>,
-    // source: [video handle]
-    color-space: option<predefined-color-space>
-  }
-
   /// Color space for external texture
   enum predefined-color-space {
     srgb,
@@ -503,8 +490,7 @@ interface gpu {
     buffer: option<gpu-buffer-binding-layout>,
     sampler: option<gpu-sampler-binding-layout>,
     texture: option<gpu-texture-binding-layout>,
-    storage-texture: option<gpu-storage-texture-binding-layout>,
-    external-texture: option<gpu-external-texture-binding-layout>
+    storage-texture: option<gpu-storage-texture-binding-layout>
   }
 
   flags gpu-shader-stage {
@@ -557,10 +543,6 @@ interface gpu {
 
   enum gpu-storage-texture-access {
     write-only
-  }
-
-  record gpu-external-texture-binding-layout {
-    label: option<string>,
   }
 
   /// GPUBindGroup
