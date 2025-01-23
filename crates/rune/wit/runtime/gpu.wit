@@ -3,14 +3,18 @@ package rune:runtime;
 /// A GPU API based on the WebGPU API
 
 interface gpu {
+  /// Request a surface from the host.
   surface: func() -> gpu-surface;
   /// Requests an adapter from the host. The host chooses an adapter according to the user's preferences.
   request-adapter: func() -> gpu-adapter;
 
+  /// A resource which represents a GPU surface.
   resource gpu-surface {
+    /// Get the current texture for GPU surface.
     current-texture: func() -> gpu-texture;
   }
 
+  /// A resource which represents a GPU query set.
   resource gpu-query-set {
     /// Type of query for this query set.
     %type: func() -> gpu-query-type;
@@ -37,6 +41,7 @@ interface gpu {
     timestamp
   }
 
+  /// Buffer data represented as bytes.
   type buffer-source = list<u8>;
 
   /// Describes a buffer and optional range to bind as a resource.
@@ -75,6 +80,7 @@ interface gpu {
 
   /// An adapter identifies a GPU implementation on the system. This is how you access the GPU hardware device.
   resource gpu-adapter {
+    /// Request the GPU device from the adapter.
     request-device: func() -> gpu-device;
   }
 
@@ -82,21 +88,35 @@ interface gpu {
   resource gpu-device {
     queue: func() -> gpu-queue;
 
+    /// Create a buffer from a buffer descriptor.
     create-buffer: func(descriptor: gpu-buffer-descriptor) -> gpu-buffer;
+    /// Create a texture from a texture descriptor.
     create-texture: func(descriptor: gpu-texture-descriptor) -> gpu-texture;
+    /// Create a sampler from a sampler descriptor.
     create-sampler: func(descriptor: gpu-sampler-descriptor) -> gpu-sampler;
+    /// Import an external texture from a texture descriptor.
     import-external-texture: func(descriptor: gpu-external-texture-descriptor) -> gpu-external-texture;
+    /// Create a bind group layout from a descriptor.
     create-bind-group-layout: func(descriptor: gpu-bind-group-layout-descriptor) -> gpu-bind-group-layout;
+    /// Create a pipeline layout from a descriptor.
     create-pipeline-layout: func(descriptor: gpu-pipeline-layout-descriptor) -> gpu-pipeline-layout;
+    /// Createa a bind group from a descriptor.
     create-bind-group: func(descriptor: gpu-bind-group-descriptor) -> gpu-bind-group;
+    /// Create a shader module from a descriptor.
     create-shader-module: func(descriptor: gpu-shader-module-descriptor) -> gpu-shader-module;
+    /// Create a compute pipeline from a descriptor.
     create-compute-pipeline: func(descriptor: gpu-compute-pipeline-descriptor) -> gpu-compute-pipeline;
+    /// Create a render pipeline from a descriptor.
     create-render-pipeline: func(descriptor: gpu-render-pipeline-descriptor) -> gpu-render-pipeline;
+    /// Create a command encoder from a descriptor.
     create-command-encoder: func(descriptor: gpu-command-encoder-descriptor) -> gpu-command-encoder;
+    /// Create a render bundle encoder from a descriptor.
     create-render-bundle-encoder: func(descriptor: gpu-render-bundle-descriptor) -> gpu-render-bundle-encoder;
+    /// Create a query set from a descriptor.
     create-query-set: func(descriptor: gpu-query-set-descriptor) -> gpu-query-set;
   }
 
+  /// Options for GPU device.
   record gpu-device-descriptor {
     label: option<string>,
     required-features: list<gpu-feature-name>,
@@ -104,6 +124,7 @@ interface gpu {
     default-queue: option<gpu-queue-descriptor>
   }
 
+  /// GPU feature names
   enum gpu-feature-name {
     depth-clip-control,
     depth32float-stencil8,
@@ -126,10 +147,12 @@ interface gpu {
     copy-external-image-to-texture: func(source: gpu-image-copy-external-image, destination: gpu-image-copy-texture-tagged, copy-size: gpu-extent-d3);
   }
 
+  /// Options for GPU queue
   record gpu-queue-descriptor {
     label: option<string>,
   }
 
+  /// GPU image data layout options.
   record gpu-image-data-layout {
     offset: gpu-size-u64,
     bytes-per-row: gpu-size-u32,
@@ -141,16 +164,24 @@ interface gpu {
 
   /// GPUBuffer
   resource gpu-buffer {
+    /// The size of the buffer
     size: func() -> gpu-size-u64;
+    /// Usage modes for the buffer
     usage: func() -> gpu-buffer-usage;
 
+    /// State of GPU buffer map
     map-state: func() -> gpu-buffer-map-state;
+    /// Map the GPU buffer
     map: func(mode: gpu-map-mode, offset: gpu-size-u64, size: gpu-size-u64);
+    /// Get a range of bytes from the buffer
     get-mapped-range: func(offset: gpu-size-u64, size: gpu-size-u64) -> list<u8>;
+    /// Unmap the GPU buffer
     unmap: func();
+    /// Destroy the GPU buffer
     destroy: func();
   }
 
+  /// Options for GPU buffer
   record gpu-buffer-descriptor {
     label: option<string>,
     size: gpu-size-u64,
@@ -159,6 +190,7 @@ interface gpu {
     mapped-at-creation: bool
   }
 
+  /// GPU buffer usage modes
   flags gpu-buffer-usage {
     map-read,
     map-write,
@@ -172,12 +204,14 @@ interface gpu {
     query-resolve
   }
 
+  /// GPU buffer map states
   enum gpu-buffer-map-state {
     unmapped,
     pending,
     mapped
   }
 
+  /// GPU map modes
   flags gpu-map-mode {
     read,
     write
@@ -187,19 +221,29 @@ interface gpu {
 
   /// GPUTexture
   resource gpu-texture {
+    /// Get the texture width.
     width: func() -> gpu-integer-coordinate;
+    /// Get the texture height.
     height: func() -> gpu-integer-coordinate;
+    /// Get the depth or array layers of the texture.
     depth-or-array-layers: func() -> gpu-integer-coordinate;
+    /// Get the mip level count for the texture.
     mip-level-count: func() -> gpu-integer-coordinate;
+    /// Get the sample count for the texture.
     sample-count: func() -> gpu-size-u32;
+    /// Get the number of dimensions for the texture.
     dimension: func() -> gpu-texture-dimension;
+    /// Get the format of the texture.
     format: func() -> gpu-texture-format;
+    /// Get the usage mode for the texture.
     usage: func() -> gpu-texture-usage;
-
+    /// Create a view of the texture.
     create-view: func() -> gpu-texture-view;
+    /// Destroy the texture.
     destroy: func();
   }
 
+  /// Options for the GPU texture
   record gpu-texture-descriptor {
     size: gpu-extent-d3,
     mip-level-count: gpu-integer-coordinate,
@@ -210,12 +254,14 @@ interface gpu {
     view-formats: list<gpu-texture-format>
   }
 
+  /// GPU texture dimensions
   enum gpu-texture-dimension {
     d1,
     d2,
     d3
   }
 
+  /// GPU texture formats
   enum gpu-texture-format {
     // 8-bit formats
     r8unorm,
@@ -336,6 +382,7 @@ interface gpu {
     astc12x12unormsrgb,
   }
 
+  /// GPU texture usage modes
   flags gpu-texture-usage {
     copy-src,
     copy-dst,
@@ -344,6 +391,7 @@ interface gpu {
     render-attachment
   }
 
+  /// GPU texture aspects
   enum gpu-texture-aspect {
     all,
     stencil-only,
@@ -355,6 +403,7 @@ interface gpu {
     
   }
 
+  /// Options for the texture view
   record gpu-texture-view-descriptor {
     label: option<string>,
     format: gpu-texture-format,
@@ -366,6 +415,7 @@ interface gpu {
     array-layer-count: gpu-integer-coordinate
   }
 
+  /// GPU texture view dimensions
   enum gpu-texture-view-dimension {
     d1,
     d2,
@@ -379,12 +429,14 @@ interface gpu {
     
   }
 
+  /// Options for external GPU texture
   record gpu-external-texture-descriptor {
     label: option<string>,
     // source: [video handle]
     color-space: option<predefined-color-space>
   }
 
+  /// Color space for external texture
   enum predefined-color-space {
     srgb,
     display-p3

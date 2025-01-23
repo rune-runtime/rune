@@ -45,8 +45,8 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
         current_dir: current_dir.clone(),
         rune_dir,
         rune_bin_dir,
-        metadata_id: config["metadata"]["id"].as_str().unwrap().to_owned(),
-        metadata_version: Version::parse(config["metadata"]["version"].as_str().unwrap()).unwrap(),
+        metadata_id: config["package"]["identifier"].as_str().unwrap().to_owned(),
+        metadata_version: Version::parse(config["package"]["version"].as_str().unwrap()).unwrap(),
         build,
         target,
         target_triplet,
@@ -59,7 +59,7 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
             .join(config["build"]["output"].as_str().unwrap()),
         build_entrypoint: PathBuf::from(config["build"]["entrypoint"].as_str().unwrap()),
         bundle_name: config["bundle"]["name"].as_str().unwrap().to_owned(),
-        bundle_identifier: config["bundle"]["identifier"].as_str().unwrap().to_owned(),
+        bundle_identifier: config["package"]["identifier"].as_str().unwrap().to_owned(),
     };
 
     println!("Building for target {}", settings.target_triplet);
@@ -154,6 +154,7 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
     if fs::metadata(&rustup_dir).is_ok() {
         return Ok(());
     }
+    fs::create_dir_all(&rustup_dir)?;
 
     let os = env::consts::OS;
     let filename = match os {
@@ -168,7 +169,6 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
     let content = resp.bytes().await?;
 
     let out_path = rustup_dir.join(filename);
-    println!("{}", out_path.to_str().unwrap());
     
     let mut open_options = OpenOptions::new();
     let open_options = open_options
@@ -177,6 +177,8 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
 
     #[cfg(not(target_os = "windows"))]
     let open_options = open_options.mode(0o755);
+
+    println!("{}", out_path.to_str().unwrap());
     
     let file = open_options.open(&out_path)?;
 
@@ -186,7 +188,7 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
     let mut cmd = Command::new(out_path);
 
     cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
-        .env("RUSTUP_HOME", settings.rune_bin_dir.join("rustup"));
+        .env("RUSTUP_HOME", rustup_dir);
 
     cmd.arg("-y");
 
@@ -195,9 +197,10 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
         .stderr(Stdio::inherit())
         .output()?;
 
-    println!("Status: {}", output.status);
-    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
-    println!("Error: {}", String::from_utf8_lossy(&output.stderr));
+    let rustup_bin_path = settings.rune_bin_dir.join("cargo/bin/rustup");
+    Command::new(rustup_bin_path)
+        .args(["default", "stable"])
+        .output()?;
 
     Ok(())
 }

@@ -1,0 +1,13 @@
+[package]
+name = "rune-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+clap = { version = "4.4.5", features = ["derive", "cargo", "wrap_help", "unicode", "string", "unstable-styles"] }
+rune = { path = "../rune", version = "0.1.12" }
+
+[[bin]]
+name = "rune-host"
+path = "src/main.rs"

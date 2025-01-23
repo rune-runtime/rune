@@ -64,7 +64,8 @@ vergen = { version = "8.2.6", features = [ "build", "git", "gitoxide", "cargo" ]
 [workspace]
 resolver = '2'
 members = [
-  "crates/rune"
+  "crates/rune",
+  "crates/rune-host"
 ]
 
 [workspace.package]
