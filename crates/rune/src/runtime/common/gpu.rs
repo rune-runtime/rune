@@ -3,8 +3,11 @@ use std::collections::HashMap;
 use wgpu_core::id::{BufferId, QuerySetId, TextureId};
 use wgpu_types::{BufferUsages, QueryType, TextureDimension, TextureFormat, TextureUsages};
 
+use crate::gpu::GpuBufferMapState;
+
 pub struct Buffer {
     pub usage: BufferUsages,
+    pub map_state: GpuBufferMapState,
     pub size: u64,
 }
 

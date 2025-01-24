@@ -142,7 +142,6 @@ interface gpu {
     submit: func(command-buffers: list<gpu-command-buffer>);
     write-buffer: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size-u64, data: buffer-source, data-offset: gpu-size-u64, size: gpu-size-u64);
     write-texture: func(destination: gpu-image-copy-texture, data: buffer-source, data-layout: gpu-image-data-layout, size: gpu-extent-d3);
-    copy-external-image-to-texture: func(source: gpu-image-copy-external-image, destination: gpu-image-copy-texture-tagged, copy-size: gpu-extent-d3);
   }
 
   /// Options for GPU queue
@@ -423,7 +422,7 @@ interface gpu {
     d3
   }
 
-  /// Color space for external texture
+  /// Color space for texture
   enum predefined-color-space {
     srgb,
     display-p3
@@ -437,6 +436,7 @@ interface gpu {
     
   }
 
+  // Options for the GPU sampler
   record gpu-sampler-descriptor {
     label: option<string>,
     address-mode-u: gpu-address-mode,
@@ -480,10 +480,12 @@ interface gpu {
     
   }
 
+  // Options for the GPU bind group layout
   record gpu-bind-group-layout-descriptor {
     entries: list<gpu-bind-group-layout-entry>
   }
 
+  // GPU bind group layout
   record gpu-bind-group-layout-entry {
     binding: gpu-index-u32,
     visibility: gpu-shader-stage,
@@ -874,16 +876,6 @@ interface gpu {
     aspect: gpu-texture-aspect,
     color-space: predefined-color-space,
     premultiplied-alpha: bool
-  }
-
-  record gpu-image-copy-external-image {
-    source: gpu-image-copy-external-image-source,
-    origin: gpu-origin-d2,
-    flip-y: bool
-  }
-
-  variant gpu-image-copy-external-image-source {
-    html-video-element(u32)
   }
 
   type gpu-origin-d2 = list<gpu-integer-coordinate>;

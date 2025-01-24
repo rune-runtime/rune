@@ -5,7 +5,7 @@ use wgpu_core::{
     binding_model::{BindGroupLayoutDescriptor, PipelineLayoutDescriptor},
     command::PassChannel,
     pipeline::VertexBufferLayout,
-    resource::TextureViewDescriptor,
+    resource::{BufferMapOperation, TextureViewDescriptor},
 };
 use wgpu_types::{
     BindGroupLayoutEntry, Color, ColorTargetState, ColorWrites, DepthBiasState, DepthStencilState,
@@ -33,7 +33,7 @@ impl Host for RuneRuntimeState {
     async fn request_adapter(&mut self) -> Resource<GpuAdapter> {
         // let adapter_id = self.instance.request_adapter(
         //     &RequestAdapterOptions {
-        //         power_preference: wgpu_types::PowerPreference::HighPerformance,
+        //         power_preference: wgpu_core::resource::PowerPreference::HighPerformance,
         //         force_fallback_adapter: false,
         //         compatible_surface: None
         //     },
@@ -132,7 +132,7 @@ impl HostGpuDevice for RuneRuntimeState {
             let padded_size =
                 ((unpadded_size + align_mask) & !align_mask).max(wgpu_types::COPY_BUFFER_ALIGNMENT);
 
-            buffer_descriptor = wgpu_types::BufferDescriptor {
+            buffer_descriptor = wgpu_core::resource::BufferDescriptor {
                 label: descriptor.label.map(|s| s.into()),
                 size: padded_size,
                 usage: descriptor.usage.into(),
@@ -160,7 +160,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
             buffer_id
         } else {
-            buffer_descriptor = wgpu_types::BufferDescriptor {
+            buffer_descriptor = wgpu_core::resource::BufferDescriptor {
                 label: None,
                 size: descriptor.size,
                 usage: descriptor.usage.into(),
@@ -180,6 +180,7 @@ impl HostGpuDevice for RuneRuntimeState {
             Buffer {
                 size: buffer_descriptor.size,
                 usage: buffer_descriptor.usage,
+                map_state: GpuBufferMapState::Unmapped
             },
         );
 
@@ -193,7 +194,7 @@ impl HostGpuDevice for RuneRuntimeState {
     ) -> Resource<GpuTexture> {
         let device_id = self.table.get(&device).unwrap();
 
-        let texture_descriptor = wgpu_types::TextureDescriptor {
+        let texture_descriptor = wgpu_core::resource::TextureDescriptor {
             label: None,
             size: descriptor.size.into(),
             mip_level_count: descriptor.mip_level_count,
@@ -261,14 +262,6 @@ impl HostGpuDevice for RuneRuntimeState {
         .unwrap();
 
         self.table.push_child(sampler_id, &device).unwrap()
-    }
-
-    async fn import_external_texture(
-        &mut self,
-        _self_: Resource<GpuDevice>,
-        _descriptor: GpuExternalTextureDescriptor,
-    ) -> Resource<GpuExternalTexture> {
-        todo!()
     }
 
     async fn create_bind_group_layout(
@@ -375,7 +368,7 @@ impl HostGpuDevice for RuneRuntimeState {
             *device_id,
             &wgpu_core::pipeline::ShaderModuleDescriptor {
                 label: descriptor.label.map(|label| label.into()),
-                shader_bound_checks: Default::default(),
+                runtime_checks: Default::default()
             },
             wgpu_core::pipeline::ShaderModuleSource::Wgsl(Cow::Owned(descriptor.code)),
             None,
@@ -629,7 +622,7 @@ impl HostGpuDevice for RuneRuntimeState {
     ) -> Resource<GpuQuerySet> {
         let device_id = self.table.get(&device).unwrap();
 
-        let query_set_descriptor = wgpu_types::QuerySetDescriptor {
+        let query_set_descriptor = wgpu_core::resource::QuerySetDescriptor {
             label: Some(descriptor.label.into()),
             ty: descriptor.type_.into(),
             count: descriptor.count,
@@ -738,18 +731,6 @@ impl HostGpuQueue for RuneRuntimeState {
         ()
     }
 
-    async fn copy_external_image_to_texture(
-        &mut self,
-        queue: Resource<GpuQueue>,
-        _source: GpuImageCopyExternalImage,
-        _destination: GpuImageCopyTextureTagged,
-        _copy_size: GpuExtentD3,
-    ) -> () {
-        let _queue_id = self.table.get(&queue).unwrap();
-
-        todo!()
-    }
-
     async fn drop(&mut self, _rep: Resource<GpuQueue>) -> Result<()> {
         Ok(())
     }
@@ -769,8 +750,10 @@ impl HostGpuBuffer for RuneRuntimeState {
         buffer.usage.into()
     }
 
-    async fn map_state(&mut self, _self_: Resource<GpuBuffer>) -> GpuBufferMapState {
-        todo!()
+    async fn map_state(&mut self, buffer: Resource<GpuBuffer>) -> GpuBufferMapState {
+        let buffer_id = self.table.get(&buffer).unwrap();
+        let buffer = self.gpu_state.buffers.get(&buffer_id).unwrap();
+        buffer.map_state
     }
 
     async fn map(
@@ -781,9 +764,21 @@ impl HostGpuBuffer for RuneRuntimeState {
         size: GpuSizeU64,
     ) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
+        let buffer = self.gpu_state.buffers.get_mut(buffer_id).unwrap();
+        
+        buffer.map_state = GpuBufferMapState::Pending;
         self.instance
-            .buffer_map_async(*buffer_id, offset, Some(size), mode.into())
-            .ok();
+            .buffer_map_async(
+                *buffer_id,
+                offset,
+                Some(size),
+                BufferMapOperation {
+                    host: mode.into(),
+                    callback: None
+                }
+            )
+            .unwrap();
+        buffer.map_state = GpuBufferMapState::Mapped;
         ()
     }
 
@@ -810,9 +805,11 @@ impl HostGpuBuffer for RuneRuntimeState {
 
     async fn unmap(&mut self, buffer: Resource<GpuBuffer>) -> () {
         let buffer_id = self.table.get(&buffer).unwrap();
+        let buffer = self.gpu_state.buffers.get_mut(buffer_id).unwrap();
         self.instance
             .buffer_unmap(*buffer_id)
             .ok();
+        buffer.map_state = GpuBufferMapState::Unmapped;
         ()
     }
 
@@ -896,6 +893,7 @@ impl HostGpuTexture for RuneRuntimeState {
                 format: Some(texture.format),
                 dimension: None,
                 range: ImageSubresourceRange::default(),
+                ..Default::default()
             }
         } else {
             TextureViewDescriptor::default()
@@ -934,16 +932,6 @@ impl HostGpuTextureView for RuneRuntimeState {
         self.instance
             .texture_view_drop(texture_view_id)
             .unwrap();
-        Ok(())
-    }
-}
-
-#[async_trait::async_trait]
-impl HostGpuExternalTexture for RuneRuntimeState {
-    async fn drop(&mut self, rep: Resource<GpuExternalTexture>) -> Result<()> {
-        let texture_id = self.table.delete(rep).unwrap();
-        self.instance
-            .texture_drop(texture_id);
         Ok(())
     }
 }
@@ -1090,16 +1078,12 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
             color_attachments.push(Some(wgpu_core::command::RenderPassColorAttachment {
                 view: views[i],
                 resolve_target,
-                channel: wgpu_core::command::PassChannel {
-                    load_op: color_attachment.load_op.into(),
-                    store_op: color_attachment.store_op.into(),
-                    clear_value: color_attachment
-                        .clear_value
-                        .as_ref()
-                        .map(|v| vec_to_color(v))
-                        .unwrap_or(Color::BLACK),
-                    read_only: false,
-                },
+                load_op: color_attachment.load_op.into_wgt(color_attachment
+                    .clear_value
+                    .as_ref()
+                    .map(|v| vec_to_color(v))
+                    .unwrap_or(Color::BLACK)),
+                store_op: color_attachment.store_op.into(),
             }));
         }
 
@@ -1110,15 +1094,13 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
                     wgpu_core::command::RenderPassDepthStencilAttachment {
                         view: *self.table.get(&depth_stencil_attachment.view).unwrap(),
                         depth: PassChannel {
-                            load_op: depth_stencil_attachment.depth_load_op.into(),
-                            store_op: depth_stencil_attachment.depth_store_op.into(),
-                            clear_value: depth_stencil_attachment.depth_clear_value,
+                            load_op: Some(depth_stencil_attachment.depth_load_op.into_wgt(Some(depth_stencil_attachment.depth_clear_value))),
+                            store_op: Some(depth_stencil_attachment.depth_store_op.into()),
                             read_only: depth_stencil_attachment.depth_read_only,
                         },
                         stencil: PassChannel {
-                            load_op: depth_stencil_attachment.stencil_load_op.into(),
-                            store_op: depth_stencil_attachment.stencil_store_op.into(),
-                            clear_value: depth_stencil_attachment.stencil_clear_value,
+                            load_op: Some(depth_stencil_attachment.stencil_load_op.into_wgt(Some(depth_stencil_attachment.stencil_clear_value))),
+                            store_op: Some(depth_stencil_attachment.stencil_store_op.into()),
                             read_only: depth_stencil_attachment.stencil_read_only,
                         },
                     }

@@ -72,7 +72,6 @@ wasmtime::component::bindgen!({
         "rune:runtime/gpu/gpu-sampler": wgpu_core::id::SamplerId,
         "rune:runtime/gpu/gpu-texture": wgpu_core::id::TextureId,
         "rune:runtime/gpu/gpu-texture-view": wgpu_core::id::TextureViewId,
-        "rune:runtime/gpu/gpu-external-texture": wgpu_core::id::TextureId,
         "rune:runtime/gpu/gpu-query-set": wgpu_core::id::QuerySetId,
         // "rune:runtime/gpu/buffer-source": BufferSource,
 

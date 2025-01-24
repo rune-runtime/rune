@@ -36,11 +36,10 @@ async fn run_loop(
 ) -> Result<(), EventLoopError> {
     let instance = wgpu_core::global::Global::new(
         "webgpu",
-        wgpu_types::InstanceDescriptor {
+        &wgpu_types::InstanceDescriptor {
             backends: wgpu_types::Backends::all(),
             flags: wgpu_types::InstanceFlags::from_build_config(),
-            dx12_shader_compiler: wgpu_types::Dx12Compiler::Fxc,
-            gles_minor_version: wgpu_types::Gles3MinorVersion::default(),
+            ..Default::default()
         },
     );
     let surface_id = unsafe {

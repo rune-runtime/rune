@@ -18,104 +18,145 @@ interface audio {
 
   /// An audio context controls both the creation of the nodes it contains and the execution of the audio processing, or decoding.
   resource audio-context {
-    /// A double that represents the number of seconds of processing latency incurred by the AudioContext passing an audio buffer from the AudioDestinationNode
+    /// A double that represents the number of seconds of processing latency incurred by the AudioContext passing an audio buffer from the AudioDestinationNode.
     base-latency: func() -> f32;
-    /// An estimation of the output latency of the current audio context
+    /// An estimation of the output latency of the current audio context.
     output-latency: func() -> f32;
-    /// Sink ID of the current output audio device
+    /// Sink ID of the current output audio device.
     sink-id: func() -> string;
-    /// Sets the Sink ID for the current output audio device
+    /// Sets the Sink ID for the current output audio device.
     set-sink-id: func(sink-id: string);
-    /// Returns an AudioRenderCapacity instance associated with an AudioContext
+    /// Returns an AudioRenderCapacity instance associated with an AudioContext.
     render-capacity: func() -> audio-render-capacity;
-    /// Suspends the progression of time in the audio context
+    /// Suspends the progression of time in the audio context.
     suspend: func();
-    /// Resumes the progression of time in an audio context that has previously been suspended/paused
+    /// Resumes the progression of time in an audio context that has previously been suspended/paused.
     resume: func();
-    /// Closes the AudioContext, releasing the system resources being used
+    /// Closes the AudioContext, releasing the system resources being used.
     close: func();
 
-    /// Decode audio file data contained in a byte array
+    /// Decode audio file data contained in a byte array.
     decode-audio-data: func(data: list<u8>) -> audio-buffer;
-    /// Creates a new, empty audio buffer object, which can then be populated by data, and played via an audio buffer source node
+    /// Creates a new, empty audio buffer object, which can then be populated by data, and played via an audio buffer source node.
     create-buffer: func(number-of-channels: u32, length: u32, sample-rate: f32) -> audio-buffer;
-    /// Creates an analyzer node, which can be used to expose audio time and frequency data and create data visualizations
+    /// Creates an analyzer node, which can be used to expose audio time and frequency data and create data visualizations.
     create-analyzer: func() -> analyzer-node;
-    /// Creates a biquad filter node, which represents a second order filter configurable as several different common filter types
+    /// Creates a biquad filter node, which represents a second order filter configurable as several different common filter types.
     create-biquad-filter: func() -> biquad-filter-node;
-    /// Creates a new audio buffer source node, which can be used to play audio data contained within an audio buffer object
+    /// Creates a new audio buffer source node, which can be used to play audio data contained within an audio buffer object.
     create-buffer-source: func() -> audio-buffer-source-node;
-    /// Creates a channel merger node, which combines channels from multiple audio streams into a single audio stream
+    /// Creates a channel merger node, which combines channels from multiple audio streams into a single audio stream.
     create-channel-merger: func(number-of-inputs: u32) -> channel-merger-node;
-    /// Create a channel splitter node, which is used to access the individual channels of an audio stream and process them separately
+    /// Create a channel splitter node, which is used to access the individual channels of an audio stream and process them separately.
     create-channel-splitter: func(number-of-outputs: u32) -> channel-splitter-node;
-    /// Creates a constant source node object, which is an audio source that continuously outputs a monaural (one-channel) sound signal whose samples all have the same value
+    /// Creates a constant source node object, which is an audio source that continuously outputs a monaural (one-channel) sound signal whose samples all have the same value.
     create-constant-source: func() -> constant-source-node;
-    /// Creates a convolver node, which is commonly used to apply reverb effects to your audio
+    /// Creates a convolver node, which is commonly used to apply reverb effects to your audio.
     create-convolver: func() -> convolver-node;
-    /// Create a delay node, which is used to delay the incoming audio signal by a certain amount of time
+    /// Create a delay node, which is used to delay the incoming audio signal by a certain amount of time.
     create-delay: func(max-delay-time: f32) -> delay-node;
-    create-dynamics-compressor: func() -> dynamics-compressor-node;
+    /// Creates a dynamics compressor node, which can be used to automatically adjust the volume of an audio signal to minimize the difference between loud and soft sounds.
+    create-dynamics-compressor: func() -> dynamics-com  pressor-node;
+    /// Creates a gain node, which is used to control the overall volume of an audio signal.
     create-gain: func() -> gain-node;
+    /// Creates an IIR (Infinite Impulse Response) filter node, which can be used to apply complex audio filtering with specified feedforward and feedback coefficients.
     create-iir-filter: func(feedforward: list<f32>, feedback: list<f32>) -> iir-filter-node;
+    /// Creates an oscillator node, which represents a periodic waveform audio source.
     create-oscillator: func() -> oscillator-node;
+    /// Creates a panner node, which is used to spatially position an audio source in a 3D environment.
     create-panner: func() -> panner-node;
+    /// Creates a periodic wave object, which is used to define a waveform that can be used by an oscillator node.
     create-periodic-wave: func(options: periodic-wave-options) -> periodic-wave;
+    /// Creates a stereo panner node, which is used to pan an audio source left or right in a stereo space.
     create-stereo-panner: func() -> stereo-panner-node;
+    /// Creates a wave shaper node, which is used to apply a non-linear distortion effect to an audio signal.
     create-wave-shaper: func() -> wave-shaper-node;
+    /// Returns the audio destination node, which represents the final audio-rendering device.
     destination: func() -> audio-destination-node;
+    /// Returns the audio listener, which is used to represent the position and orientation of the person listening to the audio.
     listener: func() -> audio-listener;
+    /// Returns the sample rate (in samples per second) of the audio context.
     sample-rate: func() -> f32;
+    /// Returns the current state of the audio context (e.g., "running", "suspended", or "closed")
     state: func() -> audio-context-state;
+    /// Returns the current time of the audio context in seconds.
     current-time: func() -> f32;
     // create-audio-param: func(options: audio-param-descriptor, destination: borrow<audio-context-registration>) -> tuple<audio-param, audio-param-id>;
     // create-custom: func(key: string) -> custom-audio-node;
   }
 
   resource audio-param {
+    /// Returns the current automation rate of the audio parameter (e.g., "a-rate" or "k-rate")
     automation-rate: func() -> automation-rate;
+    /// Sets the automation rate of the audio parameter.
     set-automation-rate: func(automation-rate: automation-rate);
+    /// Returns the default value of the audio parameter.
     default-value: func() -> f32;
+    /// Returns the minimum value of the audio parameter.
     min-value: func() -> f32;
+    /// Returns the maximum value of the audio parameter.
     max-value: func() -> f32;
+    /// Returns the current value of the audio parameter.
     value: func() -> f32;
+    /// Sets the current value of the audio parameter.
     set-value: func(value: f32);
+    /// Schedules a change to the value of the audio parameter at a precise time.
     set-value-at-time: func(value: f32, start-time: f32);
+    /// Schedules a gradual change in the value of the audio parameter along a defined curve.
     set-value-curve-at-time: func(values: list<f32>, start-time: f32, duration: f32);
+    /// Schedules a linear ramp to a target value at a specific time.
     linear-ramp-to-value-at-time: func(value: f32, end-time: f32);
+    /// Schedules an exponential ramp to a target value at a specific time.
     exponential-ramp-to-value-at-time: func(value: f32, end-time: f32);
+    /// Schedules a gradual change in the value of the audio parameter starting at a given time, with a time constant for the curve.
     set-target-at-time: func(value: f32, start-time: f32, time-constant: f32);
+    /// Cancels all scheduled changes to the audio parameter that occur after the specified time.
     cancel-scheduled-values: func(cancel-time: f32);
+    /// Cancels scheduled changes to the audio parameter and holds its value at the specified time.
     cancel-and-hold-at-time: func(cancel-time: f32);
   }
 
+  /// Enum representing the automation rate of an audio parameter.
   enum automation-rate {
-    a,
-    k
+    /// "a-rate" applies the parameter's value for every audio sample.
+    a,  
+    /// "k-rate" applies the parameter's value for each block of audio processing.
+    k  
   }
 
+  /// Represents the final audio destination and provides information about the output device's capabilities.
   resource audio-destination-node {
+    /// Returns the maximum number of channels that the audio destination node can handle.
     max-channel-count: func() -> u32;
   }
 
+  /// Represents the audio render capacity, providing information about the system's ability to handle audio processing efficiently.
   resource audio-render-capacity {
 
   }
 
+  /// Represents an in-memory audio asset, which can be used for playback or audio processing.
   resource audio-buffer {
+    /// Creates an audio buffer from a list of audio channel data and a specified sample rate.
     constructor(samples: list<list<f32>>, sample-rate: f32);
+    /// Returns the number of audio channels in the buffer.
     number-of-channels: func() -> u32;
+    /// Returns the length of the buffer in sample-frames.
     length: func() -> u32;
+    /// Returns the sample rate of the audio buffer in samples per second.
     sample-rate: func() -> f32;
+    /// Returns the duration of the audio buffer in seconds.
     duration: func() -> f32;
     // copy-from-channel: func() -> 
     // copy-from-channel-with-offset: func() -> 
     // copy-to-channel: func() ->
     // copy-to-channel-with-offset: func() -> 
+    /// Retrieves a copy of the audio data for a specific channel as a list of samples.
     get-channel-data: func(channel-number: u32) -> list<f32>;
     // get-channel-data-mut: func() -> 
   }
 
+  /// Represents a variant type for different kinds of audio nodes, which process or manipulate audio signals in various ways.
   variant audio-node {
     analyzer(borrow<analyzer-node>),
     biquad-filter(borrow<biquad-filter-node>),
@@ -134,55 +175,92 @@ interface audio {
     wave-shaper(borrow<wave-shaper-node>)
   }
 
+  /// Represents an audio buffer source node, which can be used to play audio data from an audio buffer.
   resource audio-buffer-source-node {
     // TODO: constructor
+    /// Starts playback of the audio buffer at a specific start time and with a time offset.
     start-at-with-offset: func(start: f32, offset: f32);
+    /// Starts playback of the audio buffer at a specific start time, with an offset and a duration.
     start-at-with-offset-and-duration: func(start: f32, offset: f32, duration: f32);
+    /// Returns the audio buffer currently assigned to the source node, or None if not set.
     buffer: func() -> option<audio-buffer>;
+    /// Sets the audio buffer to be played by this source node.
     set-buffer: func(audio-buffer: audio-buffer);
+    /// Returns the playback rate parameter, which controls the speed of the playback.
     playback-rate: func() -> audio-param;
+    /// Returns the current position of the audio playback in seconds.
     position: func() -> f32;
+    /// Returns the detune parameter, which controls the pitch detuning of the playback.
     detune: func() -> audio-param;
+    /// Returns whether the audio buffer will loop when it reaches the end.
     loop: func() -> bool;
+    /// Sets whether the audio buffer will loop when it reaches the end.
     set-loop: func(value: bool);
+    /// Returns the start time of the loop in seconds.
     loop-start: func() -> f32;
+    /// Sets the start time of the loop in seconds.
     set-loop-start: func(value: f32);
+    /// Returns the end time of the loop in seconds.
     loop-end: func() -> f32;
+    /// Sets the end time of the loop in seconds.
     set-loop-end: func(value: f32);
-
+    /// Connects the audio buffer source node to a destination audio node.
     connect: func(destination: audio-node);
+    /// Starts playback of the audio buffer source node.
     start: func();
   }
 
+  /// Represents an audio analyzer node, used for extracting audio data such as time-domain and frequency-domain data for visualization.
   resource analyzer-node {
     // TODO: constructor
+    /// Returns the FFT (Fast Fourier Transform) size, which determines the resolution of frequency analysis.
     fft-size: func() -> u32;
+    /// Sets the FFT size for frequency analysis.
     set-fft-size: func(fft-size: u32);
+    /// Returns the smoothing time constant for frequency data smoothing.
     smoothing-time-constant: func() -> f32;
+    /// Sets the smoothing time constant for frequency data smoothing.
     set-smoothing-time-constant: func(smoothing-time-constant: f32);
+    /// Returns the minimum decibel value for frequency data.
     min-decibels: func() -> f32;
+    /// Sets the minimum decibel value for frequency data.
     set-min-decibels: func(min-decebels: f32);
+    /// Returns the maximum decibel value for frequency data.
     max-decibels: func() -> f32;
+    /// Sets the maximum decibel value for frequency data.
     set-max-decibels: func(max-decebels: f32);
+    /// Returns the number of frequency bins (frequency ranges) used by the analyzer.
     frequency-bin-count: func() -> u32;
+    /// Retrieves time-domain audio data as a list of floating-point values.
     get-float-time-domain-data: func() -> list<f32>;
+    /// Retrieves time-domain audio data as a list of byte values.
     get-byte-time-domain-data: func() -> list<u8>;
+    /// Retrieves frequency-domain audio data as a list of floating-point values.
     get-float-frequency-data: func() -> list<f32>;
+    /// Retrieves frequency-domain audio data as a list of byte values.
     get-byte-frequency-data: func() -> list<u8>;
-
+    /// Connects the analyzer node to a destination audio node
     connect: func(destination: audio-node);
   }
 
+  /// Represents a biquad filter node, which can be used to apply various filter effects to audio signals.
   resource biquad-filter-node {
     // TODO: constructor
+    /// Returns the gain parameter of the filter, which controls the amplification or attenuation of the signal.
     gain: func() -> audio-param;
+    /// Returns the frequency parameter of the filter, which controls the cutoff frequency for filtering.
     frequency: func() -> audio-param;
+    /// Returns the detune parameter, which adjusts the frequency of the filter for fine-tuning.
     detune: func() -> audio-param;
+    /// Returns the Q factor (quality factor) of the filter, which controls the width of the filter's frequency response.
     q: func() -> audio-param;
+    /// Returns the current type of the filter (e.g., low-pass, high-pass, etc.)
     %type: func() -> biquad-filter-type;
+    /// Sets the type of the biquad filter (e.g., low-pass, high-pass, band-pass, etc.)
     set-type: func(%type: biquad-filter-type);
     // get-frequency-response: func(frequency-hz: list<f32>, mag-response: list<f32>, phase-response: list<f32>);
 
+    /// Connects the biquad filter node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
@@ -197,76 +275,104 @@ interface audio {
     highshelf
   }
 
+  /// Represents a constant source node, which continuously outputs a fixed audio signal.
   resource constant-source-node {
     // TODO: constructor
+    /// Returns the offset parameter, which controls the value of the constant audio signal.
     offset: func() -> audio-param;
-
+    /// Connects the constant source node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a convolver node, used to apply reverb effects to an audio signal by convolving it with an impulse response.
   resource convolver-node {
     // TODO: constructor
+    /// Returns the current audio buffer used as the impulse response for convolution.
     buffer: func() -> option<audio-buffer>;
+    /// Sets the audio buffer to be used as the impulse response for convolution.
     set-buffer: func(buffer: audio-buffer);
+    /// Returns whether normalization is applied to the impulse response.
     normalize: func() -> bool;
+    /// Sets whether the impulse response should be normalized.
     set-normalize: func(value: bool);
 
+    /// Connects the convolver node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a channel merger node, which combines multiple audio channels into a single output stream.
   resource channel-merger-node {
     // TODO: constructor
-
+    /// Connects the channel merger node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a channel splitter node, which separates an audio stream into multiple individual channels.
   resource channel-splitter-node {
     // TODO: constructor
-
+    /// Connects the channel splitter node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a delay node, which delays the incoming audio signal by a specified amount of time.
   resource delay-node {
     // TODO: constructor
+    /// Returns the delay time parameter, which controls the amount of time by which the audio signal is delayed.
     delay-time: func() -> audio-param;
-
+    /// Connects the delay node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a dynamics compressor node, which applies dynamic range compression to an audio signal.
   resource dynamics-compressor-node {
     // TODO: constructor
+    /// Returns the attack parameter, which controls the time it takes for the compressor to react to a signal exceeding the threshold.
     attack: func() -> audio-param;
+    /// Returns the knee parameter, which adjusts the curve of the compression onset as the signal approaches the threshold.
     knee: func() -> audio-param;
+    /// Returns the ratio parameter, which sets the amount of compression applied once the threshold is exceeded.
     ratio: func() -> audio-param;
+    /// Returns the release parameter, which controls the time it takes for the compressor to stop applying compression after the signal falls below the threshold.
     release: func() -> audio-param;
+    /// Returns the threshold parameter, which sets the level at which compression begins.
     threshold: func() -> audio-param;
+    /// Returns the amount of gain reduction applied by the compressor.
     reduction: func() -> f32;
-
+    /// Connects the dynamics compressor node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a gain node, which controls the volume level of an audio signal.
   resource gain-node {
     // TODO: constructor
+    /// Returns the gain parameter, which controls the volume level of the audio signal.
     gain: func() -> audio-param;
-
+    /// Connects the gain node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents an IIR (Infinite Impulse Response) filter node, which applies a digital filter with feedback to an audio signal.
   resource iir-filter-node {
     // TODO: constructor
     // get-frequency-response: func(frequency-hz: list<f32>, mag-response: list<f32>, phase-response: list<f32>);
-
+    /// Connects the IIR filter node to a destination audio node
     connect: func(destination: audio-node);
   }
 
+  /// Represents an oscillator node, which generates periodic waveforms (such as sine, square, or sawtooth waves) for audio synthesis.
   resource oscillator-node {
     // TODO: constructor
+    /// Returns the detune parameter, which adjusts the frequency of the oscillator.
     detune: func() -> audio-param;
+    /// Returns the frequency parameter, which controls the frequency of the oscillator's waveform.
     frequency: func() -> audio-param;
+    /// Returns the current type of waveform generated by the oscillator (e.g., sine, square, etc.)
     %type: func() -> oscillator-type;
+    /// Sets the type of waveform generated by the oscillator (e.g., sine, square, etc.)
     set-type: func(%type: oscillator-type);
+    /// Sets a custom periodic wave for the oscillator to use for waveform generation.
     set-periodic-wave: func(periodic-wave: periodic-wave);
-
+    /// Connects the oscillator node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
@@ -278,37 +384,64 @@ interface audio {
     custom
   }
 
+  /// Represents a periodic wave, typically used for oscillator waveform generation, defined by a set of sample values (wavetable.)
   record periodic-wave {
+    /// A list of float values representing the wavetable of the periodic wave, defining its shape.
     wavetable: list<f32>
   }
 
+  /// Represents a panner node, which spatializes audio by setting its position and orientation in 3D space.
   resource panner-node {
     // TODO: constructor
+    /// Returns the X position parameter for the audio source in 3D space.
     position-x: func() -> audio-param;
+    /// Returns the Y position parameter for the audio source in 3D space.
     position-y: func() -> audio-param;
+    /// Returns the Z position parameter for the audio source in 3D space.
     position-z: func() -> audio-param;
+    /// Sets the position of the audio source in 3D space using X, Y, Z coordinates.
     set-position: func(x: f32, y: f32, z: f32);
+    /// Returns the X orientation parameter for the audio source in 3D space.
     orientation-x: func() -> audio-param;
+    /// Returns the Y orientation parameter for the audio source in 3D space.
     orientation-y: func() -> audio-param;
+    /// Returns the Z orientation parameter for the audio source in 3D space.
     orientation-z: func() -> audio-param;
+    /// Sets the orientation of the audio source in 3D space using X, Y, Z values.
     set-orientation: func(x: f32, y: f32, z: f32);
+    /// Returns the current distance model used for audio attenuation.
     distance-model: func() -> distance-model-type;
+    /// Sets the distance model for audio attenuation (e.g., linear, inverse, etc.)
     set-distance-model: func(value: distance-model-type);
+    /// Returns the reference distance for the panner, which defines the distance at which the audio reaches its reference volume.
     ref-distance: func() -> f32;
+    /// Sets the reference distance for the panner.
     set-ref-distance: func(value: f32);
+    /// Returns the maximum distance for the panner, beyond which the audio will not be heard.
     max-distance: func() -> f32;
+    /// Sets the maximum distance for the panner.
     set-max-distance: func(value: f32);
+    /// Returns the rolloff factor, which defines how the audio volume decreases with distance.
     rolloff-factor: func() -> f32;
+    /// Sets the rolloff factor for the panner.
     set-rolloff-factor: func(value: f32);
+    /// Returns the inner angle of the cone used for directional audio.
     cone-inner-angle: func() -> f32;
+    /// Sets the inner angle of the cone for directional audio.
     set-cone-inner-angle: func(value: f32);
+    /// Returns the outer angle of the cone used for directional audio.
     cone-outer-angle: func() -> f32;
+    /// Sets the outer angle of the cone for directional audio.
     set-cone-outer-angle: func(value: f32);
+    /// Returns the outer gain of the cone, which affects the volume outside the cone.
     cone-outer-gain: func() -> f32;
+    /// Sets the outer gain of the cone for directional audio.
     set-cone-outer-gain: func(value: f32);
+    /// Returns the panning model type used to position the sound in stereo or surround space.
     panning-model: func() -> panning-model-type;
+    /// Sets the panning model for spatialization (e.g., equal power, HRTF, etc.)
     set-panning-model: func(value: panning-model-type);
-
+    /// Connects the panner node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
@@ -323,36 +456,57 @@ interface audio {
     hrtf
   }
 
+  /// Represents options for creating a periodic wave, which includes real and imaginary components for complex waveforms.
   record periodic-wave-options {
+    /// An optional list of real values for the periodic wave, representing the real part of the wave.
     real: option<list<f32>>,
+    /// An optional list of imaginary values for the periodic wave, representing the imaginary part of the wave.
     imag: option<list<f32>>,
+    /// A flag to disable normalization of the wave, controlling whether the wave's values are normalized or not.
     disable-normalization: bool
   }
 
+  /// Represents a stereo panner node, which is used to spatialize audio in stereo (left/right) channels by adjusting the pan value.
   resource stereo-panner-node {
+    /// Returns the pan parameter, which controls the balance between the left and right channels.
     pan: func() -> audio-param;
-
+    /// Connects the stereo panner node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents a wave shaper node, which applies a distortion effect to an audio signal by shaping its waveform based on a provided curve.
   resource wave-shaper-node {
+    /// Returns the current curve applied to the wave shaper, which defines how the input waveform is distorted.
     curve: func() -> option<list<f32>>;
+    /// Sets the curve for the wave shaper, which controls the amount and type of distortion applied to the audio signal.
     set-curve: func(curve: list<f32>);
+    /// Returns the oversampling type used for the wave shaper, which affects the quality and performance of the distortion.
     oversample: func() -> over-sample-type;
+    /// Sets the oversampling type for the wave shaper, determining how the audio signal is processed during distortion.
     set-oversample: func(oversample: over-sample-type);
-
+    /// Connects the wave shaper node to a destination audio node.
     connect: func(destination: audio-node);
   }
 
+  /// Represents an audio listener, which defines the position and orientation of the listener in 3D space for spatial audio processing.
   resource audio-listener {
+    /// Returns the X position of the audio listener in 3D space.
     position-x: func() -> audio-param;
+    /// Returns the Y position of the audio listener in 3D space.
     position-y: func() -> audio-param;
+    /// Returns the Z position of the audio listener in 3D space.
     position-z: func() -> audio-param;
+    /// Returns the X direction the audio listener is facing (forward) in 3D space.
     forward-x: func() -> audio-param;
+    /// Returns the Y direction the audio listener is facing (forward) in 3D space.
     forward-y: func() -> audio-param;
+    /// Returns the Z direction the audio listener is facing (forward) in 3D space.
     forward-z: func() -> audio-param;
+    /// Returns the X axis of the audio listener's "up" direction in 3D space.
     up-x: func() -> audio-param;
+    /// Returns the Y axis of the audio listener's "up" direction in 3D space.
     up-y: func() -> audio-param;
+    /// Returns the Z axis of the audio listener's "up" direction in 3D space.
     up-z: func() -> audio-param;
   }
 
