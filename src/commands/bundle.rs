@@ -118,7 +118,7 @@ async fn init_rust_project(settings: &Settings) -> Result<()> {
     publish = false
 
     [dependencies]
-    rune = {{ path = "../../../rune", version = "{runtime_version}" }}
+    rune = {{ path = "../../../rune/crates/rune", version = "{runtime_version}" }}
 
     [[bin]]
     name = "{}"
@@ -166,9 +166,9 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
         CURRENT_PLATFORM, filename
     );
     let resp = reqwest::get(url).await?;
-    let content = resp.bytes().await?;
+    let rustup_content = resp.bytes().await?;
 
-    let out_path = rustup_dir.join(filename);
+    let rustup_path = rustup_dir.join(filename);
     
     let mut open_options = OpenOptions::new();
     let open_options = open_options
@@ -178,28 +178,61 @@ async fn install_rustup(settings: &Settings) -> Result<()> {
     #[cfg(not(target_os = "windows"))]
     let open_options = open_options.mode(0o755);
 
-    println!("{}", out_path.to_str().unwrap());
-    
-    let file = open_options.open(&out_path)?;
+    let rustup_file = open_options.open(&rustup_path)?;
 
-    let mut out = BufWriter::new(file);
-    out.write_all(&content.as_ref())?;
+    let mut rustup_out = BufWriter::new(rustup_file);
+    rustup_out.write_all(&rustup_content.as_ref())?;
 
-    let mut cmd = Command::new(out_path);
+    let mut cmd = Command::new(&rustup_path);
 
     cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
-        .env("RUSTUP_HOME", rustup_dir);
-
-    cmd.arg("-y");
+        .env("RUSTUP_HOME", &rustup_dir)
+        .arg("-y")
+        .arg("-q")
+        .arg("--no-update-default-toolchain")
+        .arg("--no-modify-path");
 
     let output = cmd
         .stdout(Stdio::null())
         .stderr(Stdio::inherit())
         .output()?;
 
-    let rustup_bin_path = settings.rune_bin_dir.join("cargo/bin/rustup");
-    Command::new(rustup_bin_path)
-        .args(["default", "stable"])
+    let mut cmd = Command::new(rustup_path);
+
+    cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
+        .env("RUSTUP_HOME", &rustup_dir)
+        .arg("-y")
+        .arg("-q")
+        .arg("--no-update-default-toolchain")
+        .arg("--no-modify-path");
+
+    let output = cmd
+        .stdout(Stdio::null())
+        .stderr(Stdio::inherit())
+        .output()?;
+
+    // Configure Rust
+    let rustup_path = settings.rune_bin_dir.join("cargo/bin/rustup");
+    let mut cmd = Command::new(&rustup_path);
+
+    cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
+        .env("RUSTUP_HOME", &rustup_dir)
+        .args(["default", "stable"]);
+
+    let output = cmd
+        .stdout(Stdio::null())
+        .stderr(Stdio::inherit())
+        .output()?;
+
+    let mut cmd = Command::new(&rustup_path);
+
+    cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
+        .env("RUSTUP_HOME", &rustup_dir)
+        .args(["target", "add", "wasm32-wasip1"]);
+
+    let output = cmd
+        .stdout(Stdio::null())
+        .stderr(Stdio::inherit())
         .output()?;
 
     Ok(())
@@ -213,20 +246,17 @@ async fn install_cross(settings: &Settings) -> Result<()> {
 
     let cargo_path = settings.rune_bin_dir.join("cargo/bin/cargo");
 
-    let mut cmd = Command::new(cargo_path.clone());
+    let mut cmd = Command::new(&cargo_path);
 
     cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
         .env("RUSTUP_HOME", settings.rune_bin_dir.join("rustup"));
 
-    cmd.args(["install", "cross"]);
+    cmd.args(["install", "cross", "--target", CURRENT_PLATFORM]);
 
     let output = cmd
-        .stdout(Stdio::null())
+        .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .output()?;
-
-    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
-    println!("Error: {}", String::from_utf8_lossy(&output.stderr));
 
     Ok(())
 }
@@ -236,17 +266,13 @@ async fn build_target(settings: &Settings) -> Result<()> {
 
     let cargo_bin_path = settings.rune_bin_dir.join("cargo/bin");
 
-    let current_path = env::var("PATH").unwrap_or_else(|_| String::from(""));
-    let new_path = format!("{}:{}", cargo_bin_path.to_str().unwrap(), current_path);
-    env::set_var("PATH", new_path);
-
-    let mut cmd = Command::new("cross");
+    let mut cmd = Command::new(cargo_bin_path.join("cross"));
     cmd.current_dir(rust_project_path);
 
     cmd.env("CARGO_HOME", settings.rune_bin_dir.join("cargo"))
         .env("RUSTUP_HOME", settings.rune_bin_dir.join("rustup"));
 
-    cmd.args(["build", "--target", &settings.target_triplet]);
+    cmd.args(["build", "--locked", "--target", &settings.target_triplet]);
 
     let output = cmd
         .stdout(Stdio::null())

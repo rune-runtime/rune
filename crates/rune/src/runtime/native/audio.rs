@@ -10,14 +10,12 @@ use web_audio_api::node::{AudioNode, AudioScheduledSourceNode, IIRFilterNode};
 use crate::rune::runtime::audio::*;
 use crate::RuneRuntimeState;
 
-#[async_trait::async_trait]
 impl Host for RuneRuntimeState {
     async fn output(&mut self) -> Option<Resource<AudioDevice>> {
         Some(Resource::new_own(0))
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioDevice for RuneRuntimeState {
     async fn name(&mut self, _audio_device: Resource<AudioDevice>) -> String {
         match self.audio_state.device.name() {
@@ -42,7 +40,6 @@ impl HostAudioDevice for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioContext for RuneRuntimeState {
     async fn base_latency(&mut self, audio_context: Resource<AudioContext>) -> f32 {
         let audio_context = self.table.get(&audio_context).unwrap();
@@ -306,7 +303,6 @@ impl HostAudioContext for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioBuffer for RuneRuntimeState {
     async fn new(&mut self, samples: Vec<Vec<f32>>, sample_rate: f32) -> Resource<AudioBuffer> {
         self.table
@@ -350,7 +346,6 @@ impl HostAudioBuffer for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioParam for RuneRuntimeState {
     async fn automation_rate(&mut self, audio_param: Resource<AudioParam>) -> AutomationRate {
         let audio_param = self.table.get(&audio_param).unwrap();
@@ -466,14 +461,12 @@ impl HostAudioParam for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioRenderCapacity for RuneRuntimeState {
     async fn drop(&mut self, _rep: Resource<AudioRenderCapacity>) -> Result<()> {
         Ok(())
     }
 }
 
-#[async_trait::async_trait]
 impl HostAnalyzerNode for RuneRuntimeState {
     async fn fft_size(&mut self, node: Resource<AnalyzerNode>) -> u32 {
         let audio_param = self.table.get(&node).unwrap();
@@ -562,7 +555,6 @@ impl HostAnalyzerNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostBiquadFilterNode for RuneRuntimeState {
     async fn gain(&mut self, node: Resource<BiquadFilterNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -608,7 +600,6 @@ impl HostBiquadFilterNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioDestinationNode for RuneRuntimeState {
     async fn max_channel_count(&mut self, node: Resource<AudioDestinationNode>) -> u32 {
         let node = self.table.get(&node).unwrap();
@@ -620,7 +611,6 @@ impl HostAudioDestinationNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioBufferSourceNode for RuneRuntimeState {
     async fn start_at_with_offset(
         &mut self,
@@ -731,7 +721,6 @@ impl HostAudioBufferSourceNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostConstantSourceNode for RuneRuntimeState {
     async fn offset(&mut self, node: Resource<ConstantSourceNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -752,7 +741,6 @@ impl HostConstantSourceNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostConvolverNode for RuneRuntimeState {
     async fn buffer(&mut self, node: Resource<ConvolverNode>) -> Option<Resource<AudioBuffer>> {
         let node = self.table.get(&node).unwrap();
@@ -792,7 +780,6 @@ impl HostConvolverNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostChannelMergerNode for RuneRuntimeState {
     async fn connect(
         &mut self,
@@ -808,7 +795,6 @@ impl HostChannelMergerNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostChannelSplitterNode for RuneRuntimeState {
     async fn connect(
         &mut self,
@@ -824,7 +810,6 @@ impl HostChannelSplitterNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostDelayNode for RuneRuntimeState {
     async fn delay_time(&mut self, node: Resource<DelayNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -845,7 +830,6 @@ impl HostDelayNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostDynamicsCompressorNode for RuneRuntimeState {
     async fn attack(&mut self, node: Resource<DynamicsCompressorNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -891,7 +875,6 @@ impl HostDynamicsCompressorNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGainNode for RuneRuntimeState {
     async fn gain(&mut self, node: Resource<GainNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -912,7 +895,6 @@ impl HostGainNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostIirFilterNode for RuneRuntimeState {
     async fn connect(
         &mut self,
@@ -928,7 +910,6 @@ impl HostIirFilterNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostOscillatorNode for RuneRuntimeState {
     async fn detune(&mut self, node: Resource<OscillatorNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -974,7 +955,6 @@ impl HostOscillatorNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostPannerNode for RuneRuntimeState {
     async fn position_x(&mut self, node: Resource<PannerNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -1110,7 +1090,6 @@ impl HostPannerNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostStereoPannerNode for RuneRuntimeState {
     async fn pan(&mut self, node: Resource<StereoPannerNode>) -> Resource<AudioParam> {
         let node = self.table.get(&node).unwrap();
@@ -1131,7 +1110,6 @@ impl HostStereoPannerNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostWaveShaperNode for RuneRuntimeState {
     async fn curve(&mut self, node: Resource<WaveShaperNode>) -> Option<Vec<f32>> {
         let node = self.table.get_mut(&node).unwrap();
@@ -1167,7 +1145,6 @@ impl HostWaveShaperNode for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostAudioListener for RuneRuntimeState {
     async fn position_x(&mut self, listener: Resource<AudioListener>) -> Resource<AudioParam> {
         let node = self.table.get(&listener).unwrap();

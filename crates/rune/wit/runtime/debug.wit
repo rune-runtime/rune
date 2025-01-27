@@ -2,7 +2,10 @@ package rune:runtime;
 
 /// Tools for debugging, like logging
 interface debug {
+  /// Standard log level
   log: func(msg: string);
+  /// Warning log level
   warn: func(msg: string);
+  /// Error log level
   error: func(msg: string);
 }

@@ -3,7 +3,6 @@ use std::io::Write;
 use crate::RuneRuntimeState;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-#[async_trait::async_trait]
 impl crate::rune::runtime::debug::Host for RuneRuntimeState {
     async fn log(&mut self, msg: String) {
         let mut stdout = StandardStream::stdout(ColorChoice::Always);

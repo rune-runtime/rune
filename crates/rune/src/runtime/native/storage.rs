@@ -10,7 +10,6 @@ use crate::rune::runtime::storage::*;
 use crate::runtime::storage::Storage;
 use crate::RuneRuntimeState;
 
-#[async_trait::async_trait]
 impl Host for RuneRuntimeState {
     async fn local(&mut self) -> Resource<StorageDevice> {
         let app_root_path = &self.input_path;
@@ -30,7 +29,6 @@ impl Host for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostStorageDevice for RuneRuntimeState {
     async fn create_dir(&mut self, storage: Resource<StorageDevice>, path: Resource<Path>) {
         let storage = self.storages.get(storage.rep() as usize).unwrap();
@@ -183,7 +181,6 @@ impl HostStorageDevice for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostPath for RuneRuntimeState {
     async fn new(&mut self, storage: Resource<StorageDevice>, path: String) -> Resource<Path> {
         let storage = self.storages.get(storage.rep() as usize).unwrap();

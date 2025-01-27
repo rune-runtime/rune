@@ -6,7 +6,6 @@ use winit::keyboard::{Key, NamedKey, SmolStr};
 use crate::rune::runtime::input::*;
 use crate::RuneRuntimeState;
 
-#[async_trait::async_trait]
 impl Host for RuneRuntimeState {
     async fn gamepad(&mut self) -> Option<Resource<GamepadDevice>> {
         Some(Resource::new_own(0))
@@ -25,7 +24,6 @@ impl Host for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGamepadDevice for RuneRuntimeState {
     async fn name(&mut self, gamepad: Resource<GamepadDevice>) -> String {
         let gamepad_id = self.table.get(&gamepad).unwrap();
@@ -94,7 +92,6 @@ impl HostGamepadDevice for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostKeyboardDevice for RuneRuntimeState {
     async fn is_pressed(&mut self, _device: Resource<KeyboardDevice>, key: KeyboardKey) -> bool {
         self.keyboard_state.active_keys.iter().any(|k| {
@@ -128,7 +125,6 @@ impl HostKeyboardDevice for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostMouseDevice for RuneRuntimeState {
     async fn is_pressed(&mut self, _device: Resource<MouseDevice>, _btn: MouseButton) -> bool {
         false
@@ -139,7 +135,6 @@ impl HostMouseDevice for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostTouchDevice for RuneRuntimeState {
     async fn drop(&mut self, _rep: Resource<TouchDevice>) -> Result<()> {
         Ok(())

@@ -24,7 +24,6 @@ use super::utilities::{convert_bind_group_entry, vec_to_color};
 
 impl RuneRuntimeState {}
 
-#[async_trait::async_trait]
 impl Host for RuneRuntimeState {
     async fn surface(&mut self) -> Resource<GpuSurface> {
         Resource::new_own(self.surface_resource_id)
@@ -44,7 +43,6 @@ impl Host for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuSurface for RuneRuntimeState {
     async fn current_texture(&mut self, _surface: Resource<GpuSurface>) -> Resource<GpuTexture> {
         let surface_output = self
@@ -62,7 +60,6 @@ impl HostGpuSurface for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuQuerySet for RuneRuntimeState {
     async fn type_(&mut self, query_set: Resource<GpuQuerySet>) -> GpuQueryType {
         let query_set_id = self.table.get(&query_set).unwrap();
@@ -85,7 +82,6 @@ impl HostGpuQuerySet for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuAdapter for RuneRuntimeState {
     async fn request_device(&mut self, _adapter: Resource<GpuAdapter>) -> Resource<GpuDevice> {
         // let adapter_id = self.table.get(&adapter).unwrap();
@@ -112,7 +108,6 @@ impl HostGpuAdapter for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuDevice for RuneRuntimeState {
     async fn create_buffer(
         &mut self,
@@ -655,7 +650,6 @@ impl HostGpuDevice for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuQueue for RuneRuntimeState {
     async fn submit(
         &mut self,
@@ -736,7 +730,6 @@ impl HostGpuQueue for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuBuffer for RuneRuntimeState {
     async fn size(&mut self, buffer: Resource<GpuBuffer>) -> GpuSizeU64 {
         let buffer_id = self.table.get(&buffer).unwrap();
@@ -829,7 +822,6 @@ impl HostGpuBuffer for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuTexture for RuneRuntimeState {
     async fn width(&mut self, texture: Resource<GpuTexture>) -> GpuIntegerCoordinate {
         let texture_id = self.table.get(&texture).unwrap();
@@ -925,7 +917,6 @@ impl HostGpuTexture for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuTextureView for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuTextureView>) -> Result<()> {
         let texture_view_id = self.table.delete(rep).unwrap();
@@ -936,7 +927,6 @@ impl HostGpuTextureView for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuSampler for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuSampler>) -> Result<()> {
         let sampler_id = self.table.delete(rep).unwrap();
@@ -945,7 +935,6 @@ impl HostGpuSampler for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuBindGroupLayout for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuBindGroupLayout>) -> Result<()> {
         let bind_group_layout_id = self.table.delete(rep).unwrap();
@@ -955,7 +944,6 @@ impl HostGpuBindGroupLayout for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuBindGroup for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuBindGroup>) -> Result<()> {
         let bind_group_id = self.table.delete(rep).unwrap();
@@ -965,7 +953,6 @@ impl HostGpuBindGroup for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuPipelineLayout for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuPipelineLayout>) -> Result<()> {
         let pipeline_layout_id = self.table.delete(rep).unwrap();
@@ -975,7 +962,6 @@ impl HostGpuPipelineLayout for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuShaderModule for RuneRuntimeState {
     async fn get_compilation_info(
         &mut self,
@@ -992,7 +978,6 @@ impl HostGpuShaderModule for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuComputePipeline for RuneRuntimeState {
     async fn get_bind_group_layout(
         &mut self,
@@ -1022,7 +1007,6 @@ impl HostGpuComputePipeline for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuRenderPipeline for RuneRuntimeState {
     async fn get_bind_group_layout(
         &mut self,
@@ -1048,14 +1032,12 @@ impl HostGpuRenderPipeline for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuCommandBuffer for RuneRuntimeState {
     async fn drop(&mut self, _: Resource<GpuCommandBuffer>) -> Result<()> {
         Ok(())
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuCommandEncoder for RuneRuntimeState {
     async fn begin_render_pass(
         &mut self,
@@ -1385,7 +1367,6 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuComputePassEncoder for RuneRuntimeState {
     async fn set_pipeline(
         &mut self,
@@ -1466,7 +1447,6 @@ impl HostGpuComputePassEncoder for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuRenderPassEncoder for RuneRuntimeState {
     async fn set_pipeline(
         &mut self,
@@ -1847,7 +1827,6 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuRenderBundle for RuneRuntimeState {
     async fn drop(&mut self, rep: Resource<GpuRenderBundle>) -> Result<()> {
         let render_bundle_id = self.table.delete(rep).unwrap();
@@ -1857,7 +1836,6 @@ impl HostGpuRenderBundle for RuneRuntimeState {
     }
 }
 
-#[async_trait::async_trait]
 impl HostGpuRenderBundleEncoder for RuneRuntimeState {
     async fn finish(
         &mut self,

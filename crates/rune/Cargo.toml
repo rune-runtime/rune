@@ -15,10 +15,8 @@ path = "tests/runtime.rs"
 harness = false
 
 [dependencies]
-# wasmtime = { version = "25.0.1", features = ['component-model'] }
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", features = ['component-model'] }
-# wasmtime-wasi = "25.0.1"
-wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime" }
+wasmtime = { version = "29.0.1", features = ['component-model'] }
+wasmtime-wasi = "29.0.1"
 raw-window-handle = "0.6"
 wit-bindgen-core = "0.32.0"
 wit-bindgen-rust = "0.32.0"

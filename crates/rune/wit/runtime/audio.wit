@@ -14,7 +14,6 @@ interface audio {
     name: func() -> string;
     /// Create an audio context
     create-context: func() -> audio-context;
-
   }
 
   /// An audio context controls both the creation of the nodes it contains and the execution of the audio processing, or decoding.

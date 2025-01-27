@@ -2,19 +2,30 @@ package rune:runtime;
 
 /// APIs for accessing user input via gamepad, keyboard, mouse, touch, etc.
 interface input {
+  /// Gets the device's gamepad, if one is available.
   gamepad: func() -> option<gamepad-device>;
+  /// Gets the device's keyboard, if one is available.
   keyboard: func() -> option<keyboard-device>;
+  /// Gets the device's mouse, if one is available.
   mouse: func() -> option<mouse-device>;
+  /// Gets the device's touch interface, if one is available.
   touch: func() -> option<touch-device>;
 
+  /// Represents a gamepad device, such as a controller.
   resource gamepad-device {
+    /// Returns the name of the gamepad device.
     name: func() -> string;
+    /// Checks if the provided button is currently pressed.
     is-pressed: func(btn: gamepad-button) -> bool;
+    /// Retrieves the current value of a specific axis on the gamepad.
     value: func(axis: gamepad-axis) -> f32;
+    /// Retrieves detailed data about a specific button on the gamepad, if available.
     button-data: func(btn: gamepad-button) -> option<gamepad-button-data>;
+    /// Retrieves detailed data about a specific axis on the gamepad, if available.
     axis-data: func(axis: gamepad-axis) -> option<gamepad-axis-data>;
   }
 
+  /// Representation of the buttons on a gamepad device.
   enum gamepad-button {
     south,
     east,
@@ -38,6 +49,7 @@ interface input {
     unknown
   }
 
+  /// Representation of the axes on a gamepad device.
   enum gamepad-axis {
     left-stick-x,
     left-stick-y,
@@ -50,24 +62,37 @@ interface input {
     unknown
   }
 
+  /// Detailed data for a gamepad button, including its current state and additional metadata.
   record gamepad-button-data {
+    // Indicates whether the button is currently pressed.
     is-pressed: bool,
+    // The analog value of the button (e.g., pressure-sensitive triggers).
     value: f32,
+    // Whether the button press is being repeated (useful for holding actions).
     is-repeating: bool,
+    // A counter representing the number of presses for this button.
     counter: u32
   }
   
+  /// Detailed data for a gamepad axis, including its current value and event count.
   record gamepad-axis-data {
+    /// The current value of the axis (e.g., joystick position).
     value: f32,
+    /// A counter representing the number of events for this axis.
     counter: u32
   }
 
+  /// A keyboard input device, allowing interaction with key states.
   resource keyboard-device {
+    /// Checks if the specified key is currently pressed.
     is-pressed: func(key: keyboard-key) -> bool;
+    /// Checks if the specified key was just pressed (ie. in the same frame.)
     just-pressed: func(key: keyboard-key) -> bool;
+    /// Retrieves a list of currently pressed keys.
     active-keys: func() -> list<keyboard-key>;
   }
 
+  /// A key on the keyboard.
   variant keyboard-key {
     character(string),
     unidentified(u32),
@@ -118,6 +143,7 @@ interface input {
     f12,
   }
 
+  /// The location of a key on the keyboard.
   variant key-location {
     standard,
     left,
@@ -125,14 +151,18 @@ interface input {
     numpad
   }
 
+  /// A mouse input device, allowing interaction with mouse button states.
   resource mouse-device {
+    /// Checks if the specified mouse button is currently pressed.
     is-pressed: func(btn: mouse-button) -> bool;
   }
 
+  /// A mouse button
   enum mouse-button {
     unknown
   }
 
+  /// A touch device, allowing interaction with touch states.
   resource touch-device {
 
   }
