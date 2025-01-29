@@ -64,6 +64,8 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
 
     println!("Building for target {}", settings.target_triplet);
 
+    super::build::build(release).await?;
+
     // TODO: Create a rust project that imports the wasm binary and runs it in the rune runtime
     // println!("Creating project...");
     init_rust_project(&settings).await?;
@@ -77,8 +79,6 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
     // TODO: Ensure docker is available (no portable installation possible)
 
     build_target(&settings).await?;
-
-    copy_input_to_output(&settings).await?;
 
     // TODO: Copy source code from cargo bundle to build appropriate package for target (cargo bundle does not support using existing binaries built by cross)
     // ie. https://github.com/burtonageo/cargo-bundle/blob/master/src/bundle/ios_bundle.rs#L22
@@ -285,10 +285,10 @@ async fn build_target(settings: &Settings) -> Result<()> {
     Ok(())
 }
 
-async fn copy_input_to_output(settings: &Settings) -> Result<()> {
+async fn copy_output_to_input(settings: &Settings) -> Result<()> {
     crate::fs::copy_dir_all(
-        &settings.build_input_dir,
-        settings.build_output_dir.join(".rune/input"),
+        &settings.build_output_dir,
+        settings.rune_dir.join("input"),
     )?;
     Ok(())
 }

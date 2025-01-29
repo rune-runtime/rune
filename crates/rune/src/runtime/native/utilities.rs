@@ -12,7 +12,7 @@ use crate::gpu::{
     GpuBlendState, GpuBufferUsage, GpuColorWrite, GpuCompareFunction, GpuExtentD3, GpuFilterMode,
     GpuIndexFormat, GpuLoadOp, GpuMapMode, GpuQueryType, GpuShaderStage, GpuStencilFaceState,
     GpuStencilOperation, GpuStoreOp, GpuTextureAspect, GpuTextureDimension, GpuTextureFormat,
-    GpuTextureUsage,
+    GpuTextureUsage, GpuVertexFormat, GpuVertexStepMode,
 };
 
 // use crate::renderer::{GpuCompareFunction, GpuTextureFormat, GpuStencilOperation, GpuStencilFaceState, GpuColorWrite, GpuBlendState, GpuBlendComponent, GpuBlendFactor, GpuBlendOperation};
@@ -495,6 +495,61 @@ impl Into<GpuTextureDimension> for wgpu_types::TextureDimension {
             wgpu_types::TextureDimension::D1 => GpuTextureDimension::D1,
             wgpu_types::TextureDimension::D2 => GpuTextureDimension::D2,
             wgpu_types::TextureDimension::D3 => GpuTextureDimension::D3,
+        }
+    }
+}
+
+impl Into<wgpu_types::VertexFormat> for GpuVertexFormat {
+    fn into(self) -> wgpu_types::VertexFormat {
+        match self {
+            GpuVertexFormat::Uint8 => wgpu_types::VertexFormat::Uint8,
+            GpuVertexFormat::Uint8x2 => wgpu_types::VertexFormat::Uint8x2,
+            GpuVertexFormat::Uint8x4 => wgpu_types::VertexFormat::Uint8x4,
+            GpuVertexFormat::Sint8 => wgpu_types::VertexFormat::Sint8,
+            GpuVertexFormat::Sint8x2 => wgpu_types::VertexFormat::Sint8x2,
+            GpuVertexFormat::Sint8x4 => wgpu_types::VertexFormat::Sint8x4,
+            GpuVertexFormat::Unorm8 => wgpu_types::VertexFormat::Unorm8,
+            GpuVertexFormat::Unorm8x2 => wgpu_types::VertexFormat::Unorm8x2,
+            GpuVertexFormat::Unorm8x4 => wgpu_types::VertexFormat::Unorm8x4,
+            GpuVertexFormat::Snorm8 => wgpu_types::VertexFormat::Snorm8,
+            GpuVertexFormat::Snorm8x2 => wgpu_types::VertexFormat::Snorm8x2,
+            GpuVertexFormat::Snorm8x4 => wgpu_types::VertexFormat::Snorm8x4,
+            GpuVertexFormat::Uint16 => wgpu_types::VertexFormat::Uint16,
+            GpuVertexFormat::Uint16x2 => wgpu_types::VertexFormat::Uint16x2,
+            GpuVertexFormat::Uint16x4 => wgpu_types::VertexFormat::Uint16x4,
+            GpuVertexFormat::Sint16 => wgpu_types::VertexFormat::Sint16,
+            GpuVertexFormat::Sint16x2 => wgpu_types::VertexFormat::Sint16x2,
+            GpuVertexFormat::Sint16x4 => wgpu_types::VertexFormat::Sint16x4,
+            GpuVertexFormat::Unorm16 => wgpu_types::VertexFormat::Unorm16,
+            GpuVertexFormat::Unorm16x2 => wgpu_types::VertexFormat::Unorm16x2,
+            GpuVertexFormat::Unorm16x4 => wgpu_types::VertexFormat::Unorm16x4,
+            GpuVertexFormat::Snorm16 => wgpu_types::VertexFormat::Snorm16,
+            GpuVertexFormat::Snorm16x2 => wgpu_types::VertexFormat::Snorm16x2,
+            GpuVertexFormat::Snorm16x4 => wgpu_types::VertexFormat::Snorm16x4,
+            GpuVertexFormat::Float16 => wgpu_types::VertexFormat::Float16,
+            GpuVertexFormat::Float16x2 => wgpu_types::VertexFormat::Float16x2,
+            GpuVertexFormat::Float16x4 => wgpu_types::VertexFormat::Float16x4,
+            GpuVertexFormat::Float32 => wgpu_types::VertexFormat::Float32,
+            GpuVertexFormat::Float32x2 => wgpu_types::VertexFormat::Float32x2,
+            GpuVertexFormat::Float32x3 => wgpu_types::VertexFormat::Float32x3,
+            GpuVertexFormat::Float32x4 => wgpu_types::VertexFormat::Float32x4,
+            GpuVertexFormat::Uint32 => wgpu_types::VertexFormat::Uint32,
+            GpuVertexFormat::Uint32x2 => wgpu_types::VertexFormat::Uint32x2,
+            GpuVertexFormat::Uint32x3 => wgpu_types::VertexFormat::Uint32x3,
+            GpuVertexFormat::Uint32x4 => wgpu_types::VertexFormat::Uint32x4,
+            GpuVertexFormat::Sint32 => wgpu_types::VertexFormat::Sint32,
+            GpuVertexFormat::Sint32x2 => wgpu_types::VertexFormat::Sint32x2,
+            GpuVertexFormat::Sint32x3 => wgpu_types::VertexFormat::Sint32x3,
+            GpuVertexFormat::Sint32x4 => wgpu_types::VertexFormat::Sint32x4,
+        }
+    }
+}
+
+impl Into<wgpu_types::VertexStepMode> for GpuVertexStepMode {
+    fn into(self) -> wgpu_types::VertexStepMode {
+        match self {
+            GpuVertexStepMode::Vertex => wgpu_types::VertexStepMode::Vertex,
+            GpuVertexStepMode::Instance => wgpu_types::VertexStepMode::Instance,
         }
     }
 }

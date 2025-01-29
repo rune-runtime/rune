@@ -10,7 +10,7 @@ use crate::settings::Settings;
 pub fn bundle_project(settings: &Settings) -> crate::Result<()> {
     let msi_bundle_name = format!("{}.msi", settings.bundle_name);
     let msi_path = settings
-        .build_output_dir
+        .current_dir
         .join("bundle/windows")
         .join(&msi_bundle_name);
 

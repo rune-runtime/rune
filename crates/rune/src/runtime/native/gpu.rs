@@ -423,7 +423,7 @@ impl HostGpuDevice for RuneRuntimeState {
                         v.attributes
                             .iter()
                             .map(|a| VertexAttribute {
-                                format: unsafe { std::mem::transmute(a.format as u32) },
+                                format: a.format.into(),
                                 offset: a.offset,
                                 shader_location: a.shader_location,
                             })
@@ -444,7 +444,7 @@ impl HostGpuDevice for RuneRuntimeState {
 
                     VertexBufferLayout {
                         array_stride: v.array_stride,
-                        step_mode: unsafe { std::mem::transmute(v.step_mode as u32) },
+                        step_mode: v.step_mode.into(),
                         attributes: Cow::Borrowed(&attributes.as_slice()),
                     }
                 })
@@ -565,7 +565,7 @@ impl HostGpuDevice for RuneRuntimeState {
     async fn create_command_encoder(
         &mut self,
         device: Resource<GpuDevice>,
-        _descriptor: GpuCommandEncoderDescriptor,
+        descriptor: GpuCommandEncoderDescriptor,
     ) -> Resource<GpuCommandEncoder> {
         let device_id = self.table.get(&device).unwrap();
 
@@ -573,7 +573,9 @@ impl HostGpuDevice for RuneRuntimeState {
             self.instance
                 .device_create_command_encoder(
                     *device_id,
-                    &wgpu_types::CommandEncoderDescriptor { label: None },
+                    &wgpu_types::CommandEncoderDescriptor {
+                        label: descriptor.label.map(|label| label.into())
+                    },
                     None,
                 ),
         )

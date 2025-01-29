@@ -12,7 +12,7 @@ use crate::settings::Settings;
 pub fn bundle_project(settings: &Settings) -> crate::Result<()> {
     let app_bundle_name = format!("{}.app", settings.bundle_name);
     let app_bundle_path = settings
-        .build_output_dir
+        .current_dir
         .join("bundle/macos")
         .join(&app_bundle_name);
     if app_bundle_path.exists() {
@@ -31,23 +31,16 @@ pub fn bundle_project(settings: &Settings) -> crate::Result<()> {
 
     copy_build_output_to_bundle(&bundle_directory, settings)?;
 
-    copy_input_to_bundle(&bundle_directory, settings)?;
-
     Ok(())
 }
 
 fn copy_build_output_to_bundle(bundle_directory: &Path, settings: &Settings) -> crate::Result<()> {
     let dest_dir = bundle_directory.join("MacOS");
+    crate::fs::copy_dir_all(&settings.build_output_dir, dest_dir.join(".rune/input"))?;
     crate::fs::copy_file(
         settings.target_binary_path(),
         dest_dir.join(settings.binary_name()),
     )?;
-    Ok(())
-}
-
-fn copy_input_to_bundle(bundle_directory: &Path, settings: &Settings) -> crate::Result<()> {
-    let dest_dir = bundle_directory.join("MacOS");
-    crate::fs::copy_dir_all(&settings.build_input_dir, dest_dir.join(".rune/input"))?;
     Ok(())
 }
 
