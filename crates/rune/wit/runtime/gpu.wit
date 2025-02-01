@@ -114,45 +114,66 @@ interface gpu {
     create-query-set: func(descriptor: gpu-query-set-descriptor) -> gpu-query-set;
   }
 
-  /// Options for GPU device.
+  /// Descriptor for configuring a GPU device, including features, limits, and queue settings.
   record gpu-device-descriptor {
+    /// Optional label for debugging and identification purposes.
     label: option<string>,
+    /// List of required GPU features that must be supported by the device.
     required-features: list<gpu-feature-name>,
+    /// List of required GPU limits, specified as key-value pairs.
     required-limits: list<tuple<string, gpu-size-u64>>,
+    /// Optional descriptor for the default GPU queue.
     default-queue: option<gpu-queue-descriptor>
   }
 
-  /// GPU feature names
+  /// Representation of various GPU features that a device may support.
   enum gpu-feature-name {
+    /// Controls whether depth clipping is enabled or disabled.
     depth-clip-control,
+    /// Support for 32-bit floating-point depth with an 8-bit stencil.
     depth32float-stencil8,
+    /// Support for BC (Block Compression) texture formats.
     texture-compression-bc,
+    /// Support for ETC2 texture compression format.
     texture-compression-etc2,
+    /// Support for ASTC (Adaptive Scalable Texture Compression).
     texture-compression-astc,
+    /// Allows querying timestamps for GPU operations.
     timestamp-query,
+    /// Enables indirect draw calls to specify the first instance.
     indirect-first-instance,
+    /// Allows the use of 16-bit floating-point precision in shaders.
     shader-f16,
+    /// Support for RG11B10 unsigned float render targets.
     rg11b10ufloat-renderable,
+    /// Allows storage usage for BGRA8Unorm textures.
     bgra8unorm-storage,
+    /// Enables 32-bit floating-point texture filtering.
     float32-filterable,
   }
 
-  /// GPUQueue
+  /// Represents a GPU command queue that executes command buffers and manages data transfers.
   resource gpu-queue {
+    /// Submits a list of command buffers for execution.
     submit: func(command-buffers: list<gpu-command-buffer>);
+    /// Writes data into a GPU buffer at a specified offset.
     write-buffer: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size-u64, data: buffer-source, data-offset: gpu-size-u64, size: gpu-size-u64);
+    /// Writes data into a GPU texture at a specified location.
     write-texture: func(destination: gpu-image-copy-texture, data: buffer-source, data-layout: gpu-image-data-layout, size: gpu-extent-d3);
   }
 
-  /// Options for GPU queue
+  /// Describes properties for creating a GPU queue.
   record gpu-queue-descriptor {
     label: option<string>,
   }
 
-  /// GPU image data layout options.
+  /// Describes the layout of image data in GPU memory.
   record gpu-image-data-layout {
+    /// Specifies the memory offset in bytes.
     offset: gpu-size-u64,
+    /// Number of bytes per row of the image.
     bytes-per-row: gpu-size-u32,
+    /// Number of rows per image slice.
     rows-per-image: gpu-size-u32
   }
 
@@ -178,39 +199,60 @@ interface gpu {
     destroy: func();
   }
 
-  /// Options for GPU buffer
+  /// Describes a GPU buffer and its properties.
   record gpu-buffer-descriptor {
+    /// Optional label for debugging.
     label: option<string>,
+    /// Size of the buffer in bytes.
     size: gpu-size-u64,
+    /// Usage flags defining how the buffer will be used.
     usage: gpu-buffer-usage,
+    /// Optional initial contents of the buffer.
     contents: option<buffer-source>,
+    /// Whether the buffer is mapped at creation.
     mapped-at-creation: bool
   }
 
-  /// GPU buffer usage modes
+
+  /// Defines the usage flags for a GPU buffer.
   flags gpu-buffer-usage {
+    /// Allows the buffer to be mapped for reading.
     map-read,
+    /// Allows the buffer to be mapped for writing.
     map-write,
+    /// Allows the buffer to be used as a source in copy operations.
     copy-src,
+    /// Allows the buffer to be used as a destination in copy operations.
     copy-dst,
+    /// Allows the buffer to be used as an index buffer.
     index,
+    /// Allows the buffer to be used as a vertex buffer.
     vertex,
+    /// Allows the buffer to be used as a uniform buffer.
     uniform,
+    /// Allows the buffer to be used as a storage buffer.
     storage,
+    /// Allows the buffer to be used for indirect commands.
     indirect,
+    /// Allows the buffer to be used for resolving query results.
     query-resolve
   }
 
-  /// GPU buffer map states
+  /// Represents the mapping state of a GPU buffer.
   enum gpu-buffer-map-state {
+    /// The buffer is not currently mapped.
     unmapped,
+    /// The buffer is in the process of being mapped.
     pending,
+    /// The buffer is successfully mapped and accessible.
     mapped
   }
 
-  /// GPU map modes
+  /// Defines the modes in which a GPU buffer can be mapped.
   flags gpu-map-mode {
+    /// Allows the buffer to be mapped for reading.
     read,
+    /// Allows the buffer to be mapped for writing.
     write
   }
 
@@ -240,21 +282,31 @@ interface gpu {
     destroy: func();
   }
 
-  /// Options for the GPU texture
+  /// Describes the properties and configuration of a GPU texture.
   record gpu-texture-descriptor {
+    /// The size of the texture in three dimensions (width, height, depth).
     size: gpu-extent-d3,
+    /// The number of mipmap levels for the texture.
     mip-level-count: gpu-integer-coordinate,
+    /// The number of samples per pixel for multisampling.
     sample-count: gpu-size-u32,
+    /// The dimensionality of the texture (e.g., 1D, 2D, 3D).
     dimension: gpu-texture-dimension,
+    /// The format of the texture data (e.g., RGBA8, Depth24Stencil8).
     format: gpu-texture-format,
+    /// The intended usage flags for the texture.
     usage: gpu-texture-usage,
+    /// A list of formats that can be used when creating views of this texture.
     view-formats: list<gpu-texture-format>
   }
 
-  /// GPU texture dimensions
+  /// Specifies the dimensionality of a texture in WebGPU.
   enum gpu-texture-dimension {
+    /// Represents a 1-dimensional texture.
     d1,
+    /// Represents a 2-dimensional texture.
     d2,
+    /// Represents a 3-dimensional texture.
     d3
   }
 
@@ -379,318 +431,481 @@ interface gpu {
     astc12x12unormsrgb,
   }
 
-  /// GPU texture usage modes
+  /// Defines the usage flags for a GPU texture in WebGPU.
   flags gpu-texture-usage {
+    /// Allows the texture to be used as a source in copy operations.
     copy-src,
+    /// Allows the texture to be used as a destination in copy operations.
     copy-dst,
+    /// Allows the texture to be bound as a texture resource in shaders.
     texture-binding,
+    /// Allows the texture to be bound as a storage resource in shaders.
     storage-binding,
+    /// Allows the texture to be used as a render attachment (e.g., color or depth/stencil target).
     render-attachment
   }
 
-  /// GPU texture aspects
+  /// Specifies the aspect of a texture to be accessed or modified.
   enum gpu-texture-aspect {
+    /// Refers to all aspects of the texture (e.g., color, depth, and stencil).
     all,
+    /// Refers only to the stencil aspect of the texture.
     stencil-only,
+    /// Refers only to the depth aspect of the texture.
     depth-only
   }
 
-  /// GPUTextureView
+  /// Represents a view into a GPU texture, allowing specific parts or aspects of the texture to be accessed.
   resource gpu-texture-view {
     
   }
 
-  /// Options for the texture view
+  /// Describes the configuration for creating a view into a GPU texture.
   record gpu-texture-view-descriptor {
+    /// An optional label for the texture view, useful for debugging and diagnostics.
     label: option<string>,
+    /// The format of the texture view, which may differ from the underlying texture's format.
     format: gpu-texture-format,
+    /// The dimensionality of the texture view (e.g., 2D, 2D-array, cube, etc.).
     dimension: gpu-texture-view-dimension,
+    /// The aspect of the texture to be accessed (e.g., color, depth, stencil).
     aspect: gpu-texture-aspect,
+    /// The base mip level from which the view starts.
     base-mip-level: gpu-integer-coordinate,
+    /// The number of mip levels included in the view.
     mip-level-count: gpu-integer-coordinate,
+    /// The base array layer from which the view starts.
     base-array-layer: gpu-integer-coordinate,
+    /// The number of array layers included in the view.
     array-layer-count: gpu-integer-coordinate
   }
 
-  /// GPU texture view dimensions
+  /// Specifies the dimensionality of a texture view in WebGPU.
   enum gpu-texture-view-dimension {
+    /// Represents a 1-dimensional texture view.
     d1,
+    /// Represents a 2-dimensional texture view.
     d2,
+    /// Represents a 2-dimensional array texture view.
     d2-array,
+    /// Represents a cube texture view.
     cube,
+    /// Represents a cube array texture view.
     cube-array,
+    /// Represents a 3-dimensional texture view.
     d3
   }
 
-  /// Color space for texture
+  /// Specifies predefined color spaces for textures and rendering in WebGPU.
   enum predefined-color-space {
+    /// The sRGB color space, commonly used for standard color representation.
     srgb,
+    /// The Display-P3 color space, which has a wider gamut than sRGB.
     display-p3
   }
 
 
   /// Samples
 
-  /// GPUSampler
+  /// Represents a sampler resource, used to control how textures are sampled in shaders.
   resource gpu-sampler {
-    
+
   }
 
-  // Options for the GPU sampler
+  /// Describes the configuration for creating a GPU sampler.
   record gpu-sampler-descriptor {
-    label: option<string>,
-    address-mode-u: gpu-address-mode,
-    address-mode-v: gpu-address-mode,
-    address-mode-w: gpu-address-mode,
-    mag-filter: gpu-filter-mode,
-    min-filter: gpu-filter-mode,
-    mipmap-filter: gpu-filter-mode,
-    lod-min-clamp: f32,
-    lod-max-clamp: f32,
-    compare: option<gpu-compare-function>,
-    max-anisotrophy: u16
+      /// An optional label for the sampler, useful for debugging and diagnostics.
+      label: option<string>,
+      /// Specifies the addressing mode for the U (texture coordinate) axis.
+      address-mode-u: gpu-address-mode,
+      /// Specifies the addressing mode for the V (texture coordinate) axis.
+      address-mode-v: gpu-address-mode,
+      /// Specifies the addressing mode for the W (texture coordinate) axis.
+      address-mode-w: gpu-address-mode,
+      /// Specifies the filtering mode when magnifying the texture (e.g., nearest or linear).
+      mag-filter: gpu-filter-mode,
+      /// Specifies the filtering mode when minifying the texture (e.g., nearest or linear).
+      min-filter: gpu-filter-mode,
+      /// Specifies the filtering mode for mipmap levels (e.g., nearest or linear).
+      mipmap-filter: gpu-filter-mode,
+      /// The minimum level of detail (LOD) to use when sampling the texture.
+      lod-min-clamp: f32,
+      /// The maximum level of detail (LOD) to use when sampling the texture.
+      lod-max-clamp: f32,
+      /// An optional comparison function for depth textures (used in shadow mapping).
+      compare: option<gpu-compare-function>,
+      /// The maximum anisotropy level for anisotropic filtering.
+      max-anisotrophy: u16
   }
 
+  /// Specifies the addressing mode for texture coordinates.
   enum gpu-address-mode {
+    /// Clamps texture coordinates to the edge of the texture.
     clamp-to-edge,
+    /// Repeats the texture when coordinates exceed the texture dimensions.
     repeat,
+    /// Mirrors and repeats the texture when coordinates exceed the texture dimensions.
     mirror-repeat
   }
 
+  /// Specifies the filtering mode for texture sampling.
   enum gpu-filter-mode {
+    /// Samples the nearest texel to the texture coordinate (point filtering).
     nearest,
+    /// Interpolates between neighboring texels to produce a smoother result (linear filtering).
     linear
   }
 
+  /// Specifies the comparison function used for depth or stencil operations.
   enum gpu-compare-function {
+    /// The comparison never passes.
     never,
+    /// Passes if the source value is less than the destination value.
     less,
+    /// Passes if the source value is equal to the destination value.
     equal,
+    /// Passes if the source value is less than or equal to the destination value.
     less-equal,
+    /// Passes if the source value is greater than the destination value.
     greater,
+    /// Passes if the source value is not equal to the destination value.
     not-equal,
+    /// Passes if the source value is greater than or equal to the destination value.
     greater-equal,
+    /// The comparison always passes.
     always
   }
 
-  /// Resource Binding
-
-  /// GPUBindGroupLayout
+  /// Represents a layout for a bind group, defining the structure and types of resources bound to a shader.
   resource gpu-bind-group-layout {
     
   }
 
-  // Options for the GPU bind group layout
+  /// Describes the configuration for creating a bind group layout.
   record gpu-bind-group-layout-descriptor {
+    /// A list of entries defining the resources and their binding points in the layout.
     entries: list<gpu-bind-group-layout-entry>
   }
 
-  // GPU bind group layout
+  /// Describes a single entry in a bind group layout, defining a resource binding.
   record gpu-bind-group-layout-entry {
+    /// The binding index for this entry, corresponding to the shader's binding point.
     binding: gpu-index-u32,
+    /// The shader stages that can access this resource (e.g., vertex, fragment, compute).
     visibility: gpu-shader-stage,
+    /// Optional layout for a buffer resource binding.
     buffer: option<gpu-buffer-binding-layout>,
+    /// Optional layout for a sampler resource binding.
     sampler: option<gpu-sampler-binding-layout>,
+    /// Optional layout for a texture resource binding.
     texture: option<gpu-texture-binding-layout>,
+    /// Optional layout for a storage texture resource binding.
     storage-texture: option<gpu-storage-texture-binding-layout>
   }
 
+  /// Specifies the shader stages that can access a resource.
   flags gpu-shader-stage {
+    /// The resource is accessible in the vertex shader stage.
     vertex,
+    /// The resource is accessible in the fragment shader stage.
     fragment,
+    /// The resource is accessible in the compute shader stage.
     compute
   }
 
+  /// Defines the layout for a GPU buffer binding.
   record gpu-buffer-binding-layout {
+    /// The type of buffer binding.
     %type: gpu-buffer-binding-type,
+    /// Indicates if the binding has a dynamic offset.
     has-dynamic-offset: bool,
+    /// Minimum required size for the binding.
     min-binding-size: gpu-size-u64
   }
 
+  /// Specifies the type of GPU buffer binding.
   enum gpu-buffer-binding-type {
+    /// A uniform buffer, typically used for read-only data shared across shaders.
     uniform,
+    /// A storage buffer, allowing read and write access in shaders.
     storage,
+    /// A read-only storage buffer, permitting only read access in shaders.
     read-only-storage
   }
 
+  /// Describes the binding layout for a GPU sampler.
   record gpu-sampler-binding-layout {
+    /// The type of sampler binding.
     %type: gpu-sampler-binding-type
   }
 
+  /// Represents the type of sampler binding in a GPU pipeline.
   enum gpu-sampler-binding-type {
+    /// A sampler that supports filtering operations like linear interpolation.
     filtering,
+    /// A sampler that does not support filtering, typically used for integer textures.
     non-filtering,
+    /// A sampler used for comparison operations, such as shadow mapping.
     comparison
   }
 
+  /// Describes how a GPU texture can be bound in a shader.
   record gpu-texture-binding-layout {
+    /// The type of data sampled from the texture.
     sample-type: gpu-texture-sample-type,
+    /// The dimensionality of the texture view.
     view-dimension: gpu-texture-view-dimension,
+    /// Whether the texture supports multisampling.
     multisampled: bool
   }
 
+  /// Specifies the type of data sampled from a GPU texture.
   enum gpu-texture-sample-type {
+    /// A floating-point texture that can be filtered.
     float,
+    /// A floating-point texture that cannot be filtered.
     unfilterable-float,
+    /// A depth texture used for depth-based sampling.
     depth,
+    /// A signed integer texture.
     sint,
+    /// An unsigned integer texture.
     uint
   }
 
+  /// Defines how a storage texture is bound in a GPU pipeline.
   record gpu-storage-texture-binding-layout {
+    /// Specifies the access mode for the storage texture.
     access: gpu-storage-texture-access,
+    /// The format of the texture.
     format: gpu-texture-format,
+    /// The dimensionality of the texture view.
     view-dimension: gpu-texture-view-dimension
   }
 
+  /// Specifies the access mode for a GPU storage texture.
   enum gpu-storage-texture-access {
+    /// The texture can only be written to.
     write-only
   }
 
   /// GPUBindGroup
 
+  /// Represents a group of GPU resource bindings.
   resource gpu-bind-group {
   }
 
+  /// Describes the configuration for creating a bind group.
   record gpu-bind-group-descriptor {
+    /// An optional label for the bind group, useful for debugging and diagnostics.
     label: option<string>,
+    /// The layout that defines the structure of this bind group.
     layout: borrow<gpu-bind-group-layout>,
+    /// A list of entries specifying the resources to bind.
     entries: list<gpu-bind-group-entry>
   }
 
+  /// Describes a single entry in a bind group, associating a resource with a binding point.
   record gpu-bind-group-entry {
+    /// The binding index for this entry, corresponding to the shader's binding point.
     binding: gpu-index-u32,
+    /// The resource to bind (e.g., buffer, texture, sampler).
     %resource: gpu-binding-resource
   }
 
+  /// Represents a resource that can be bound to a shader, such as a buffer, sampler, or texture view.
   variant gpu-binding-resource {
+    /// A single buffer resource to bind.
     buffer(gpu-buffer-binding),
+    /// An array of buffer resources to bind.
     buffer-array(list<gpu-buffer-binding>),
+    /// A single sampler resource to bind.
     sampler(borrow<gpu-sampler>),
+    /// An array of sampler resources to bind.
     sampler-array(list<borrow<gpu-sampler>>),
+    /// A single texture view resource to bind.
     texture-view(borrow<gpu-texture-view>),
+    /// An array of texture view resources to bind.
     texture-view-array(list<borrow<gpu-texture-view>>)
   }
 
-  /// GPUPipelineLayout
-
+  /// Represents the layout of a pipeline, defining the bind group layouts and push constant ranges.
   resource gpu-pipeline-layout {
-    
   }
 
+  /// Describes the configuration for creating a pipeline layout.
   record gpu-pipeline-layout-descriptor {
+    /// A list of bind group layouts defining the resource bindings for the pipeline.
     bind-group-layouts: list<borrow<gpu-bind-group-layout>>
   }
 
-
-  /// Shader Modules
-
-  /// GPUShaderModule
+  /// Represents a compiled shader module, containing shader code ready for use in a pipeline.
   resource gpu-shader-module {
+    /// Retrieves compilation information about the shader module, such as warnings or errors.
     get-compilation-info: func() -> gpu-compilation-info;
   }
 
+  /// Describes the configuration for creating a shader module.
   record gpu-shader-module-descriptor {
+    /// An optional label for the shader module, useful for debugging and diagnostics.
     label: option<string>,
+    /// The shader code, typically written in WGSL (WebGPU Shading Language).
     code: string,
+    /// A list of compilation hints, providing additional information for optimizing or compiling the shader.
     hints: list<tuple<string, gpu-shader-module-compilation-hint>>
   }
 
+  /// Contains information about the compilation of a shader module, including messages and diagnostics.
   record gpu-compilation-info {
+    /// A list of messages generated during shader compilation (e.g., errors, warnings, or info).
     messages: list<gpu-compilation-message>
   }
 
+  /// Provides a hint for compiling a shader module, such as the pipeline layout to optimize for.
   record gpu-shader-module-compilation-hint {
+    /// The layout to use as a hint for compiling the shader module.
     layout: gpu-layout
   }
 
+  /// Specifies the layout to use for shader compilation hints.
   variant gpu-layout {
+    /// Automatically determine the layout during compilation.
     auto,
+    /// Use a specific pipeline layout for compilation.
     pipeline(borrow<gpu-pipeline-layout>)
   }
 
+  /// Represents a single message generated during shader compilation.
   record gpu-compilation-message {
+    /// The text of the compilation message.
     message: string,
+    /// The type of the message (e.g., error, warning, or info).
     %type: gpu-compilation-message-type,
+    /// The line number in the shader source where the message applies.
     line-num: u64,
+    /// The position within the line where the message applies.
     line-pos: u64,
+    /// The byte offset in the shader source where the message applies.
     offset: u64,
+    /// The length of the relevant portion of the shader source.
     length: u64
   }
 
+  /// Specifies the type of a compilation message.
   enum gpu-compilation-message-type {
+    /// Indicates an error in the shader code.
     error,
+    /// Indicates a warning about the shader code.
     warning,
+    /// Provides informational details about the shader compilation.
     info
   }
 
-
-  /// Pipelines
-
+  /// Represents a constant value that can be used in a pipeline.
   variant gpu-pipeline-constant-value {
+    /// A boolean constant value.
     %bool(bool),
+    /// A 16-bit floating-point constant value (stored as f32 for convenience).
     f16(f32),
+    /// A 32-bit floating-point constant value.
     %f32(f32),
+    /// A 32-bit signed integer constant value.
     i32(s32),
+    /// A 32-bit unsigned integer constant value.
     %u32(u32)
   }
 
+  /// Represents a pipeline, which can be either a render pipeline or a compute pipeline.
   variant gpu-pipeline {
+    /// A render pipeline used for graphics rendering.
     render(gpu-render-pipeline),
+    /// A compute pipeline used for general-purpose computation.
     compute(gpu-compute-pipeline)
   }
 
-  /// GPUComputePipeline
+  /// Represents a compute pipeline, used for executing compute shaders.
   resource gpu-compute-pipeline {
+    /// Retrieves the bind group layout for a specific index in the pipeline.
     get-bind-group-layout: func(index: u32) -> gpu-bind-group-layout;
   }
 
+  /// Describes the configuration for creating a compute pipeline.
   record gpu-compute-pipeline-descriptor {
+    /// The layout of the pipeline, defining resource bindings.
     layout: gpu-layout,
+    /// The compute stage of the pipeline, including the shader module and entry point.
     compute: gpu-programmable-stage
   }
 
+  /// Describes a programmable stage (vertex, fragment, or compute) in a pipeline.
   record gpu-programmable-stage {
+    /// The shader module containing the code for this stage.
     module: borrow<gpu-shader-module>,
+    /// The entry point function in the shader module.
     entry-point: string,
+    /// A list of constants to specialize the shader.
     constants: list<tuple<string, gpu-pipeline-constant-value>>
   }
 
-  /// GPURenderPipeline
+  /// Represents a render pipeline, used for graphics rendering.
   resource gpu-render-pipeline {
+    /// Retrieves the bind group layout for a specific index in the pipeline.
     get-bind-group-layout: func(index: u32) -> gpu-bind-group-layout;
   }
 
+  /// Describes the configuration for creating a render pipeline.
   record gpu-render-pipeline-descriptor {
+    /// The layout of the pipeline, defining resource bindings.
     layout: gpu-layout,
+    /// The vertex stage of the pipeline, including the shader module and vertex buffers.
     vertex: gpu-vertex-state,
+    /// The primitive state, defining how vertices are assembled into primitives.
     primitive: option<gpu-primitive-state>,
+    /// The depth-stencil state, defining depth and stencil testing.
     depth-stencil: option<gpu-depth-stencil-state>,
+    /// The multisample state, defining antialiasing behavior.
     multisample: option<gpu-multisample-state>,
+    /// The fragment stage of the pipeline, including the shader module and output colors.
     fragment: option<gpu-fragment-state>
   }
 
+  /// Describes the vertex stage of a render pipeline.
   record gpu-vertex-state {
+    /// The shader module containing the vertex shader code.
     module: borrow<gpu-shader-module>,
+    /// The entry point function in the vertex shader.
     entry-point: string,
+    /// A list of constants to specialize the vertex shader.
     constants: list<tuple<string, gpu-pipeline-constant-value>>,
+    /// The layout of vertex buffers used in the pipeline.
     buffers: option<list<gpu-vertex-buffer-layout>>
   }
 
+  /// Describes the layout of a vertex buffer.
   record gpu-vertex-buffer-layout {
+    /// The stride (in bytes) between consecutive elements in the vertex buffer.
     array-stride: gpu-size-u64,
+    /// The step mode, defining whether the buffer is per-vertex or per-instance.
     step-mode: gpu-vertex-step-mode,
+    /// A list of vertex attributes in the buffer.
     attributes: list<gpu-vertex-attribute>
   }
 
+  /// Specifies how vertex data is stepped through in a vertex buffer.
   enum gpu-vertex-step-mode {
+    /// Data is stepped per vertex.
     vertex,
+    /// Data is stepped per instance.
     instance
   }
 
+  /// Describes a single vertex attribute in a vertex buffer.
   record gpu-vertex-attribute {
+    /// The format of the vertex attribute (e.g., float32x2, uint32).
     format: gpu-vertex-format,
+    /// The offset (in bytes) of the attribute within the vertex buffer.
     offset: gpu-size-u64,
+    /// The location of the attribute in the shader.
     shader-location: gpu-index-u32
   }
 
@@ -736,304 +951,490 @@ interface gpu {
     sint32x4
   }
 
+  /// Describes the fragment stage of a render pipeline.
   record gpu-fragment-state {
+    /// The shader module containing the fragment shader code.
     module: borrow<gpu-shader-module>,
+    /// The entry point function in the fragment shader.
     entry-point: string,
+    /// A list of constants to specialize the fragment shader.
     constants: list<tuple<string, gpu-pipeline-constant-value>>,
+    /// A list of color targets, defining how fragment outputs are written to textures.
     targets: list<gpu-color-target-state>
   }
 
+  /// Describes a color target state, defining how fragment outputs are blended and written.
   record gpu-color-target-state {
+    /// The texture format of the color target.
     format: gpu-texture-format,
+    /// The blend state, defining how colors are blended with the target.
     blend: option<gpu-blend-state>,
+    /// A mask specifying which color channels (red, green, blue, alpha) are written.
     write-mask: option<gpu-color-write>
   }
 
+  /// Describes the blend state for a color target.
   record gpu-blend-state {
+    /// The blend component for the RGB channels.
     color: gpu-blend-component,
+    /// The blend component for the alpha channel.
     alpha: gpu-blend-component
   }
 
+  /// Specifies which color channels are written to the target.
   flags gpu-color-write {
+    /// Enables writing to the red channel.
     red,
+    /// Enables writing to the green channel.
     green,
+    /// Enables writing to the blue channel.
     blue,
+    /// Enables writing to the alpha channel.
     alpha,
+    /// Enables writing to all channels (red, green, blue, alpha).
     all
   }
 
+  /// Describes a blend component, defining how source and destination colors are combined.
   record gpu-blend-component {
+    /// The blend operation used to combine source and destination colors.
     operation: option<gpu-blend-operation>,
+    /// The blend factor applied to the source color.
     src-factor: option<gpu-blend-factor>,
+    /// The blend factor applied to the destination color.
     dst-factor: option<gpu-blend-factor>
   }
 
+  /// Specifies the operation used to combine source and destination colors.
   enum gpu-blend-operation {
+    /// Adds the source and destination colors.
     add,
+    /// Subtracts the destination color from the source color.
     subtract,
+    /// Subtracts the source color from the destination color.
     reverse-subtract,
+    /// Uses the minimum of the source and destination colors.
     min,
+    /// Uses the maximum of the source and destination colors.
     max
   }
 
+  /// Specifies the blend factor used to scale source or destination colors.
   enum gpu-blend-factor {
+    /// Multiplies by 0.
     zero,
+    /// Multiplies by 1.
     one,
+    /// Multiplies by the source color.
     src,
+    /// Multiplies by (1 - source color).
     one-minus-src,
+    /// Multiplies by the source alpha.
     src-alpha,
+    /// Multiplies by (1 - source alpha).
     one-minus-src-alpha,
+    /// Multiplies by the destination color.
     dst,
+    /// Multiplies by (1 - destination color).
     one-minus-dst,
+    /// Multiplies by the destination alpha.
     dst-alpha,
+    /// Multiplies by (1 - destination alpha).
     one-minus-dst-alpha,
+    /// Multiplies by the saturated source alpha.
     src-alpha-saturated,
+    /// Multiplies by a constant blend color.
     constant,
+    /// Multiplies by (1 - constant blend color).
     one-minus-constant
   }
 
+  /// Describes the primitive state of a render pipeline, defining how vertices are assembled into primitives.
   record gpu-primitive-state {
+    /// The topology of the primitives (e.g., point list, triangle list).
     topology: option<gpu-primitive-topology>,
+    /// The format of indices used in strip topologies (e.g., line strip, triangle strip).
     strip-index-format: option<gpu-index-format>,
+    /// The winding order that determines the front face of primitives.
     front-face: option<gpu-front-face>,
+    /// The culling mode, specifying which faces are discarded.
     cull-mode: gpu-cull-mode,
+    /// Whether depth clipping is disabled, allowing depth values outside the [0, 1] range.
     unclipped-depth: bool
   }
 
+  /// Specifies the topology used to assemble vertices into primitives.
   enum gpu-primitive-topology {
+    /// Vertices are treated as individual points.
     point-list,
+    /// Vertices are treated as a list of separate lines.
     line-list,
+    /// Vertices are treated as a connected strip of lines.
     line-strip,
+    /// Vertices are treated as a list of separate triangles.
     triangle-list,
+    /// Vertices are treated as a connected strip of triangles.
     triangle-strip
   }
 
+  /// Specifies the winding order that determines the front face of primitives.
   enum gpu-front-face {
+    /// Counter-clockwise winding indicates the front face.
     ccw,
+    /// Clockwise winding indicates the front face.
     cw
   }
 
+  /// Specifies which faces of primitives are culled (discarded).
   enum gpu-cull-mode {
+    /// No faces are culled.
     none,
+    /// Front faces are culled.
     front,
+    /// Back faces are culled.
     back
   }
 
+  /// Describes the depth-stencil state of a render pipeline, defining depth and stencil testing.
   record gpu-depth-stencil-state {
+    /// The texture format used for depth and stencil data.
     format: gpu-texture-format,
+    /// Whether depth values are written to the depth buffer.
     depth-write-enabled: bool,
+    /// The comparison function used for depth testing.
     depth-compare: gpu-compare-function,
+    /// The stencil state for front-facing primitives.
     stencil-front: option<gpu-stencil-face-state>,
+    /// The stencil state for back-facing primitives.
     stencil-back: option<gpu-stencil-face-state>,
+    /// A mask applied when reading stencil values.
     stencil-read-mask: option<gpu-stencil-value>,
+    /// A mask applied when writing stencil values.
     stencil-write-mask: option<gpu-stencil-value>,
+    /// A constant depth bias added to depth values.
     depth-bias: option<gpu-depth-bias>,
+    /// A slope scale factor applied to depth bias.
     depth-bias-slope-scale: option<f32>,
+    /// The maximum (or minimum) depth bias value allowed.
     depth-bias-clamp: option<f32>
   }
 
+  /// Describes the stencil state for a face (front or back) of primitives.
   record gpu-stencil-face-state {
+    /// The comparison function used for stencil testing.
     compare: option<gpu-compare-function>,
+    /// The operation performed when the stencil test fails.
     fail-op: option<gpu-stencil-operation>,
+    /// The operation performed when the stencil test passes but the depth test fails.
     depth-fail-op: option<gpu-stencil-operation>,
+    /// The operation performed when both the stencil and depth tests pass.
     pass-op: option<gpu-stencil-operation>
   }
 
+  /// Specifies the operation performed during stencil testing.
   enum gpu-stencil-operation {
+    /// Keeps the current stencil value.
     keep,
+    /// Sets the stencil value to zero.
     zero,
+    /// Replaces the stencil value with the reference value.
     replace,
+    /// Inverts the stencil value bitwise.
     invert,
+    /// Increments the stencil value and clamps it to the maximum value.
     increment-clamp,
+    /// Decrements the stencil value and clamps it to zero.
     decrement-clamp,
+    /// Increments the stencil value and wraps around if it exceeds the maximum value.
     increment-wrap,
+    /// Decrements the stencil value and wraps around if it goes below zero.
     decrement-wrap
   }
 
+  /// Represents a stencil value, which is a 32-bit unsigned integer.
   type gpu-stencil-value = u32;
 
+  /// Represents a depth bias value, which is a 32-bit signed integer.
   type gpu-depth-bias = s32;
 
+  /// Describes the multisample state of a render pipeline, controlling antialiasing behavior.
   record gpu-multisample-state {
+    /// The number of samples per pixel for multisampling.
     count: gpu-size-u32,
+    /// A bitmask specifying which samples are written.
     mask: gpu-sample-mask,
+    /// Whether alpha-to-coverage is enabled, converting alpha values to coverage masks.
     alpha-to-coverage-enabled: bool
   }
 
+  /// Represents a sample mask, which is a 32-bit unsigned integer.
   type gpu-sample-mask = u32;
 
-  /// Copies
-
+  /// Describes a buffer used as a source or destination in a texture copy operation.
   record gpu-image-copy-buffer {
+    /// The buffer containing the image data.
     buffer: borrow<gpu-buffer>,
+    /// The layout of the image data in the buffer.
     layout: gpu-image-data-layout
   }
 
+  /// Describes a texture used as a source or destination in a texture copy operation.
   record gpu-image-copy-texture {
+    /// The texture to copy to or from.
     texture: borrow<gpu-texture>,
+    /// The mip level of the texture to copy.
     mip-level: gpu-integer-coordinate,
+    /// The origin of the copy operation in 3D texture coordinates.
     origin: gpu-origin-d3,
+    /// The aspect of the texture to copy (e.g., color, depth, stencil).
     aspect: gpu-texture-aspect
   }
 
+  /// Represents a 3D origin as a list of integer coordinates (x, y, z).
   type gpu-origin-d3 = list<gpu-integer-coordinate>;
 
+  /// Describes a texture used in a texture copy operation, with additional metadata.
   record gpu-image-copy-texture-tagged {
+    /// The texture to copy to or from.
     texture: borrow<gpu-texture>,
+    /// The mip level of the texture to copy.
     mip-level: gpu-integer-coordinate,
+    /// The origin of the copy operation in 3D texture coordinates.
     origin: gpu-origin-d3,
+    /// The aspect of the texture to copy (e.g., color, depth, stencil).
     aspect: gpu-texture-aspect,
+    /// The color space of the texture data.
     color-space: predefined-color-space,
+    /// Whether the texture data uses premultiplied alpha.
     premultiplied-alpha: bool
   }
 
+  /// Represents a 2D origin as a list of integer coordinates (x, y).
   type gpu-origin-d2 = list<gpu-integer-coordinate>;
 
-  /// Command Buffers
-
-  /// GPUCommandBuffer
+  /// Represents a command buffer, which stores a sequence of GPU commands for execution.
   resource gpu-command-buffer {
 
   }
 
+  /// Describes the configuration for creating a command buffer.
   record gpu-command-buffer-descriptor {
+    /// An optional label for the command buffer, useful for debugging and diagnostics.
     label: option<string>
   }
 
-
-  /// Command Encoding
-
-  // GPUCommandEncoder
+  /// Represents a command encoder, used to record GPU commands into a command buffer.
   resource gpu-command-encoder {
+    /// Begins a render pass, returning a render pass encoder for recording rendering commands.
     begin-render-pass: func(descriptor: gpu-render-pass-descriptor) -> gpu-render-pass-encoder;
+    /// Begins a compute pass, returning a compute pass encoder for recording compute commands.
     begin-compute-pass: func(descriptor: option<gpu-compute-pass-descriptor>) -> gpu-compute-pass-encoder;
+    /// Copies data from one buffer to another.
     copy-buffer-to-buffer: func(source: borrow<gpu-buffer>, source-offset: gpu-size-u64, destination: borrow<gpu-buffer>, destination-offset: gpu-size-u64, size: gpu-size-u64);
+    /// Copies data from a buffer to a texture.
     copy-buffer-to-texture: func(source: gpu-image-copy-buffer, destination: gpu-image-copy-texture, copy-size: gpu-extent-d3);
+    /// Copies data from a texture to a buffer.
     copy-texture-to-buffer: func(source: gpu-image-copy-texture, destination: gpu-image-copy-buffer, copy-size: gpu-extent-d3);
+    /// Copies data from one texture to another.
     copy-texture-to-texture: func(source: gpu-image-copy-texture, destination: gpu-image-copy-texture, copy-size: gpu-extent-d3);
+    /// Clears a portion of a buffer with zero values.
     clear-buffer: func(buffer: borrow<gpu-buffer>, offset: option<gpu-size-u64>, size: option<gpu-size-u64>);
+    /// Writes a timestamp into a query set at a specific index.
     write-timestamp: func(query-set: borrow<gpu-query-set>, query-index: gpu-size-u32);
+    /// Resolves query results from a query set into a buffer.
     resolve-query-set: func(query-set: borrow<gpu-query-set>, first-query: gpu-size-u32, query-count: gpu-size-u32, destination: borrow<gpu-buffer>, destination-offset: gpu-size-u64);
+    /// Finishes recording commands and returns the resulting command buffer.
     finish: func() -> gpu-command-buffer;
   }
 
+  /// Describes the configuration for creating a command encoder.
   record gpu-command-encoder-descriptor {
+    /// An optional label for the command encoder, useful for debugging and diagnostics.
     label: option<string>
   }
 
-  /// Compute Passes
-
-  /// GPUComputePassEncoder
+  /// Represents a compute pass encoder, used to record compute commands during a compute pass.
   resource gpu-compute-pass-encoder {
+    /// Sets the compute pipeline to be used for subsequent dispatch commands.
     set-pipeline: func(pipeline: borrow<gpu-compute-pipeline>);
+    /// Dispatches a compute workload with the specified workgroup counts.
     dispatch-workgroups: func(workgroup-count-x: gpu-size-u32, workgroup-count-y: option<gpu-size-u32>, workgroup-count-z: option<gpu-size-u32>);
+    /// Dispatches a compute workload using parameters from an indirect buffer.
     dispatch-workgroups-indirect: func(indirect-buffer: borrow<gpu-buffer>, indirect-offset: gpu-size-u64);
+    /// Ends the compute pass, finalizing the recorded commands.
     end: func();
 
+    /// Binds a bind group to a specific index for use in the compute pipeline.
     set-bind-group: func(index: gpu-index-u32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets: option<list<gpu-buffer-dynamic-offset>>);
+    /// Binds a bind group to a specific index, with dynamic offsets provided as raw data.
     set-bind-group-with-data: func(index: gpu-index-u32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: list<u32>, dynamic-offsets-data-start: gpu-size-u64, dynamic-offsets-data-lengh: gpu-size-u32);
 
+    /// Pushes a debug group, allowing for hierarchical grouping of commands in debugging tools.
     push-debug-group: func(group-label: string);
+    /// Pops the current debug group.
     pop-debug-group: func();
+    /// Inserts a debug marker into the command stream.
     insert-debug-marker: func(marker-label: string);
   }
-  
+
+  /// Describes the configuration for creating a compute pass.
   record gpu-compute-pass-descriptor {
+    /// An optional label for the compute pass, useful for debugging and diagnostics.
     label: option<string>,
+    /// Specifies where timestamps should be written during the compute pass.
     timestamp-writes: gpu-compute-pass-timestamp-writes
   }
 
+  /// Specifies where timestamps should be written during a compute pass.
   record gpu-compute-pass-timestamp-writes {
+    /// The query set where timestamps will be written.
     query-set: borrow<gpu-query-set>,
+    /// The index in the query set where the beginning-of-pass timestamp is written.
     beginning-of-pass-write-index: option<gpu-size-u32>,
+    /// The index in the query set where the end-of-pass timestamp is written.
     end-of-pass-write-index: option<gpu-size-u32>
   }
 
-  /// GPURenderPassEncoder
+  /// Represents a render pass encoder, used to record rendering commands during a render pass.
   resource gpu-render-pass-encoder {
+    /// Sets the render pipeline to be used for subsequent draw commands.
     set-pipeline: func(pipeline: borrow<gpu-render-pipeline>);
+    /// Binds an index buffer for use in indexed draw commands.
     set-index-buffer: func(buffer: borrow<gpu-buffer>, index-format: gpu-index-format, offset: gpu-size-u64, size: option<gpu-size-u64>);
+    /// Binds a vertex buffer to a specific slot for use in draw commands.
     set-vertex-buffer: func(slot: gpu-index-u32, buffer: borrow<gpu-buffer>, offset: gpu-size-u64, size: option<gpu-size-u64>);
+    /// Issues a non-indexed draw call.
     draw: func(vertex-count: gpu-size-u32, instance-count: gpu-size-u32, first-vertex: gpu-size-u32, first-instance: gpu-size-u32);
+    /// Issues an indexed draw call.
     draw-indexed: func(index-count: gpu-size-u32, instance-count: gpu-size-u32, first-index: gpu-size-u32, base-vertex: gpu-signed-offset-s32, first-instance: gpu-size-u32);
+    /// Issues an indirect draw call using parameters from a buffer.
     draw-indirect: func(indirect-buffer: borrow<gpu-buffer>, indirect-offset: gpu-size-u64);
+    /// Issues an indexed indirect draw call using parameters from a buffer.
     draw-indexed-indirect: func(indirect-buffer: borrow<gpu-buffer>, indirect-offset: gpu-size-u64);
 
+    /// Sets the viewport for the render pass.
     set-viewport: func(x: f32, y: f32, width: f32, height: f32, min-depth: f32, max-depth: f32);
+    /// Sets the scissor rectangle for the render pass.
     set-scissor-rect: func(x: gpu-integer-coordinate, y: gpu-integer-coordinate, width: gpu-integer-coordinate, height: gpu-integer-coordinate);
+    /// Sets the blend constant color used in blending operations.
     set-blend-constant: func(color: gpu-color);
+    /// Sets the stencil reference value used in stencil testing.
     set-stencil-reference: func(reference: gpu-stencil-value);
+    /// Begins an occlusion query at the specified query index.
     begin-occlusion-query: func(query-index: gpu-size-u32);
+    /// Ends the current occlusion query.
     end-occlusion-query: func();
+    /// Executes a list of pre-recorded render bundles.
     execute-bundles: func(bundles: list<borrow<gpu-render-bundle>>);
+    /// Ends the render pass, finalizing the recorded commands.
     end: func();
 
+    /// Binds a bind group to a specific index for use in the render pipeline.
     set-bind-group: func(index: gpu-index-u32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets: option<list<gpu-buffer-dynamic-offset>>);
+    /// Binds a bind group to a specific index, with dynamic offsets provided as raw data.
     set-bind-group-with-data: func(index: gpu-index-u32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: list<u32>, dynamic-offsets-data-start: gpu-size-u64, dynamic-offsets-data-lengh: gpu-size-u32);
 
+    /// Pushes a debug group, allowing for hierarchical grouping of commands in debugging tools.
     push-debug-group: func(group-label: string);
+    /// Pops the current debug group.
     pop-debug-group: func();
+    /// Inserts a debug marker into the command stream.
     insert-debug-marker: func(marker-label: string);
   }
 
+  /// Describes the configuration for creating a render pass.
   record gpu-render-pass-descriptor {
+    /// A list of color attachments used in the render pass.
     color-attachments: list<gpu-render-pass-color-attachment>,
+    /// An optional depth-stencil attachment used in the render pass.
     depth-stencil-attachment: option<gpu-render-pass-depth-stencil-attachment>,
+    /// An optional query set for occlusion queries during the render pass.
     occlusion-query-set: option<borrow<gpu-query-set>>,
+    /// Specifies where timestamps should be written during the render pass.
     timestamp-writes: option<gpu-render-pass-timestamp-writes>,
+    /// The maximum number of draw calls allowed in the render pass.
     max-draw-count: option<gpu-size-u64>
   }
 
+  /// Describes a color attachment used in a render pass.
   record gpu-render-pass-color-attachment {
+    /// The texture view to be used as a color attachment.
     view: borrow<gpu-texture-view>,
+    /// An optional texture view to resolve multisampled data into.
     resolve-target: option<borrow<gpu-texture-view>>,
+    /// The clear value to use when clearing the attachment.
     clear-value: option<gpu-color>,
+    /// The load operation to perform at the start of the render pass.
     load-op: gpu-load-op,
+    /// The store operation to perform at the end of the render pass.
     store-op: gpu-store-op
   }
 
+  /// Represents a color value as a list of floating-point components (e.g., RGBA).
   type gpu-color = list<f64>;
 
+  /// Specifies the load operation for an attachment at the start of a render pass.
   enum gpu-load-op {
+    /// Loads the existing contents of the attachment.
     load,
+    /// Clears the attachment to a specified value.
     clear
   }
 
+  /// Specifies the store operation for an attachment at the end of a render pass.
   enum gpu-store-op {
+    /// Stores the results of the render pass to the attachment.
     store,
+    /// Discards the results of the render pass.
     discard
   }
 
+  /// Describes a depth-stencil attachment used in a render pass.
   record gpu-render-pass-depth-stencil-attachment {
+    /// The texture view to be used as a depth-stencil attachment.
     view: borrow<gpu-texture-view>,
+    /// The clear value to use when clearing the depth component.
     depth-clear-value: f32,
+    /// The load operation to perform for the depth component.
     depth-load-op: gpu-load-op,
+    /// The store operation to perform for the depth component.
     depth-store-op: gpu-store-op,
+    /// Whether the depth component is read-only during the render pass.
     depth-read-only: bool,
+    /// The clear value to use when clearing the stencil component.
     stencil-clear-value: gpu-stencil-value,
+    /// The load operation to perform for the stencil component.
     stencil-load-op: gpu-load-op,
+    /// The store operation to perform for the stencil component.
     stencil-store-op: gpu-store-op,
+    /// Whether the stencil component is read-only during the render pass.
     stencil-read-only: bool
   }
-  
+
+  /// Specifies where timestamps should be written during a render pass.
   record gpu-render-pass-timestamp-writes {
+    /// The query set where timestamps will be written.
     query-set: borrow<gpu-query-set>,
+    /// The index in the query set where the beginning-of-pass timestamp is written.
     beginning-of-pass-write-index: option<gpu-size-u32>,
+    /// The index in the query set where the end-of-pass timestamp is written.
     end-of-pass-write-index: option<gpu-size-u32>
   }
 
-  /// Bundles
-
-  /// GPURenderBundle
+  /// Represents a render bundle, which is a pre-recorded set of rendering commands.
   resource gpu-render-bundle {
-    
+
   }
 
+  /// Represents a render bundle encoder, used to record rendering commands into a render bundle.
   resource gpu-render-bundle-encoder {
+    /// Finishes recording commands and returns the resulting render bundle.
     finish: func(descriptor: gpu-render-bundle-descriptor) -> gpu-render-bundle;
   }
 
+  /// Describes the configuration for creating a render bundle.
   record gpu-render-bundle-descriptor {
+    /// A label for the render bundle, useful for debugging and diagnostics.
     label: string
   }
 }

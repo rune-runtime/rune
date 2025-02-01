@@ -4,10 +4,20 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
-[dependencies]
-clap = { version = "4.4.5", features = ["derive", "cargo", "wrap_help", "unicode", "string", "unstable-styles"] }
-rune = { path = "../rune", version = "0.1.12" }
+[lib]
+name = "web"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
 
 [[bin]]
-name = "rune-host"
+name = "native"
 path = "src/main.rs"
+
+[dependencies]
+rune = { path = "../rune", version = "0.1.12" }
+
+[target.'cfg(not(any(target_arch = "wasm32", target_arch = "wasm64")))'.dependencies]
+clap = { version = "4.4.5", features = ["derive", "cargo", "wrap_help", "unicode", "string", "unstable-styles"] }
+js-sys = "0.3.77"
+wasm-bindgen = "0.2.100"
+web-sys = { version = "0.3.77", features = ["Window", "Response", "Request", "RequestInit", "RequestMode", "Headers", "Blob", "Url"] }

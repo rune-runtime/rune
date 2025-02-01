@@ -2,36 +2,57 @@ package rune:runtime;
 
 /// Virtual filesystem APIs for local and cloud based storage
 interface storage {
+  /// Returns a cloud-based storage device if configured and available
   cloud: func() -> option<storage-device>;
+  /// Returns the local filesystem storage device
   local: func() -> storage-device;
 
+  /// Abstract representation of a storage device (local or cloud)
   resource storage-device {
+    /// Creates a directory at specified path. No-op if already exists
     create-dir: func(path: path);
+    /// Lists all entries in a directory. Path must be a valid directory
     list-dir: func(path: path) -> list<path>;
+    /// Checks if a path exists in the storage device
     exists: func(path: path) -> bool;
+    /// Reads file contents as raw bytes. Returns none if path doesn't exist
     read: func(path: path) -> option<list<u8>>;
-    // read: func(path: path) -> option<output-stream>;
+    /// Reads file contents as UTF-8 string. Returns none if path doesn't exist
     read-string: func(path: path) -> option<string>;
+    /// Writes content to path. Overwrites existing files. Creates parent directories if needed
     write: func(path: path, content: writeable-content);
+    /// Deletes a file or empty directory. Returns true if removed, false if not empty, none if path doesn't exist
     remove: func(path: path) -> option<bool>;
   }
 
+  /// Supported content types for write operations
   variant writeable-content {
-    %stream(string),
-    // %stream(output-stream),
+    //%stream(string),
+    /// Complete string content
     %string(string),
+    /// Raw byte content
     %bytes(list<u8>)
   }
 
+  /// Platform-agnostic path representation
   resource path {
+    /// Creates a path object tied to a specific storage device
     constructor(storage: borrow<storage-device>, path: string);
+    /// Returns full path as a string
     to-string: func() -> string;
+    /// Checks if path points to a directory
     is-dir: func() -> bool;
+    /// Checks if path points to a file
     is-file: func() -> bool;
+    /// Checks if path is root directory of storage
     is-root: func() -> bool;
+    /// Gets file extension if available (e.g. "txt" from "file.txt")
     extension: func() -> option<string>;
+    /// Gets filename component if available (e.g. "file.txt" from "/docs/file.txt")
     filename: func() -> option<string>;
+    /// Appends path component using platform-specific separator
     join: func(path: string) -> path;
+    /// Returns parent directory path. Returns self if already root
     parent: func() -> path;
   }
 }
