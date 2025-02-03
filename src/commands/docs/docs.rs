@@ -410,9 +410,24 @@ fn render_type_list_item<'a>(
 ) -> (Line<'a>, Line<'a>, CurrentItem) {
     let interface = package.interfaces.get(*interface_id).unwrap();
     let type_def = package.types.get(*type_id).unwrap();
+    let kind_str = match &type_def.kind {
+        wit_parser::TypeDefKind::Record(record) => "record",
+        wit_parser::TypeDefKind::Resource => "resource",
+        wit_parser::TypeDefKind::Handle(handle) => "handle",
+        wit_parser::TypeDefKind::Flags(flags) => "flags",
+        wit_parser::TypeDefKind::Tuple(tuple) => "tuple",
+        wit_parser::TypeDefKind::Variant(variant) => "variant",
+        wit_parser::TypeDefKind::Enum(_) => "enum",
+        wit_parser::TypeDefKind::Option(t) => &format!("option<{}>", type_name(package, t)),
+        wit_parser::TypeDefKind::Result(result) => "result",
+        wit_parser::TypeDefKind::List(t) => &format!("list<{}>", type_name(package, t)),
+        wit_parser::TypeDefKind::Future(_) => "future",
+        wit_parser::TypeDefKind::Stream(stream) => "stream",
+        _ => "type"
+    };
     (
         Line::from(vec![
-            Span::styled("type ", Style::reset().bold().fg(Color::Indexed(43))),
+            Span::styled(format!("{kind_str} "), Style::reset().bold().fg(Color::Indexed(43))),
             Span::styled(
                 type_def.name.clone().unwrap_or_default(),
                 Style::reset().bold().fg(Color::Indexed(158)),

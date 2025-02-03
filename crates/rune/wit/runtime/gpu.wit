@@ -34,6 +34,7 @@ interface gpu {
     count: gpu-size-u32
   }
 
+  /// Specifies the type of query that can be performed in a query set.
   enum gpu-query-type {
     /// Query the number of fragment samples that pass all the per-fragment tests for a set of drawing commands.
     occlusion,
@@ -70,11 +71,18 @@ interface gpu {
   type gpu-size-u32 = u32;
   /// A size, represented as an unsigned 64-bit integer.
   type gpu-size-u64 = u64;
+  /// A size, represented as an unsigned 32-bit integer.
   type gpu-size-u32-out = u32;
+  /// A size, represented as a signed 32-bit integer.
   type gpu-signed-offset-s32 = s32;
+
+  /// Represents a 3D extent, defining the size of a texture or region in width, height, and depth/array layers.
   record gpu-extent-d3 {
+    /// The width of the extent.
     width: gpu-integer-coordinate,
+    /// The height of the extent.
     height: gpu-integer-coordinate,
+    /// The depth or number of array layers in the extent.
     depth-or-array-layers: gpu-integer-coordinate
   }
 
@@ -86,6 +94,7 @@ interface gpu {
 
   /// A device is the logical instantiation of an adapter, through which GPU interfaces are created.
   resource gpu-device {
+    /// Retrieves the default queue associated with the device, used for submitting command buffers.
     queue: func() -> gpu-queue;
 
     /// Create a buffer from a buffer descriptor.
@@ -177,10 +186,7 @@ interface gpu {
     rows-per-image: gpu-size-u32
   }
 
-
-  /// Buffers
-
-  /// GPUBuffer
+  /// Represents a GPU buffer, which is a block of memory that can store data for use in GPU operations.
   resource gpu-buffer {
     /// The size of the buffer
     size: func() -> gpu-size-u64;
@@ -256,9 +262,7 @@ interface gpu {
     write
   }
 
-  /// Textures and Texture Views
-
-  /// GPUTexture
+  /// Represents a GPU texture, which is an image or array of images used in rendering or compute operations.
   resource gpu-texture {
     /// Get the texture width.
     width: func() -> gpu-integer-coordinate;
@@ -310,7 +314,7 @@ interface gpu {
     d3
   }
 
-  /// GPU texture formats
+  /// Specifies the format of a texture, defining how its data is stored and interpreted.
   enum gpu-texture-format {
     // 8-bit formats
     r8unorm,
@@ -909,6 +913,7 @@ interface gpu {
     shader-location: gpu-index-u32
   }
 
+  /// Specifies the format of a vertex attribute, defining how vertex data is stored and interpreted.
   enum gpu-vertex-format {
     uint8,
     uint8x2,

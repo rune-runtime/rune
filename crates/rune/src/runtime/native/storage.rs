@@ -136,7 +136,7 @@ impl HostStorageDevice for RuneRuntimeState {
                 }
 
                 match content {
-                    WriteableContent::Stream(_) => todo!(),
+                    // WriteableContent::Stream(_) => todo!(),
                     WriteableContent::String(data) => file.write_all(data.as_bytes()).unwrap(),
                     WriteableContent::Bytes(bytes) => file.write_all(&bytes).unwrap(),
                 }
