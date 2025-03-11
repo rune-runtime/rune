@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::RuneRuntimeState;
+use super::state::RuneRuntimeState;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 impl crate::rune::runtime::debug::Host for RuneRuntimeState {

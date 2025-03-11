@@ -9,6 +9,7 @@ pub struct Settings {
 
     pub metadata_id: String,
     pub metadata_version: Version,
+    pub metadata_author: String,
 
     pub build: String,
     pub target: String,

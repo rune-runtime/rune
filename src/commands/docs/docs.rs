@@ -237,145 +237,229 @@ fn render_function_signature<'a>(
     match func.kind {
         wit_parser::FunctionKind::Freestanding => {
             let name = func.item_name();
-            let params = func
+            let mut rendered_params = func
                 .params
                 .iter()
                 .skip(1)
-                .map(|(param_name, param_type)| format!("{param_name}"))
-                .collect::<Vec<_>>()
-                .join(", ");
+                .map(|(param_name, param_type)| vec![
+                    Span::styled(
+                        format!("{param_name}: "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                    render_type(&package, param_type),
+                    Span::styled(
+                        format!(", "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                ])
+                .flat_map(|x| x)
+                .collect::<Vec<_>>();
 
-            let rendered_func = vec![
-                Span::styled("static fn ", Style::reset().bold().fg(Color::Indexed(33))),
-                Span::styled(
-                    format!("{name}({params})"),
-                    Style::reset().bold().fg(Color::Indexed(229)),
-                ),
-                Span::styled(
-                    format!(": "),
-                    Style::reset().bold().dim(),
-                ),
-            ];
+            rendered_params.pop();
 
-            let redered_return = func
+            let mut rendered_return = func
                 .results
                 .iter_types()
                 .map(|t| render_type(package, t))
                 .collect::<Vec<_>>();
 
-            let rendered_func = rendered_func
-                .into_iter()
-                .chain(redered_return)
-                .map(|x|x)
-                .collect::<Vec<_>>();
+            let mut rendered_func = vec![];
+            rendered_func.extend([
+                Span::styled("static fn ", Style::reset().bold().fg(Color::Indexed(33))),
+                Span::styled(
+                    format!("{name}"),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+                Span::styled(
+                    format!("("),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+            ]);
+            rendered_func.extend(rendered_params);
+            rendered_func.extend([
+                Span::styled(
+                    format!(")"),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                )
+            ]);
+            if rendered_return.len() > 0 {
+                rendered_func.push(Span::styled(
+                    format!(": "),
+                    Style::reset().bold().dim(),
+                ));
+                rendered_func.extend(rendered_return);
+            }
 
             Line::from(rendered_func)
         }
         wit_parser::FunctionKind::Method(type_id) => {
+
             let name = func.item_name();
-            let params = func
+            let mut rendered_params = func
                 .params
                 .iter()
                 .skip(1)
-                .map(|(param_name, param_type)| format!("{param_name}"))
-                .collect::<Vec<_>>()
-                .join(", ");
+                .map(|(param_name, param_type)| vec![
+                    Span::styled(
+                        format!("{param_name}: "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                    render_type(&package, param_type),
+                    Span::styled(
+                        format!(", "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                ])
+                .flat_map(|x| x)
+                .collect::<Vec<_>>();
 
-            let rendered_func = vec![
-                Span::styled("fn ", Style::reset().bold().fg(Color::Indexed(33))),
-                Span::styled(
-                    format!("{name}({params})"),
-                    Style::reset().bold().fg(Color::Indexed(229)),
-                ),
-                Span::styled(
-                    format!(": "),
-                    Style::reset().bold().dim(),
-                ),
-            ];
+            rendered_params.pop();
 
-            let redered_return = func
+            let mut rendered_return = func
                 .results
                 .iter_types()
                 .map(|t| render_type(package, t))
                 .collect::<Vec<_>>();
 
-            let rendered_func = rendered_func
-                .into_iter()
-                .chain(redered_return)
-                .map(|x|x)
-                .collect::<Vec<_>>();
+            let mut rendered_func = vec![];
+            rendered_func.extend([
+                Span::styled("fn ", Style::reset().bold().fg(Color::Indexed(33))),
+                Span::styled(
+                    format!("{name}"),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+                Span::styled(
+                    format!("("),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+            ]);
+            rendered_func.extend(rendered_params);
+            rendered_func.extend([
+                Span::styled(
+                    format!(")"),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+            ]);
+            if rendered_return.len() > 0 {
+                rendered_func.push(Span::styled(
+                    format!(": "),
+                    Style::reset().bold().dim(),
+                ));
+                rendered_func.extend(rendered_return);
+            }
 
             Line::from(rendered_func)
         }
         wit_parser::FunctionKind::Static(type_id) => {
             let name = func.item_name();
-            let params = func
+            let mut rendered_params = func
                 .params
                 .iter()
-                .skip(1)
-                .map(|(param_name, param_type)| format!("{param_name}"))
-                .collect::<Vec<_>>()
-                .join(", ");
+                .map(|(param_name, param_type)| vec![
+                    Span::styled(
+                        format!("{param_name}: "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                    render_type(&package, param_type),
+                    Span::styled(
+                        format!(", "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                ])
+                .flat_map(|x| x)
+                .collect::<Vec<_>>();
 
-            let rendered_func = vec![
-                Span::styled("static fn ", Style::reset().bold().fg(Color::Indexed(33))),
-                Span::styled(
-                    format!("{name}({params})"),
-                    Style::reset().bold().fg(Color::Indexed(229)),
-                ),
-                Span::styled(
-                    format!(": "),
-                    Style::reset().bold().dim(),
-                ),
-            ];
+            rendered_params.pop();
 
-            let redered_return = func
+            let mut rendered_return = func
                 .results
                 .iter_types()
                 .map(|t| render_type(package, t))
                 .collect::<Vec<_>>();
 
-            let rendered_func = rendered_func
-                .into_iter()
-                .chain(redered_return)
-                .map(|x|x)
-                .collect::<Vec<_>>();
+            let mut rendered_func = vec![];
+            rendered_func.extend([
+                Span::styled("static fn ", Style::reset().bold().fg(Color::Indexed(33))),
+                Span::styled(
+                    format!("{name}"),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+                Span::styled(
+                    format!("("),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                ),
+            ]);
+            rendered_func.extend(rendered_params);
+            rendered_func.extend([
+                Span::styled(
+                    format!(")"),
+                    Style::reset().bold().fg(Color::Indexed(229)),
+                )
+            ]);
+            if rendered_return.len() > 0 {
+                rendered_func.push(Span::styled(
+                    format!(": "),
+                    Style::reset().bold().dim(),
+                ));
+                rendered_func.extend(rendered_return);
+            }
 
             Line::from(rendered_func)
         }
         wit_parser::FunctionKind::Constructor(type_id) => {
-            let name = func.item_name();
-            let params = func
+            let type_def = package.types.get(type_id).unwrap();
+            let name = type_def.name.clone().unwrap();
+            let mut rendered_params = func
                 .params
                 .iter()
-                .skip(1)
-                .map(|(param_name, param_type)| format!("{param_name}"))
-                .collect::<Vec<_>>()
-                .join(", ");
+                .map(|(param_name, param_type)| vec![
+                    Span::styled(
+                        format!("{param_name}: "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                    render_type(&package, param_type),
+                    Span::styled(
+                        format!(", "),
+                        Style::reset().bold().fg(Color::White),
+                    ),
+                ])
+                .flat_map(|x| x)
+                .collect::<Vec<_>>();
 
-            let rendered_func = vec![
-                Span::styled("constructor ", Style::reset().bold().fg(Color::Indexed(33))),
-                Span::styled(
-                    format!("{name}({params})"),
-                    Style::reset().bold().fg(Color::Indexed(229)),
-                ),
-                Span::styled(
-                    format!(": "),
-                    Style::reset().bold().dim(),
-                ),
-            ];
+            rendered_params.pop();
 
-            let redered_return = func
+            let mut rendered_return = func
                 .results
                 .iter_types()
                 .map(|t| render_type(package, t))
                 .collect::<Vec<_>>();
 
-            let rendered_func = rendered_func
-                .into_iter()
-                .chain(redered_return)
-                .map(|x|x)
-                .collect::<Vec<_>>();
+            let mut rendered_func = vec![];
+            rendered_func.extend([
+                Span::styled("constructor ", Style::reset().bold().fg(Color::Indexed(33))),
+                Span::styled(
+                    format!("{name}"),
+                    Style::reset().bold().fg(Color::Indexed(43)),
+                ),
+                Span::styled(
+                    format!("("),
+                    Style::reset().bold().fg(Color::Indexed(43)),
+                ),
+            ]);
+            rendered_func.extend(rendered_params);
+            rendered_func.extend([
+                Span::styled(
+                    format!(")"),
+                    Style::reset().bold().fg(Color::Indexed(43)),
+                )
+            ]);
+            if rendered_return.len() > 0 {
+                rendered_func.push(Span::styled(
+                    format!(": "),
+                    Style::reset().bold().dim(),
+                ));
+                rendered_func.extend(rendered_return);
+            }
 
             Line::from(rendered_func)
         }
@@ -466,10 +550,16 @@ fn render_function_page(
 ) {
     let layout = Layout::vertical(vec![
         Constraint::Min(0),
-        Constraint::Fill(1),
+        Constraint::Min(0),
     ]);
 
+    // let params_area_layout = Layout::vertical(vec![
+    //     Constraint::Min(0),
+    //     Constraint::Fill(1),
+    // ]);
+
     let [description_area, content_area] = layout.areas(area);
+    // let [params_header_area, params_list_area] = params_area_layout.areas(content_area);
 
     let name = func.item_name();
     let params = func
@@ -483,13 +573,18 @@ fn render_function_page(
     let description = Paragraph::new(func.docs.contents.clone().unwrap_or_default())
         .block(Block::new().padding(Padding::proportional(1)));
 
-    let params_list: Vec<_> = func.params.clone();
+    let params_list: Vec<_> = func.params.clone().into_iter().filter(|(name, _)| name != "self").collect();
     let params_count = params_list.len();
 
+    let params_header = Paragraph::new("Parameters")
+        .block(Block::new().padding(Padding::proportional(1)));
+
+    let package = package.clone();
     let params_list_builder = ListBuilder::new(move |context| {
         let (param_name, param_type) = params_list[context.index].clone();
-        let item = Paragraph::new(vec![Line::from(vec![Span::from(param_name)])]).block(
-            Block::new()
+        let item = Paragraph::new(vec![Line::from(vec![Span::from(format!("{param_name}: ")), render_type(&package, &param_type)])])
+            .block(Block::new()
+                .padding(Padding::horizontal(1))
                 .borders(Borders::LEFT | Borders::BOTTOM)
                 .border_set(if context.is_selected {
                     symbols::border::Set {
@@ -520,7 +615,8 @@ fn render_function_page(
 
     f.render_widget(description, description_area);
 
-    f.render_stateful_widget(params_list, content_area, function_params_list_state);
+    // f.render_widget(params_header, params_header_area);
+    // f.render_stateful_widget(params_list, params_list_area, function_params_list_state);
 }
 
 pub struct Docs {

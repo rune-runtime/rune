@@ -8,7 +8,7 @@ use web_audio_api::context::{AudioContext, AudioContextOptions, BaseAudioContext
 use web_audio_api::node::{AudioNode, AudioScheduledSourceNode, IIRFilterNode};
 
 use crate::rune::runtime::audio::*;
-use crate::RuneRuntimeState;
+use super::state::RuneRuntimeState;
 
 impl Host for RuneRuntimeState {
     async fn output(&mut self) -> Option<Resource<AudioDevice>> {

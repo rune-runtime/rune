@@ -9,7 +9,9 @@ use wasmtime::{
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::{RuneRuntimeState, Runtime, RuntimePre};
+use crate::{Runtime, RuntimePre};
+
+pub use crate::runtime::RuneRuntimeState;
 
 /// Game is used to run wasm component
 

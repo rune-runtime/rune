@@ -1,5 +1,5 @@
 pub mod macos;
-pub mod windows;
+// pub mod windows;
 
 use std::{
     env,
@@ -46,6 +46,7 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
         rune_dir,
         rune_bin_dir,
         metadata_id: config["package"]["identifier"].as_str().unwrap().to_owned(),
+        metadata_author: config["package"]["author"].as_str().unwrap().to_owned(),
         metadata_version: Version::parse(config["package"]["version"].as_str().unwrap()).unwrap(),
         build,
         target,
@@ -88,7 +89,7 @@ pub async fn bundle(target: &String, release: &bool) -> Result<()> {
         "ios" => {}
         "linux" => {}
         "macos" => macos::bundle_project(&settings)?,
-        "windows" => windows::bundle_project(&settings)?,
+        // "windows" => windows::bundle_project(&settings)?,
         _ => {}
     }
 

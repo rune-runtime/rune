@@ -57,6 +57,8 @@ wat = "1.219.1"
 wit-component = "0.219.1"
 subprocess = "0.2.9"
 wasmparser = "0.219.1"
+cab = "0.4"
+uuid = "1.14.0"
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = [ "build", "git", "gitoxide", "cargo" ]}

@@ -8,7 +8,8 @@ use wasmtime::Result;
 
 use crate::rune::runtime::storage::*;
 use crate::runtime::storage::Storage;
-use crate::RuneRuntimeState;
+
+use super::state::RuneRuntimeState;
 
 impl Host for RuneRuntimeState {
     async fn local(&mut self) -> Resource<StorageDevice> {

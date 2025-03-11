@@ -1,4 +1,4 @@
-use crate::RuneRuntimeState;
+use super::state::RuneRuntimeState;
 
 impl crate::rune::runtime::window::Host for RuneRuntimeState {
     async fn dimensions(&mut self) -> (u32, u32) {

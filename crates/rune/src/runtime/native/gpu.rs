@@ -17,8 +17,10 @@ use wgpu_types::{
 use crate::{
     rune::runtime::gpu::*,
     runtime::gpu::{Buffer, QuerySet, Texture},
-    wgpu_id, RuneRuntimeState,
+    wgpu_id,
 };
+
+use super::state::RuneRuntimeState;
 
 use super::utilities::{convert_bind_group_entry, vec_to_color};
 

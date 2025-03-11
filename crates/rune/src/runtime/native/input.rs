@@ -4,7 +4,7 @@ use wasmtime::Result;
 use winit::keyboard::{Key, NamedKey, SmolStr};
 
 use crate::rune::runtime::input::*;
-use crate::RuneRuntimeState;
+use super::state::RuneRuntimeState;
 
 impl Host for RuneRuntimeState {
     async fn gamepad(&mut self) -> Option<Resource<GamepadDevice>> {
