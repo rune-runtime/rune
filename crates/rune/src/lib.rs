@@ -6,7 +6,7 @@ use vfs::VfsPath;
 use wgpu_types::TextureFormat;
 use winit::keyboard::{Key, KeyLocation};
 
-pub mod game;
+pub mod host;
 pub mod runtime;
 pub mod tests;
 // pub mod debug;

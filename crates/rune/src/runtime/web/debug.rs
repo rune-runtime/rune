@@ -1,16 +1,32 @@
+use js_sys::Object;
+use wasm_bindgen::JsValue;
+
 use crate::RuneRuntimeState;
 
-#[async_trait::async_trait]
-impl crate::rune::runtime::debug::Host for RuneRuntimeState {
-    async fn log(&mut self, msg: String) {
-        web_sys::console().log(msg);
-    }
+static EXPORTS: OnceCell<Object> = OnceCell::new();
 
-    async fn warn(&mut self, msg: String) {
-        web_sys::console().warn(msg);
-    }
+pub fn export() -> JsValue {
+    let debug = Object::new();
+    
+    Reflect::set(&debug, &JsValue::from_str("log"), &Closure::wrap(Box::new(log) as Box<dyn FnMut(String)>).as_ref())?;
+    Reflect::set(&debug, &JsValue::from_str("warn"), &Closure::wrap(Box::new(warn) as Box<dyn FnMut(String)>).as_ref())?;
+    Reflect::set(&debug, &JsValue::from_str("error"), &Closure::wrap(Box::new(error) as Box<dyn FnMut(String)>).as_ref())?;
 
-    async fn error(&mut self, msg: String) {
-        web_sys::console().error(msg);
-    }
+    debug
 }
+
+#[wasm_bindgen]
+pub fn log(msg: String) {
+    web_sys::console::log_1(&JsValue::from_str(&msg));
+}
+
+#[wasm_bindgen]
+pub fn warn(msg: String) {
+    web_sys::console::warn_1(&JsValue::from_str(&msg));
+}
+
+#[wasm_bindgen]
+pub fn error(msg: String) {
+    web_sys::console::error_1(&JsValue::from_str(&msg));
+}
+

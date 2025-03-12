@@ -8,17 +8,13 @@ use pollster;
 mod common;
 #[cfg(target_arch = "wasm32")]
 mod web;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 mod native;
 
 pub use common::*;
 #[cfg(target_arch = "wasm32")]
-pub use web::{
-    run::run,
-    run::test,
-    state::RuneRuntimeState
-};
-#[cfg(not(target_arch = "wasm32"))]
+pub use web::*;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub use native::{
     run::run,
     run::test,

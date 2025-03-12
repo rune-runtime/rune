@@ -27,6 +27,7 @@ impl std::fmt::Debug for Tests {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Tests {
     pub fn from_binary(bytes: &[u8]) -> Result<Tests> {
         let mut config = Config::new();

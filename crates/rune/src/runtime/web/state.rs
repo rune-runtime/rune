@@ -17,14 +17,7 @@ impl RuneRuntimeState {
     pub fn new(
         id: Uuid,
         input_path: PathBuf,
-        window_size: PhysicalSize<u32>,
-        audio_device: cpal::Device,
-        instance: wgpu_core::global::Global,
-        surface: wgpu_core::id::SurfaceId,
-        adapter: wgpu_core::id::AdapterId,
-        device: wgpu_core::id::DeviceId,
-        queue: wgpu_core::id::QueueId,
-        gilrs: Gilrs,
+        window_size: PhysicalSize<u32>
     ) -> Self {
         let mut table = ResourceTable::new();
 
@@ -52,17 +45,6 @@ impl RuneRuntimeState {
             input_path,
             window_size,
             audio_state: AudioState::new(audio_device),
-            instance,
-            surface,
-            surface_resource_id: table.push(surface).unwrap().rep(),
-            surface_config,
-            adapter,
-            adapter_resource_id: table.push(adapter).unwrap().rep(),
-            device,
-            device_resource_id: table.push(device).unwrap().rep(),
-            queue,
-            queue_resource_id: table.push(queue).unwrap().rep(),
-            gilrs,
             gpu_state: GpuState::new(),
             gamepad_state: GamepadState::new(),
             keyboard_state: KeyboardState::new(),
