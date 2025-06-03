@@ -76,6 +76,11 @@ wasmtime::component::bindgen!({
         // "rune:runtime/gpu/buffer-source": BufferSource,
 
         "rune:runtime/input/gamepad-device": gilrs::GamepadId,
+
+        "rune:runtime/network/network-client": crate::runtime::network::NetworkClient,
+        "rune:runtime/network/network-server": crate::runtime::network::NetworkServer,
+        "rune:runtime/network/network-connection": crate::runtime::network::NetworkConnection,
+        "rune:runtime/network/network-http-client": crate::runtime::network::NetworkHttpClient,
     }
 });
 

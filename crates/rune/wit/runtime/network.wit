@@ -1,0 +1,65 @@
+package rune:runtime;
+
+interface network {
+  client: func(config: network-client-config) -> network-client;
+  server: func(config: network-server-config) -> network-server;
+  http-client: func() -> network-http-client;
+
+  record network-client-config {
+    kind: connection-type,
+  }
+
+  record network-server-config {
+    kind: connection-type,
+    bind: string
+  }
+
+  enum connection-type { reliable, unreliable }
+
+  resource network-client {
+    connect: func(endpoint: string) -> network-connection;
+  }
+
+  resource network-server {
+    accept: func() -> network-connection;
+  }
+
+  resource network-connection {
+    send: func(data: list<u8>) -> result<_, net-error>;
+    receive: func(max-bytes: u32) -> result<list<u8>, net-error>;
+    close: func();
+  }
+
+  resource network-http-client {
+    request: func(req: http-request) -> result<http-response, net-error>;
+  }
+
+  record http-request {
+    method: http-method,
+    url: string,
+    headers: list<http-header>,
+    body: option<list<u8>>,
+  }
+
+  record http-header {
+    name: string,
+    value: string,
+  }
+
+  enum http-method { get, post, put, delete, head }
+
+  record http-response {
+    status: u16,
+    headers: list<http-header>,
+    body: list<u8>,
+  }
+
+  enum net-error {
+    connection-refused,
+    timeout,
+    unreachable,
+    not-connected,
+    invalid-operation,
+    unknown,
+  }
+}

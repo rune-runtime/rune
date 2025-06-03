@@ -5,7 +5,7 @@ use cpal::traits::HostTrait;
 use libtest_mimic::{Arguments, Trial};
 use pollster;
 
-use crate::game::Game;
+use crate::host::Game;
 pub use crate::runtime::common::*;
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
