@@ -1374,43 +1374,89 @@ impl HostGpuCommandEncoder for RuneRuntimeState {
 impl HostGpuComputePassEncoder for RuneRuntimeState {
     async fn set_pipeline(
         &mut self,
-        _self_: Resource<GpuComputePassEncoder>,
-        _pipeline: Resource<GpuComputePipeline>,
+        compute_pass_encoder: Resource<GpuComputePassEncoder>,
+        pipeline: Resource<GpuComputePipeline>,
     ) -> () {
-        todo!()
+        let pipeline_id = *self.table.get(&pipeline).unwrap();
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+
+        self.instance
+            .compute_pass_set_pipeline(compute_pass_encoder_id, pipeline_id)
+            .unwrap();
+        ()
     }
 
     async fn dispatch_workgroups(
         &mut self,
-        _self_: Resource<GpuComputePassEncoder>,
-        _workgroup_count_x: GpuSizeU32,
-        _workgroup_count_y: Option<GpuSizeU32>,
-        _workgroup_count_z: Option<GpuSizeU32>,
+        compute_pass_encoder: Resource<GpuComputePassEncoder>,
+        workgroup_count_x: GpuSizeU32,
+        workgroup_count_y: Option<GpuSizeU32>,
+        workgroup_count_z: Option<GpuSizeU32>,
     ) -> () {
-        todo!()
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+
+        self.instance
+            .compute_pass_dispatch_workgroups(
+                compute_pass_encoder_id,
+                workgroup_count_x,
+                workgroup_count_y.unwrap_or(1),
+                workgroup_count_z.unwrap_or(1),
+            )
+            .unwrap();
+
+        ()
     }
 
     async fn dispatch_workgroups_indirect(
         &mut self,
-        _self_: Resource<GpuComputePassEncoder>,
-        _indirect_buffer: Resource<GpuBuffer>,
-        _indirect_offset: GpuSizeU64,
+        compute_pass_encoder: Resource<GpuComputePassEncoder>,
+        indirect_buffer: Resource<GpuBuffer>,
+        indirect_offset: GpuSizeU64,
     ) -> () {
-        todo!()
+        let indirect_buffer_id = *self.table.get(&indirect_buffer).unwrap();
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+
+        self.instance
+            .compute_pass_dispatch_workgroups_indirect(
+                compute_pass_encoder_id,
+                indirect_buffer_id,
+                indirect_offset,
+            )
+            .unwrap();
+
+        ()
     }
 
-    async fn end(&mut self, _self_: Resource<GpuComputePassEncoder>) -> () {
-        todo!()
+    async fn end(&mut self, compute_pass_encoder: Resource<GpuComputePassEncoder>) -> () {
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+
+        self.instance
+            .compute_pass_end(compute_pass_encoder_id)
+            .unwrap();
+        ()
     }
 
     async fn set_bind_group(
         &mut self,
-        _self_: Resource<GpuComputePassEncoder>,
-        _index: GpuIndexU32,
-        _bind_group: Option<Resource<GpuBindGroup>>,
-        _dynamic_offsets: Option<Vec<GpuBufferDynamicOffset>>,
+        compute_pass_encoder: Resource<GpuComputePassEncoder>,
+        index: GpuIndexU32,
+        bind_group: Option<Resource<GpuBindGroup>>,
+        dynamic_offsets: Option<Vec<GpuBufferDynamicOffset>>,
     ) -> () {
-        todo!()
+        let bind_group_id = bind_group.map(|bg| *self.table.get(&bg).unwrap());
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+
+        let dynamic_offsets_slice = dynamic_offsets.as_deref().unwrap_or(&[]);
+
+        self.instance
+            .compute_pass_set_bind_group(
+                compute_pass_encoder_id,
+                index,
+                bind_group_id,
+                dynamic_offsets_slice,
+            )
+            .unwrap();
+        ()
     }
 
     async fn set_bind_group_with_data(
@@ -1422,27 +1468,64 @@ impl HostGpuComputePassEncoder for RuneRuntimeState {
         _dynamic_offsets_data_start: GpuSizeU64,
         _dynamic_offsets_data_lengh: GpuSizeU32,
     ) -> () {
-        todo!()
+        let bind_group_id = _bind_group.map(|bg| *self.table.get(&bg).unwrap());
+        let compute_pass_encoder_id = self.table.get_mut(&_self_).unwrap();
+
+        let dynamic_offsets_slice = if _dynamic_offsets_data_lengh > 0 {
+            let start = _dynamic_offsets_data_start as usize;
+            let len = _dynamic_offsets_data_lengh as usize;
+            // Assuming start and len are valid and won't cause out-of-bounds panic.
+            // WIT generated code or guest logic should ensure this.
+            &_dynamic_offsets_data[start..start + len]
+        } else {
+            &[]
+        };
+
+        self.instance
+            .compute_pass_set_bind_group(
+                compute_pass_encoder_id,
+                _index,
+                bind_group_id,
+                dynamic_offsets_slice,
+            )
+            .unwrap();
+        ()
     }
 
     async fn push_debug_group(
         &mut self,
-        _self_: Resource<GpuComputePassEncoder>,
-        _group_label: String,
+        compute_pass_encoder: Resource<GpuComputePassEncoder>,
+        group_label: String,
     ) -> () {
-        todo!()
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+        self.instance
+            .compute_pass_push_debug_group(compute_pass_encoder_id, &group_label, 0)
+            .unwrap();
+        ()
     }
 
-    async fn pop_debug_group(&mut self, _self_: Resource<GpuComputePassEncoder>) -> () {
-        todo!()
+    async fn pop_debug_group(&mut self, compute_pass_encoder: Resource<GpuComputePassEncoder>) -> () {
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+        self.instance
+            .compute_pass_pop_debug_group(compute_pass_encoder_id)
+            .unwrap();
+        ()
     }
 
     async fn insert_debug_marker(
         &mut self,
-        _self_: Resource<GpuComputePassEncoder>,
-        _marker_label: String,
+        compute_pass_encoder: Resource<GpuComputePassEncoder>,
+        marker_label: String,
     ) -> () {
-        todo!()
+        let compute_pass_encoder_id = self.table.get_mut(&compute_pass_encoder).unwrap();
+        self.instance
+            .compute_pass_insert_debug_marker(
+                compute_pass_encoder_id,
+                &marker_label,
+                0,
+            )
+            .unwrap();
+        ()
     }
 
     async fn drop(&mut self, rep: Resource<GpuComputePassEncoder>) -> Result<()> {
@@ -1783,7 +1866,28 @@ impl HostGpuRenderPassEncoder for RuneRuntimeState {
         _dynamic_offsets_data_start: GpuSizeU64,
         _dynamic_offsets_data_length: GpuSizeU32,
     ) -> () {
-        todo!()
+        let bind_group_id = _bind_group.map(|bg| *self.table.get(&bg).unwrap());
+        let render_pass_encoder_id = self.table.get_mut(&_render_pass_encoder).unwrap();
+
+        let dynamic_offsets_slice = if _dynamic_offsets_data_length > 0 {
+            let start = _dynamic_offsets_data_start as usize;
+            let len = _dynamic_offsets_data_length as usize;
+            // Assuming start and len are valid and won't cause out-of-bounds panic.
+            // WIT generated code or guest logic should ensure this.
+            &_dynamic_offsets_data[start..start + len]
+        } else {
+            &[]
+        };
+
+        self.instance
+            .render_pass_set_bind_group(
+                render_pass_encoder_id,
+                _index,
+                bind_group_id,
+                dynamic_offsets_slice,
+            )
+            .unwrap();
+        ()
     }
 
     async fn push_debug_group(
