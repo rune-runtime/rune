@@ -37,13 +37,14 @@ impl Game {
 
         let debug = crate::runtime::debug::export();
         Reflect::set(&imports, &JsValue::from_str("rune:runtime/debug"), &debug)?;
+
+        let gpu = crate::runtime::gpu::export();
+        Reflect::set(&imports, &JsValue::from_str("rune:runtime/gpu"), &gpu)?;
         
         let instance = JsFuture::from(
             component_init_fn.call1(&component, &imports)?
                 .dyn_into::<js_sys::Promise>()?
         ).await?;
-
-        
 
         Ok(Self {
             path: "bytes".to_owned()
